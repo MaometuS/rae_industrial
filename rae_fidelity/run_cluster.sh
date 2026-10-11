@@ -8,13 +8,38 @@ WORK=${WORK:-$PWD}
 RAE_ROOT=${RAE_ROOT:-$WORK/RAE}
 OUT=${OUT:-$WORK/results_rae_fidelity}
 HERE=$(cd "$(dirname "$0")" && pwd)
+ENV_NAME=${ENV_NAME:-rae}
+# CUDA build of torch 2.8.0: cu126 (driver >= 560), cu128 (>= 570), cu129 (>= 575). Check `nvidia-smi`.
+CUDA_TAG=${CUDA_TAG:-cu126}
+
+# 0) Dedicated conda env as the RAE README prescribes (python 3.10, torch 2.8.0).
+#    Never install into anaconda base: an old torch there + new transformers breaks torchvision imports.
+eval "$(conda shell.bash hook)"
+if ! conda env list | awk '{print $1}' | grep -qx "$ENV_NAME"; then
+  conda create -n "$ENV_NAME" python=3.10 -y
+fi
+conda activate "$ENV_NAME"
+python -m pip install -q uv
 
 # 1) Official RAE repo + released decoders/stats (~a few GB)
 if [ ! -d "$RAE_ROOT" ]; then
   git clone https://github.com/bytetriper/RAE.git "$RAE_ROOT"
 fi
-pip install -q -r "$RAE_ROOT/requirements.txt"
-pip install -q huggingface_hub diffusers scikit-image scikit-learn pandas scipy matplotlib tabulate
+if ! python -c "import torch, sys; sys.exit(0 if torch.__version__.startswith('2.8') else 1)" 2>/dev/null; then
+  uv pip install torch==2.8.0 torchvision torchaudio --index-url "https://download.pytorch.org/whl/$CUDA_TAG"
+fi
+uv pip install -r "$RAE_ROOT/requirements.txt"
+uv pip install huggingface_hub diffusers scikit-image scikit-learn pandas scipy matplotlib tabulate
+
+# Preflight: the exact import chain that failed before, plus GPU visibility
+python - <<'EOF'
+import sys, torch, torchvision, transformers
+print(f"python {sys.version.split()[0]} | torch {torch.__version__} | torchvision {torchvision.__version__} "
+      f"| transformers {transformers.__version__} | cuda {torch.cuda.is_available()}")
+from torchvision import transforms  # noqa
+assert torch.__version__.startswith("2.8"), "requirements.txt replaced torch; pin it back to 2.8.0"
+assert torch.cuda.is_available(), "torch sees no GPU: wrong CUDA_TAG for this driver, or not on a GPU node"
+EOF
 if [ ! -d "$RAE_ROOT/models" ]; then
   (cd "$RAE_ROOT" && hf download nyu-visionx/RAE-collections --local-dir models)
 fi
