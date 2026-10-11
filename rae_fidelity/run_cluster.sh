@@ -3,7 +3,7 @@
 #   MVTEC_ROOT=/data/mvtec_ad bash run_cluster.sh
 set -euo pipefail
 
-MVTEC_ROOT=${MVTEC_ROOT:?set MVTEC_ROOT to the MVTec AD folder (contains bottle/, cable/, ...)}
+MVTEC_ROOT=/home/maometus/Documents/datasets/mvtec_anomaly_detection
 WORK=${WORK:-$PWD}
 RAE_ROOT=${RAE_ROOT:-$WORK/RAE}
 OUT=${OUT:-$WORK/results_rae_fidelity}
