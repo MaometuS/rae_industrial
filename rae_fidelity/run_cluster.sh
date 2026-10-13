@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # RAE fidelity pilot on MVTec AD. Run on a GPU node.
-#   MVTEC_ROOT=/data/mvtec_ad bash run_cluster.sh
+#   bash run_cluster.sh   (MVTec defaults to /home/maometus/Documents/datasets/mvtec_anomaly_detection; override with MVTEC_ROOT=...)
 set -euo pipefail
 
 MVTEC_ROOT=${MVTEC_ROOT:-/home/maometus/Documents/datasets/mvtec_anomaly_detection}

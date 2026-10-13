@@ -20,7 +20,7 @@ For every RAE config (and optionally an SD-VAE baseline) and every MVTec categor
 Usage (on the cluster, from anywhere):
   python rae_fidelity.py --rae-root /path/to/RAE \
       --configs configs/stage1/pretrained/*.yaml \
-      --mvtec-root /data/mvtec_ad --out results/ --sdvae
+      --mvtec-root /home/maometus/Documents/datasets/mvtec_anomaly_detection --out results/ --sdvae
 """
 from __future__ import annotations
 
@@ -329,7 +329,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--rae-root", type=Path, help="clone of the official RAE repo (with models/ downloaded)")
     ap.add_argument("--configs", nargs="*", default=[], help="stage-1 RAE YAMLs (relative to --rae-root or absolute)")
-    ap.add_argument("--mvtec-root", type=Path, required=True)
+    ap.add_argument("--mvtec-root", type=Path, default=Path(os.environ.get("MVTEC_ROOT", "/home/maometus/Documents/datasets/mvtec_anomaly_detection")))
     ap.add_argument("--out", type=Path, default=Path("results"))
     ap.add_argument("--categories", nargs="*", default=MVTEC_CATEGORIES)
     ap.add_argument("--size", type=int, default=256, help="input resolution fed to the autoencoder")
