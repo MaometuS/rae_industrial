@@ -10,7 +10,7 @@ OUT=${OUT:-$WORK/results_rae_fidelity}
 HERE=$(cd "$(dirname "$0")" && pwd)
 ENV_NAME=${ENV_NAME:-rae}
 # CUDA build of torch 2.8.0: cu126 (driver >= 560), cu128 (>= 570), cu129 (>= 575). Check `nvidia-smi`.
-CUDA_TAG=${CUDA_TAG:-cu126}
+CUDA_TAG=${CUDA_TAG:-cu128}
 
 # 0) Dedicated conda env as the RAE README prescribes (python 3.10, torch 2.8.0).
 #    Never install into anaconda base: an old torch there + new transformers breaks torchvision imports.
