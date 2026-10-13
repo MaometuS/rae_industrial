@@ -1,0 +1,17 @@
+{
+  "rae_root": "/home/maometus/Documents/projects/rae_industrial/rae_fidelity/RAE",
+  "configs": "['configs/stage1/pretrained/DINOv2-B_512.yaml', 'configs/stage1/pretrained/DINOv2-B.yaml', 'configs/stage1/pretrained/MAE.yaml', 'configs/stage1/pretrained/SigLIP2.yaml']",
+  "mvtec_root": "/home/maometus/Documents/datasets/mvtec_anomaly_detection",
+  "out": "/home/maometus/Documents/projects/rae_industrial/rae_fidelity/results_rae_fidelity",
+  "categories": "['bottle', 'cable', 'capsule', 'carpet', 'grid', 'hazelnut', 'leather', 'metal_nut', 'pill', 'screw', 'tile', 'toothbrush', 'transistor', 'wood', 'zipper']",
+  "size": "256",
+  "batch_size": "32",
+  "max_train_good": "50",
+  "sigma": "4.0",
+  "pixel_stride": "2",
+  "grid_n": "6",
+  "sdvae": "True",
+  "mock": "False",
+  "bf16": "False",
+  "device": "None"
+}
