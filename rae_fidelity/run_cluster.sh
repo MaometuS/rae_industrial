@@ -3,14 +3,19 @@
 #   MVTEC_ROOT=/data/mvtec_ad bash run_cluster.sh
 set -euo pipefail
 
-MVTEC_ROOT=/home/maometus/Documents/datasets/mvtec_anomaly_detection
+MVTEC_ROOT=${MVTEC_ROOT:?set MVTEC_ROOT to the MVTec AD folder (contains bottle/, cable/, ...)}
 WORK=${WORK:-$PWD}
 RAE_ROOT=${RAE_ROOT:-$WORK/RAE}
 OUT=${OUT:-$WORK/results_rae_fidelity}
 HERE=$(cd "$(dirname "$0")" && pwd)
 ENV_NAME=${ENV_NAME:-rae}
-# CUDA build of torch 2.8.0: cu126 (driver >= 560), cu128 (>= 570), cu129 (>= 575). Check `nvidia-smi`.
-CUDA_TAG=${CUDA_TAG:-cu128}
+# torch 2.8.0 source: "pypi" (default, bundles CUDA 12.8) or a PyTorch-index build: cu126 / cu128 / cu129.
+CUDA_TAG=${CUDA_TAG:-pypi}
+
+# Network preflight: every host this script downloads from.
+for h in pypi.org files.pythonhosted.org github.com huggingface.co; do
+  getent hosts "$h" >/dev/null || echo "WARNING: cannot resolve $h from $(hostname) - run setup on a node with internet (e.g. the login node)"
+done
 
 # 0) Dedicated conda env as the RAE README prescribes (python 3.10, torch 2.8.0).
 #    Never install into anaconda base: an old torch there + new transformers breaks torchvision imports.
@@ -26,7 +31,14 @@ if [ ! -d "$RAE_ROOT" ]; then
   git clone https://github.com/bytetriper/RAE.git "$RAE_ROOT"
 fi
 if ! python -c "import torch, sys; sys.exit(0 if torch.__version__.startswith('2.8') else 1)" 2>/dev/null; then
-  uv pip install torch==2.8.0 torchvision torchaudio --index-url "https://download.pytorch.org/whl/$CUDA_TAG"
+  # PyPI's Linux torch 2.8.0 wheel already bundles CUDA 12.8, so no PyTorch index is needed.
+  # Use the PyTorch index only if it resolves and a non-default CUDA build was requested.
+  if [ "$CUDA_TAG" != "pypi" ] && getent hosts download.pytorch.org >/dev/null; then
+    uv pip install torch==2.8.0 torchvision==0.23.0 --index-url "https://download.pytorch.org/whl/$CUDA_TAG"
+  else
+    echo "download.pytorch.org not reachable (or CUDA_TAG=pypi): installing torch 2.8.0 (CUDA 12.8) from PyPI"
+    uv pip install torch==2.8.0 torchvision==0.23.0
+  fi
 fi
 uv pip install -r "$RAE_ROOT/requirements.txt"
 uv pip install huggingface_hub diffusers scikit-image scikit-learn pandas scipy matplotlib tabulate
