@@ -1,0 +1,50 @@
+usage: latent_draem.py [-h] [--rae-root RAE_ROOT] [--configs [CONFIGS ...]]
+                       [--mock] --mvtec-root MVTEC_ROOT [--dtd-root DTD_ROOT]
+                       [--out OUT] [--categories [CATEGORIES ...]]
+                       [--modes [{pixel,latent_tex,latent_self,latent_noise,mix} ...]]
+                       [--size SIZE] [--p-clean P_CLEAN] [--beta BETA BETA]
+                       [--noise-sigma NOISE_SIGMA NOISE_SIGMA]
+                       [--dtd-bank DTD_BANK] [--soft-targets] [--hard-targets]
+                       [--d-model D_MODEL] [--depth DEPTH] [--heads HEADS]
+                       [--drop-tokens DROP_TOKENS] [--d-disc D_DISC]
+                       [--disc-blocks DISC_BLOCKS] [--steps STEPS]
+                       [--batch-size BATCH_SIZE] [--lr LR] [--w-anom W_ANOM]
+                       [--w-disc W_DISC] [--detach-disc] [--joint-disc]
+                       [--sigma SIGMA] [--no-pro] [--no-viz]
+                       [--log-every LOG_EVERY] [--seed SEED] [--device DEVICE]
+latent_draem.py: error: unrecognized arguments: --seeds 0 --n-val 20 --save-maps
+usage: latent_draem.py [-h] [--rae-root RAE_ROOT] [--configs [CONFIGS ...]]
+                       [--mock] --mvtec-root MVTEC_ROOT [--dtd-root DTD_ROOT]
+                       [--out OUT] [--categories [CATEGORIES ...]]
+                       [--modes [{pixel,latent_tex,latent_self,latent_noise,mix} ...]]
+                       [--size SIZE] [--p-clean P_CLEAN] [--beta BETA BETA]
+                       [--noise-sigma NOISE_SIGMA NOISE_SIGMA]
+                       [--dtd-bank DTD_BANK] [--soft-targets] [--hard-targets]
+                       [--d-model D_MODEL] [--depth DEPTH] [--heads HEADS]
+                       [--drop-tokens DROP_TOKENS] [--d-disc D_DISC]
+                       [--disc-blocks DISC_BLOCKS] [--steps STEPS]
+                       [--batch-size BATCH_SIZE] [--lr LR] [--w-anom W_ANOM]
+                       [--w-disc W_DISC] [--detach-disc] [--joint-disc]
+                       [--sigma SIGMA] [--no-pro] [--no-viz]
+                       [--log-every LOG_EVERY] [--seed SEED] [--device DEVICE]
+latent_draem.py: error: unrecognized arguments: --seeds 0 --n-val 20 --save-maps
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+DTD images: 5640
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+
+######## encoder DINOv2-B ########
+[DINOv2-B/screw] train 300  val 20  test 160  latent (768, 16, 16)
+  knn   I-AUROC 0.907  P-AUROC 0.901  AUPRO 0.755
+  [pixel s0] step     1/300  L_rest 0.5982  L_disc 0.1714  (0s)
+  pixel        s0 disc  I-AUROC 0.736 (top1% 0.722)  P-AUROC 0.970  AP 0.284  AUPRO 0.854
+  pixel        s0 resid I-AUROC 0.771 (top1% 0.764)  P-AUROC 0.920  AP 0.179  AUPRO 0.668
+  [latent_self s0] step     1/300  L_rest 0.0591  L_disc 0.1882  (0s)
+  latent_self  s0 disc  I-AUROC 0.677 (top1% 0.679)  P-AUROC 0.800  AP 0.009  AUPRO 0.412
+  latent_self  s0 resid I-AUROC 0.375 (top1% 0.373)  P-AUROC 0.821  AP 0.008  AUPRO 0.484
+  [mix s0] step     1/300  L_rest 0.2693  L_disc 0.1819  (0s)
+  mix          s0 disc  I-AUROC 0.706 (top1% 0.688)  P-AUROC 0.800  AP 0.153  AUPRO 0.600
+  mix          s0 resid I-AUROC 0.775 (top1% 0.762)  P-AUROC 0.917  AP 0.098  AUPRO 0.683
+
+Done. results_exp3_smoke/report.md

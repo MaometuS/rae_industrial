@@ -1,0 +1,17 @@
+DINOv2-B/screw latent_self s0 disc            I 0.677/0.679  P 0.800  AP 0.009  PRO 0.412
+DINOv2-B/screw latent_self s0 resid           I 0.375/0.373  P 0.821  AP 0.008  PRO 0.484
+DINOv2-B/screw latent_self s0 disc+knn        I 0.881/0.865  P 0.912  AP 0.185  PRO 0.737
+DINOv2-B/screw latent_self s0 resid+knn       I 0.888/0.864  P 0.946  AP 0.258  PRO 0.819
+DINOv2-B/screw latent_self s0 disc+resid+knn  I 0.863/0.833  P 0.945  AP 0.223  PRO 0.806
+DINOv2-B/screw mix s0 disc            I 0.706/0.688  P 0.800  AP 0.153  PRO 0.600
+DINOv2-B/screw mix s0 resid           I 0.775/0.762  P 0.917  AP 0.098  PRO 0.683
+DINOv2-B/screw mix s0 disc+knn        I 0.883/0.866  P 0.877  AP 0.241  PRO 0.751
+DINOv2-B/screw mix s0 resid+knn       I 0.857/0.862  P 0.927  AP 0.129  PRO 0.772
+DINOv2-B/screw mix s0 disc+resid+knn  I 0.875/0.859  P 0.906  AP 0.146  PRO 0.767
+DINOv2-B/screw pixel s0 disc            I 0.736/0.722  P 0.970  AP 0.284  PRO 0.854
+DINOv2-B/screw pixel s0 resid           I 0.771/0.763  P 0.920  AP 0.179  PRO 0.668
+DINOv2-B/screw pixel s0 disc+knn        I 0.903/0.908  P 0.960  AP 0.344  PRO 0.849
+DINOv2-B/screw pixel s0 resid+knn       I 0.868/0.876  P 0.931  AP 0.200  PRO 0.770
+DINOv2-B/screw pixel s0 disc+resid+knn  I 0.897/0.894  P 0.966  AP 0.232  PRO 0.834
+
+Done. results_exp3_smoke/report_fusion.md
