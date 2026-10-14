@@ -395,9 +395,18 @@ def aupro(masks: np.ndarray, amaps: np.ndarray, max_fpr=0.3, steps=200) -> float
     return float(trap(p, f) / max_fpr)
 
 
+def image_scores(maps: np.ndarray, how: str = "max") -> np.ndarray:
+    flat = maps.reshape(len(maps), -1)
+    if how == "max":
+        return flat.max(1)
+    k = max(1, int(round(flat.shape[1] * 0.01)))  # mean of the top 1% pixels
+    return np.sort(flat, axis=1)[:, -k:].mean(1)
+
+
 def evaluate_maps(maps: np.ndarray, masks: np.ndarray, labels: np.ndarray, do_pro: bool):
-    img_scores = maps.reshape(len(maps), -1).max(1)
-    out = dict(img_auroc=roc_auc_score(labels, img_scores) if labels.min() != labels.max() else float("nan"))
+    two = labels.min() != labels.max()
+    out = dict(img_auroc=roc_auc_score(labels, image_scores(maps, "max")) if two else float("nan"),
+               img_auroc_top1=roc_auc_score(labels, image_scores(maps, "top1")) if two else float("nan"))
     flat_m, flat_s = masks.ravel(), maps.ravel()
     out["px_auroc"] = roc_auc_score(flat_m, flat_s) if flat_m.any() else float("nan")
     out["px_ap"] = average_precision_score(flat_m, flat_s) if flat_m.any() else float("nan")
@@ -498,9 +507,17 @@ def write_report(df: pd.DataFrame, out: Path):
     lines = ["# Latent DRAEM pilot", "",
              "Mean over categories. `disc` = learned discriminator map, `resid` = cos(z, R(z)), "
              "`knn` = frozen-token kNN baseline (no training).", ""]
-    metrics = ["img_auroc", "px_auroc", "px_ap", "aupro"]
+    metrics = [m for m in ["img_auroc", "img_auroc_top1", "px_auroc", "px_ap", "aupro"] if m in df]
+    if "seed" not in df:
+        df = df.assign(seed=0)
+    if df.seed.nunique() > 1:
+        lines += ["Values are mean ± std over seeds of the category-averaged metric "
+                  "(knn has no training, so no seed variation).", ""]
     for enc_name, g in df.groupby("encoder"):
-        piv = g.groupby(["mode", "score"])[metrics].mean().round(3)
+        per_seed = g.groupby(["mode", "score", "seed"])[metrics].mean()
+        mu = per_seed.groupby(["mode", "score"]).mean()
+        sd = per_seed.groupby(["mode", "score"]).std().fillna(0)
+        piv = mu.round(3).astype(str) + (" ± " + sd.round(3).astype(str) if df.seed.nunique() > 1 else "")
         try:
             tbl = piv.to_markdown()
         except ImportError:
@@ -522,7 +539,7 @@ def main():
     ap.add_argument("--rae-root", type=Path)
     ap.add_argument("--configs", nargs="*", default=[])
     ap.add_argument("--mock", action="store_true", help="random patch encoder, for pipeline tests")
-    ap.add_argument("--mvtec-root", type=Path, required=True)
+    ap.add_argument("--mvtec-root", type=Path, default=Path(os.environ.get("MVTEC_ROOT", "/home/maometus/Documents/datasets/mvtec_anomaly_detection")))
     ap.add_argument("--dtd-root", type=Path, default=Path("data/dtd"))
     ap.add_argument("--out", type=Path, default=Path("results_latent_draem"))
     ap.add_argument("--categories", nargs="*", default=PILOT_CATEGORIES)
@@ -555,6 +572,10 @@ def main():
     ap.add_argument("--no-viz", action="store_true")
     ap.add_argument("--log-every", type=int, default=500)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--seeds", type=int, nargs="*", default=None, help="run every mode once per seed (overrides --seed)")
+    ap.add_argument("--n-val", type=int, default=0,
+                    help="hold out this many train/good images (fixed split) as normal validation for score normalization")
+    ap.add_argument("--save-maps", action="store_true", help="save token-level maps (test + val) for offline fusion")
     ap.add_argument("--device", default=None)
     args = ap.parse_args()
 
@@ -578,9 +599,12 @@ def main():
     if not encoders:
         ap.error("pass --configs (with --rae-root) or --mock")
 
+    seeds = args.seeds if args.seeds else [args.seed]
     res_path = args.out / "results.csv"
     rows = pd.read_csv(res_path).to_dict("records") if res_path.exists() else []
-    done = {(r["encoder"], r["mode"], r["category"], r["score"]) for r in rows}
+    if rows and "seed" not in rows[0] and (len(seeds) > 1 or args.n_val or args.save_maps):
+        sys.exit(f"{res_path} comes from an earlier experiment without seeds; use a new --out (never overwrite old results)")
+    done = {(r["encoder"], r["mode"], r["category"], r["score"], int(r.get("seed", 0))) for r in rows}
 
     for build in encoders:
         enc = build()
@@ -591,41 +615,66 @@ def main():
             if not train_p:
                 print(f"[skip] {cat}: no data")
                 continue
-            seed_all(args.seed)
+            val_p = []
+            if args.n_val:  # fixed split, identical for every seed and mode
+                perm = np.random.default_rng(1234).permutation(len(train_p))
+                val_p = [train_p[i] for i in sorted(perm[:args.n_val])]
+                train_p = [train_p[i] for i in sorted(perm[args.n_val:])]
+            seed_all(seeds[0])
             train_imgs, train_z = encode_paths(enc, train_p, args.size)
             test_imgs, test_z = encode_paths(enc, [t[0] for t in test], args.size)
+            val_z = encode_paths(enc, val_p, args.size)[1] if val_p else None
             labels = np.array([int(t[1] != "good") for t in test])
             masks = np.stack([load_mask(t[2], args.size) for t in test])
-            print(f"[{enc.name}/{cat}] train {len(train_p)}  test {len(test)}  latent {tuple(train_z.shape[1:])}")
+            print(f"[{enc.name}/{cat}] train {len(train_p)}  val {len(val_p)}  test {len(test)}  "
+                  f"latent {tuple(train_z.shape[1:])}")
+            mdir = args.out / "maps" / enc.name / cat
+            if args.save_maps:
+                mdir.mkdir(parents=True, exist_ok=True)
+                np.savez_compressed(mdir / "meta.npz", labels=labels, masks=np.packbits(masks, axis=-1),
+                                    mask_shape=np.array(masks.shape),
+                                    files=np.array([str(t[0].relative_to(args.mvtec_root)) for t in test]),
+                                    val_files=np.array([str(p.relative_to(args.mvtec_root)) for p in val_p]))
 
-            if (enc.name, "-", cat, "knn") not in done:
-                km = to_pixel_map(knn_maps(train_z, test_z), args.size, args.sigma)
-                m = evaluate_maps(km, masks, labels, not args.no_pro)
-                rows.append(dict(encoder=enc.name, mode="-", category=cat, score="knn", **m))
+            if (enc.name, "-", cat, "knn", 0) not in done:
+                kt = knn_maps(train_z, test_z)
+                m = evaluate_maps(to_pixel_map(kt, args.size, args.sigma), masks, labels, not args.no_pro)
+                rows.append(dict(encoder=enc.name, mode="-", category=cat, score="knn", seed=0, **m))
                 print(f"  knn   I-AUROC {m['img_auroc']:.3f}  P-AUROC {m['px_auroc']:.3f}  AUPRO {m['aupro']:.3f}")
+                if args.save_maps:
+                    np.savez_compressed(mdir / "knn.npz", test=kt.cpu().numpy().astype(np.float16),
+                                        val=(knn_maps(train_z, val_z).cpu().numpy().astype(np.float16)
+                                             if val_z is not None else np.zeros(0, np.float16)))
 
-            synth = Synthesizer(enc, train_imgs, train_z, dtd, args, device)
-            for mode in args.modes:
-                if (enc.name, mode, cat, "disc") in done:
-                    continue
-                seed_all(args.seed)
-                t0 = time.time()
-                R, D = train_one(enc, synth, mode, args, device, log_prefix=f"  [{mode}]")
-                dmap, rmap, rz = infer(R, D, test_z, device)
-                for score, tok in (("disc", dmap), ("resid", rmap)):
-                    pm = to_pixel_map(tok, args.size, args.sigma)
-                    m = evaluate_maps(pm, masks, labels, not args.no_pro)
-                    rows.append(dict(encoder=enc.name, mode=mode, category=cat, score=score,
-                                     train_s=round(time.time() - t0), **m))
-                    print(f"  {mode:12s} {score:5s} I-AUROC {m['img_auroc']:.3f}  P-AUROC {m['px_auroc']:.3f}  "
-                          f"AP {m['px_ap']:.3f}  AUPRO {m['aupro']:.3f}")
-                    if score == "disc" and not args.no_viz:
-                        vdir = args.out / enc.name / "viz"
-                        vdir.mkdir(parents=True, exist_ok=True)
-                        save_viz(enc, test_imgs, test_z, rz, pm, masks, labels, vdir / f"{cat}_{mode}.png")
-                pd.DataFrame(rows).to_csv(res_path, index=False)  # incremental: safe to resume
-                del R, D
-            del synth
+            for seed in seeds:
+                args.seed = seed
+                synth = Synthesizer(enc, train_imgs, train_z, dtd, args, device)
+                for mode in args.modes:
+                    if (enc.name, mode, cat, "disc", seed) in done:
+                        continue
+                    seed_all(seed)
+                    t0 = time.time()
+                    R, D = train_one(enc, synth, mode, args, device, log_prefix=f"  [{mode} s{seed}]")
+                    dmap, rmap, rz = infer(R, D, test_z, device)
+                    if args.save_maps:
+                        vd, vr = (infer(R, D, val_z, device)[:2] if val_z is not None else (None, None))
+                        f16 = lambda t: t.cpu().numpy().astype(np.float16) if t is not None else np.zeros(0, np.float16)
+                        np.savez_compressed(mdir / f"{mode}_s{seed}.npz", disc=f16(dmap), resid=f16(rmap),
+                                            disc_val=f16(vd), resid_val=f16(vr))
+                    for score, tok in (("disc", dmap), ("resid", rmap)):
+                        pm = to_pixel_map(tok, args.size, args.sigma)
+                        m = evaluate_maps(pm, masks, labels, not args.no_pro)
+                        rows.append(dict(encoder=enc.name, mode=mode, category=cat, score=score, seed=seed,
+                                         train_s=round(time.time() - t0), **m))
+                        print(f"  {mode:12s} s{seed} {score:5s} I-AUROC {m['img_auroc']:.3f} (top1% {m['img_auroc_top1']:.3f})  "
+                              f"P-AUROC {m['px_auroc']:.3f}  AP {m['px_ap']:.3f}  AUPRO {m['aupro']:.3f}")
+                        if score == "disc" and not args.no_viz and seed == seeds[0]:
+                            vdir = args.out / enc.name / "viz"
+                            vdir.mkdir(parents=True, exist_ok=True)
+                            save_viz(enc, test_imgs, test_z, rz, pm, masks, labels, vdir / f"{cat}_{mode}.png")
+                    pd.DataFrame(rows).to_csv(res_path, index=False)  # incremental: safe to resume
+                    del R, D
+                del synth
             if device.type == "cuda":
                 torch.cuda.empty_cache()
         pd.DataFrame(rows).to_csv(res_path, index=False)
