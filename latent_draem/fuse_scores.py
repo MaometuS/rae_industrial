@@ -106,7 +106,8 @@ def main():
         lines += ["### vs. kNN (mean difference; * = larger than 2× seed std and > 0.005)", ""]
         diff = mu.drop(index="knn", level="score") - knn
         sd_ = sd.drop(index="knn", level="score")
-        star = ((diff.abs() > 2 * sd_) & (diff.abs() > 0.005)).replace({True: "*", False: ""})
+        multi = g[g.score != "knn"].seed.nunique() > 1  # with one seed there is no spread: never mark
+        star = ((diff.abs() > 2 * sd_) & (diff.abs() > 0.005) & multi).replace({True: "*", False: ""})
         lines += [md(diff.round(3).astype(str) + star), ""]
         for metric in ["aupro", "px_ap", "img_auroc_top1"]:
             piv = g.groupby(["category", "mode", "score"])[metric].mean().unstack(["mode", "score"]).round(3)
