@@ -55,3 +55,22 @@ skipped, so an interrupted job can simply be restarted.
 - Each category is trained separately, and anomalies can land on the background (no foreground mask).
 - The token grid is 16×16 (224 px into DINOv2, 256 px into MAE). Thin defects will be blurred.
 - The discriminator uses soft per-token targets (the fraction of each token covered by the mask). `--hard-targets` switches.
+
+## Experiment 3: seeds + score fusion
+
+```bash
+bash run_exp3.sh                                                       # ~6 h: DINOv2-B × 5 cats × {pixel, latent_self, mix} × 3 seeds
+CATS="screw" SEEDS="0" STEPS=300 OUT=results_exp3_smoke bash run_exp3.sh  # smoke test
+```
+
+- Writes only to `results_exp3/`. The Experiment 2 folder (`results_latent_draem/`) is never written to: the run script
+  refuses that path, and `latent_draem.py` refuses to add seeded runs to an old results file. The exact Exp-2 code is kept
+  in `results_latent_draem/*_exp2_snapshot.*`.
+- New options in `latent_draem.py`: `--seeds`, `--n-val N` (fixed split of train/good, held out as normal validation
+  images), `--save-maps` (token-level test + validation maps → `maps/`), and `img_auroc_top1` (image score = mean of the
+  top 1% pixels) next to the max-based `img_auroc`. With default options it behaves exactly like Exp 2.
+- `fuse_scores.py` z-normalizes each score using its maps on the held-out normals (no test labels) and evaluates `disc`,
+  `resid`, `knn` and their fusions. Output: `report_fusion.md` (mean ± std over seeds, a vs-kNN table with * for
+  differences beyond 2× seed std, per-category tables).
+- Note: 20 train/good images are held out, so kNN and the trained models see slightly less data than in Exp 2. Compare
+  Exp 3 numbers with each other, not against Exp 2 numbers.

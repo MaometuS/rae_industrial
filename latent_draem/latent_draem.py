@@ -522,7 +522,7 @@ def main():
     ap.add_argument("--rae-root", type=Path)
     ap.add_argument("--configs", nargs="*", default=[])
     ap.add_argument("--mock", action="store_true", help="random patch encoder, for pipeline tests")
-    ap.add_argument("--mvtec-root", type=Path, default=Path(os.environ.get("MVTEC_ROOT", "/home/maometus/Documents/datasets/mvtec_anomaly_detection")))
+    ap.add_argument("--mvtec-root", type=Path, required=True)
     ap.add_argument("--dtd-root", type=Path, default=Path("data/dtd"))
     ap.add_argument("--out", type=Path, default=Path("results_latent_draem"))
     ap.add_argument("--categories", nargs="*", default=PILOT_CATEGORIES)
