@@ -74,12 +74,24 @@ def load_experiment_config(path: Path) -> Dict[str, Any]:
     return cfg
 
 
-def _parse_categories(spec: Optional[str]) -> List[str]:
-    if not spec or spec == "all":
+def _parse_categories(spec) -> List[str]:
+    """Accept ``"all"``, ``"pilot"``, comma lists, or multiple CLI tokens."""
+    if not spec:
         return list(ALL_CATEGORIES)
-    if spec == "pilot":
-        return list(PILOT_CATEGORIES)
-    return [c.strip() for c in spec.split(",") if c.strip()]
+    items = [spec] if isinstance(spec, str) else list(spec)
+    out: List[str] = []
+    for item in items:
+        for tok in str(item).split(","):
+            tok = tok.strip()
+            if not tok:
+                continue
+            if tok == "all":
+                out.extend(ALL_CATEGORIES)
+            elif tok == "pilot":
+                out.extend(PILOT_CATEGORIES)
+            else:
+                out.append(tok)
+    return list(dict.fromkeys(out))  # dedupe, keep order
 
 
 # ---------------------------------------------------------------------------
@@ -539,8 +551,8 @@ def build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--mvtec-root",
                     default="/home/maometus/Documents/datasets/mvtec_anomaly_detection")
     tr.add_argument("--out", default=str(HERE / "results_dit_iad"))
-    tr.add_argument("--categories", default="pilot",
-                    help="'all' | 'pilot' | comma list")
+    tr.add_argument("--categories", nargs="+", default=["pilot"],
+                    help="'all' | 'pilot' | category names (space or comma separated)")
     tr.add_argument("--scope", choices=["joint", "per_category"], default=None)
     tr.add_argument("--seed", type=int, default=None)
     tr.add_argument("--steps", type=int, default=None)
@@ -562,7 +574,8 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--mvtec-root",
                     default="/home/maometus/Documents/datasets/mvtec_anomaly_detection")
     ev.add_argument("--out", default=str(HERE / "results_dit_iad"))
-    ev.add_argument("--categories", default="all")
+    ev.add_argument("--categories", nargs="+", default=["all"],
+                    help="'all' | 'pilot' | category names (space or comma separated)")
     ev.add_argument("--seed", type=int, default=None)
     ev.add_argument("--mode", default=None,
                     help="single | multi | ode (comma list for sweeps)")
