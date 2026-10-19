@@ -42,6 +42,11 @@ import torch
 HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
+# shared utilities live in the sibling latent_draem/ directory (project
+# convention: the directory itself is the import root, see rae_recon_ablation.py)
+_LATENT_DRAEM_DIR = HERE.parent / "latent_draem"
+if str(_LATENT_DRAEM_DIR) not in sys.path:
+    sys.path.insert(0, str(_LATENT_DRAEM_DIR))
 
 from latent_draem import PILOT_CATEGORIES, evaluate_maps, load_mask, load_rgb, mvtec_split, seed_all  # noqa: E402
 from iad import core, models as M  # noqa: E402
