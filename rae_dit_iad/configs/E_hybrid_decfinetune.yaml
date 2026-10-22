@@ -24,7 +24,8 @@ scope: joint
 
 training:
   steps: 4000
-  batch_size: 8
+  batch_size: 2        # micro-batch (DiT-XL + decoder must fit in GPU memory)
+  grad_accum_steps: 4  # effective batch = 2 x 4 = 8
   precision: fp32
   clip_grad: 1.0
   log_every: 50

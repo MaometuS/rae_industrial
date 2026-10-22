@@ -106,6 +106,8 @@ def cmd_train(args: argparse.Namespace) -> None:
         cfg["scope"] = args.scope
     if args.lambda_fm is not None:
         cfg["experiment"]["lambda_fm"] = float(args.lambda_fm)
+    if args.grad_accum is not None:
+        cfg["training"]["grad_accum_steps"] = int(args.grad_accum)
     if args.no_ema:
         cfg["training"]["use_ema"] = False
     seed = int(cfg.get("seed", 0))
@@ -556,7 +558,10 @@ def build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--scope", choices=["joint", "per_category"], default=None)
     tr.add_argument("--seed", type=int, default=None)
     tr.add_argument("--steps", type=int, default=None)
-    tr.add_argument("--batch-size", type=int, default=None)
+    tr.add_argument("--batch-size", type=int, default=None,
+                    help="micro-batch size (gradient accumulation keeps the effective batch)")
+    tr.add_argument("--grad-accum", type=int, default=None,
+                    help="gradient accumulation steps (effective batch = batch-size * grad-accum)")
     tr.add_argument("--lambda-fm", type=float, default=None,
                     help="override experiment.lambda_fm (hybrid ablations)")
     tr.add_argument("--resume", default=None, help="checkpoint to resume from")

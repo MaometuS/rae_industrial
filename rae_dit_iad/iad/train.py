@@ -383,12 +383,16 @@ def _train_scope(
 ) -> Dict[str, Any]:
     exp = cfg["experiment"]
     tag = scope_name
+    accum = max(int(tcfg.get("grad_accum_steps", 1)), 1)
+    effective_bs = bs * accum
 
     train_paths, val_paths, _ = split_train_val(mvtec_root, cats, size, n_val)
     if not train_paths:
         raise RuntimeError(f"No training images for categories {cats} under {mvtec_root}")
     print(f"[iad/{tag}] {len(train_paths)} train / {len(val_paths)} val normal images "
           f"(cats: {','.join(cats)})", flush=True)
+    print(f"[iad/{tag}] batch {bs} x {accum} accumulation = effective {effective_bs}",
+          flush=True)
 
     images = preload_images(sorted(set(train_paths) | set(val_paths)), size)
     latents = encode_cache(rae, sorted(set(train_paths) | set(val_paths)), size, device) \
@@ -431,6 +435,9 @@ def _train_scope(
         "loss": loss_type,
         "corruption": corruption,
         "lambda_fm": lambda_fm,
+        "batch_micro": bs,
+        "grad_accum_steps": accum,
+        "batch_effective": effective_bs,
         "size": size,
         "init": cfg.get("init", {}),
         "null_label": num_classes,
@@ -455,33 +462,40 @@ def _train_scope(
         if exp.get("decoder_finetune"):
             rae.decoder.train()
 
-        idx = torch.randint(0, len(train_paths), (bs,), generator=rng).tolist()
-        chunk = [train_paths[i] for i in idx]
-        x, z = _gather(chunk, images, latents, device)
-        if z is None:
-            with torch.no_grad():
-                z = rae.encode(x)
-        y = M.null_labels(bs, num_classes, device)
-
         optimizer.zero_grad(set_to_none=True)
-        with autocast_ctx:
-            total, terms, _, _ = core.compute_losses(
-                rae, dit, transport, x, z,
-                loss_type=loss_type, noise_cfg=cfg["noise"],
-                lambda_fm=lambda_fm, y=y, corruption=corruption,
-                size=size, clamp_recon=bool(exp.get("clamp_recon", False)),
-            )
-        if scaler is not None and scaler.is_enabled():
-            scaler.scale(total).backward()
-            if clip_grad:
-                scaler.unscale_(optimizer)
-                grad_norm = torch.nn.utils.clip_grad_norm_(trainable, clip_grad)
+        micro_terms: Dict[str, List[float]] = {}
+        for _micro in range(accum):
+            idx = torch.randint(0, len(train_paths), (bs,), generator=rng).tolist()
+            chunk = [train_paths[i] for i in idx]
+            x, z = _gather(chunk, images, latents, device)
+            if z is None:
+                with torch.no_grad():
+                    z = rae.encode(x)
+            y = M.null_labels(len(chunk), num_classes, device)
+
+            with autocast_ctx:
+                total, terms, _, _ = core.compute_losses(
+                    rae, dit, transport, x, z,
+                    loss_type=loss_type, noise_cfg=cfg["noise"],
+                    lambda_fm=lambda_fm, y=y, corruption=corruption,
+                    size=size, clamp_recon=bool(exp.get("clamp_recon", False)),
+                )
+            # gradient accumulation: divide so the accumulated gradient is the
+            # mean over the effective batch
+            if scaler is not None and scaler.is_enabled():
+                scaler.scale(total / accum).backward()
             else:
-                grad_norm = torch.nn.utils.clip_grad_norm_(trainable, math.inf)
+                (total / accum).backward()
+            for k, v in terms.items():
+                micro_terms.setdefault(k, []).append(v)
+
+        if scaler is not None and scaler.is_enabled():
+            scaler.unscale_(optimizer)  # grads must be unscaled before clipping
+            grad_norm = torch.nn.utils.clip_grad_norm_(
+                trainable, clip_grad if clip_grad else math.inf)
             scaler.step(optimizer)
             scaler.update()
         else:
-            total.backward()
             grad_norm = torch.nn.utils.clip_grad_norm_(
                 trainable, clip_grad if clip_grad else math.inf)
             optimizer.step()
@@ -492,8 +506,8 @@ def _train_scope(
             with torch.no_grad():
                 update_ema(ema, dit, decay=ema_decay)
 
-        for k, v in terms.items():
-            running.setdefault(k, []).append(v)
+        for k, vals in micro_terms.items():
+            running.setdefault(k, []).append(float(np.mean(vals)))
         step += 1
 
         if step % log_every == 0 or step >= n_steps:
@@ -506,6 +520,7 @@ def _train_scope(
                 "lr_dit": optimizer.param_groups[0]["lr"],
                 "lr_dec": optimizer.param_groups[1]["lr"] if len(optimizer.param_groups) > 1 else None,
                 "grad_norm": float(grad_norm),
+                "batch_eff": effective_bs,
                 "step_time_s": dt / max(n, 1),
                 "peak_mem_gb": (torch.cuda.max_memory_allocated() / 1e9
                                 if device.type == "cuda" else None),

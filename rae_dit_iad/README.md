@@ -108,6 +108,22 @@ optional after training; checkpoints are EMA weights by default (the raw model
 weights are also stored, `--ckpt-which` picks the checkpoint file, EMA usage
 follows `training.use_ema`).
 
+### GPU memory (24 GB cards)
+
+DiT-XL (30 blocks, hidden 2048) + released decoder + EMA do not fit a 24 GB
+GPU at batch 8 in fp32 (≈21 GB allocated → OOM). Training therefore uses
+**micro-batch × gradient accumulation**: configs default to
+`batch_size: 2, grad_accum_steps: 4` (effective batch 8, unchanged
+optimization semantics — one optimizer/EMA/scheduler step per effective
+batch). Override with `BATCH` / `GRAD_ACCUM`, or directly
+`--batch-size` / `--grad-accum`. Eval runs under `no_grad` and uses
+`EVAL_BATCH` (default 8). The runner exports
+`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` to limit fragmentation.
+
+If it still OOMs, lower `BATCH` (e.g. `BATCH=1 GRAD_ACCUM=8`); conversely,
+`training.precision: bf16` roughly halves activation memory at some numerical
+cost (fp16 additionally enables a GradScaler).
+
 ## 4. Evaluation
 
 * **Pixel**: AUROC, AP, AUPRO (`latent_draem.evaluate_maps`, project
