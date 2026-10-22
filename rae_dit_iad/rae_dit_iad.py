@@ -110,6 +110,10 @@ def cmd_train(args: argparse.Namespace) -> None:
         cfg["training"]["grad_accum_steps"] = int(args.grad_accum)
     if args.no_ema:
         cfg["training"]["use_ema"] = False
+    if args.grad_checkpoint is not None:
+        cfg["training"]["grad_checkpoint"] = bool(args.grad_checkpoint)
+    if args.ema_device is not None:
+        cfg["training"]["ema_device"] = str(args.ema_device)
     seed = int(cfg.get("seed", 0))
 
     rae_root = M.setup_rae_root(Path(args.rae_root))
@@ -566,6 +570,13 @@ def build_parser() -> argparse.ArgumentParser:
                     help="override experiment.lambda_fm (hybrid ablations)")
     tr.add_argument("--resume", default=None, help="checkpoint to resume from")
     tr.add_argument("--no-ema", action="store_true")
+    tr.add_argument("--grad-checkpoint", action=argparse.BooleanOptionalAction,
+                    default=None,
+                    help="recompute DiT block activations in backward: slower step, "
+                         "much less GPU memory (default: use the config)")
+    tr.add_argument("--ema-device", choices=["cuda", "cpu"], default=None,
+                    help="where EMA weights live: cuda = fastest, cpu = frees "
+                         "~4 bytes/param of GPU memory (default: use the config)")
     tr.add_argument("--device", default=None)
 
     ev = sub.add_parser("eval", help="evaluate anomaly detection metrics")

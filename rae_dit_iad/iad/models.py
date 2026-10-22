@@ -229,6 +229,63 @@ def encoder_status(rae: nn.Module) -> bool:
     return all(not p.requires_grad for p in rae.encoder.parameters())
 
 
+def offload_encoder(rae: nn.Module) -> None:
+    """Move the frozen encoder to CPU once its latents are cached.
+
+    Exactness: with ``cache_latents`` the encoder is never called again during
+    training, so removing it from the GPU only frees memory.  ``encode_cache``
+    moves it back to the device if another scope needs to encode.
+    """
+    rae.encoder.to("cpu")
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+def enable_gradient_checkpointing(dit: nn.Module, rae: Optional[nn.Module] = None) -> int:
+    """Recompute activations in backward instead of storing them.
+
+    Wraps every DiT block (and the RAE decoder, when fine-tuning) in
+    ``torch.utils.checkpoint`` with ``use_reentrant=False``.  This changes only
+    memory/compute (≈30% slower step, much smaller activation footprint), not
+    the math: the forward values are recomputed exactly.  Calls under
+    ``torch.no_grad`` (validation) run the wrapped function directly.
+
+    Idempotent.  Returns the number of wrapped DiT blocks.
+    """
+    from torch.utils.checkpoint import checkpoint
+
+    # fail loudly here rather than mid-run if this torch build cannot do
+    # keyword-argument (non-reentrant) checkpointing
+    probe = torch.ones(1, requires_grad=True)
+    try:
+        checkpoint(lambda a, k=None: a * (k if k is not None else 1.0),
+                   probe, k=torch.ones(1), use_reentrant=False).sum().backward()
+    except Exception as exc:  # pragma: no cover - depends on the torch build
+        raise RuntimeError(
+            "torch.utils.checkpoint with kwargs (use_reentrant=False) is "
+            f"unusable in this environment: {exc}") from exc
+
+    def wrap(fn):
+        if getattr(fn, "_ckpt_wrapped", False):
+            return fn
+
+        def wrapped(*args, **kwargs):
+            if torch.is_grad_enabled():
+                return checkpoint(fn, *args, use_reentrant=False, **kwargs)
+            return fn(*args, **kwargs)
+
+        wrapped._ckpt_wrapped = True  # type: ignore[attr-defined]
+        return wrapped
+
+    n = 0
+    for blk in getattr(dit, "blocks", []):
+        blk.forward = wrap(blk.forward)
+        n += 1
+    if rae is not None and hasattr(rae, "decode"):
+        rae.decode = wrap(rae.decode)
+    return n
+
+
 def decoder_grad_norm(rae: nn.Module) -> float:
     total = 0.0
     for p in rae.decoder.parameters():

@@ -34,6 +34,9 @@ training:
   n_val: 20
   use_ema: true
   ema_decay: 0.9995
+  # --- memory/speed knobs: defaults are the fastest (full-speed) settings ---
+  grad_checkpoint: false  # true = recompute activations in backward (slower step, much less VRAM)
+  ema_device: cuda        # cuda = fastest; cpu = keeps EMA off the GPU (frees ~4 bytes/param)
   cache_latents: true
   decoder_lr_ratio: 0.1  # unused while decoder_finetune=false
   optimizer:

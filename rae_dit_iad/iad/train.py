@@ -92,6 +92,7 @@ def encode_cache(
 ) -> Dict[Path, torch.Tensor]:
     """Pre-encode latents with the frozen encoder (exact: encoder never trains)."""
     rae.eval()
+    rae.encoder.to(device)  # may have been offloaded after a previous scope's cache
     out: Dict[Path, torch.Tensor] = {}
     for i in range(0, len(paths), batch_size):
         chunk = [Path(p) for p in paths[i:i + batch_size]]
@@ -251,27 +252,36 @@ def validate(
     noise_cfg = cfg["noise"]
     was_training = dit.training
     dit.eval()
+    # a CPU-resident EMA (memory saver) has to be on the GPU for this pass
+    moved = next(iter(dit.parameters())).device != device
+    if moved:
+        dit.to(device)
     totals: Dict[str, List[float]] = {}
-    with _RngGuard():
-        seed_all(val_seed)
-        for i in range(0, len(val_paths), batch_size):
-            chunk = list(val_paths[i:i + batch_size])
-            x, z = _gather(chunk, images, latents, device)
-            if z is None:  # cache_latents=false
-                with torch.no_grad():
-                    z = rae.encode(x)
-            y = M.null_labels(len(chunk), num_classes, device)
-            loss, terms, _, _ = core.compute_losses(
-                rae, dit, transport, x, z,
-                loss_type=exp["loss"], noise_cfg=noise_cfg,
-                lambda_fm=float(exp.get("lambda_fm", 0.0)), y=y,
-                corruption=exp.get("corruption", "flow"),
-                size=int(cfg.get("size", 256)),
-                clamp_recon=bool(exp.get("clamp_recon", False)),
-            )
-            for k, v in terms.items():
-                totals.setdefault(k, []).append(v)
-            totals.setdefault("total", []).append(float(loss.detach()))
+    try:
+        with _RngGuard():
+            seed_all(val_seed)
+            for i in range(0, len(val_paths), batch_size):
+                chunk = list(val_paths[i:i + batch_size])
+                x, z = _gather(chunk, images, latents, device)
+                if z is None:  # cache_latents=false
+                    with torch.no_grad():
+                        z = rae.encode(x)
+                y = M.null_labels(len(chunk), num_classes, device)
+                _, terms, _, _ = core.compute_losses(
+                    rae, dit, transport, x, z,
+                    loss_type=exp["loss"], noise_cfg=noise_cfg,
+                    lambda_fm=float(exp.get("lambda_fm", 0.0)), y=y,
+                    corruption=exp.get("corruption", "flow"),
+                    size=int(cfg.get("size", 256)),
+                    clamp_recon=bool(exp.get("clamp_recon", False)),
+                )
+                for k, v in terms.items():
+                    totals.setdefault(k, []).append(v)
+    finally:
+        if moved:
+            dit.to("cpu")
+            if device.type == "cuda":
+                torch.cuda.empty_cache()
     if was_training:
         dit.train()
     return {f"val_{k}": float(np.mean(v)) for k, v in totals.items()}
@@ -397,6 +407,10 @@ def _train_scope(
     images = preload_images(sorted(set(train_paths) | set(val_paths)), size)
     latents = encode_cache(rae, sorted(set(train_paths) | set(val_paths)), size, device) \
         if cache else None
+    if cache and device.type == "cuda":
+        # exact: with cached latents the frozen encoder is never called again
+        M.offload_encoder(rae)
+        print(f"[iad/{tag}] encoder offloaded to CPU (latents cached)", flush=True)
 
     # ---- optimizer / scheduler / EMA ----------------------------------------
     optimizer, base_lr, dec_lr, opt_msg = M.build_optimizer(
@@ -427,6 +441,19 @@ def _train_scope(
     if exp.get("decoder_finetune"):
         trainable = trainable + list(rae.decoder.parameters())
 
+    if ema is not None and str(tcfg.get("ema_device", "cuda")).lower() == "cpu" \
+            and device.type == "cuda":
+        # identical EMA math, only the storage device changes (frees ~4 bytes/param)
+        ema.to("cpu")
+        print(f"[iad/{tag}] EMA kept on CPU ({M.count_params(ema) / 1e6:.0f}M params "
+              f"off the GPU)", flush=True)
+
+    if bool(tcfg.get("grad_checkpoint", False)):
+        n_ckpt = M.enable_gradient_checkpointing(dit, rae)
+        print(f"[iad/{tag}] gradient checkpointing on {n_ckpt} DiT blocks"
+              f"{' + decoder' if exp.get('decoder_finetune') else ''} "
+              f"(recompute; no numerical change)", flush=True)
+
     meta = {
         "categories": list(cats),
         "scope": cfg.get("scope", "joint"),
@@ -438,6 +465,8 @@ def _train_scope(
         "batch_micro": bs,
         "grad_accum_steps": accum,
         "batch_effective": effective_bs,
+        "grad_checkpoint": bool(tcfg.get("grad_checkpoint", False)),
+        "ema_device": str(tcfg.get("ema_device", "cuda")).lower(),
         "size": size,
         "init": cfg.get("init", {}),
         "null_label": num_classes,
@@ -502,9 +531,16 @@ def _train_scope(
         if scheduler is not None:
             scheduler.step()
         if ema is not None:
-            from utils.train_utils import update_ema  # official
-            with torch.no_grad():
-                update_ema(ema, dit, decay=ema_decay)
+            if next(iter(ema.parameters())).device != next(iter(dit.parameters())).device:
+                # CPU-resident EMA: same decay math, streamed from the GPU
+                with torch.no_grad():
+                    for ep, p in zip(ema.parameters(), dit.parameters()):
+                        ep.mul_(ema_decay).add_(p.detach().to(ep.device),
+                                                alpha=1.0 - ema_decay)
+            else:
+                from utils.train_utils import update_ema  # official
+                with torch.no_grad():
+                    update_ema(ema, dit, decay=ema_decay)
 
         for k, vals in micro_terms.items():
             running.setdefault(k, []).append(float(np.mean(vals)))

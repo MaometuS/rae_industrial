@@ -1,4 +1,4 @@
-"""Tests A–I for the RAE-DiT IAD experiments (spec §7).
+"""Tests A–J for the RAE-DiT IAD experiments (spec §7; J covers the memory switches).
 
 All tests are *weight-independent*: they run on CPU with tiny stand-in
 modules (``TinyRAE`` / ``TinyDiT``) wherever the official 3.35 GB
@@ -451,3 +451,93 @@ def test_i_tiny_overfit():
     tail = float(np.mean(losses[-10:]))
     assert math.isfinite(tail)
     assert tail < 0.9 * head, f"loss did not decrease: head={head:.4f} tail={tail:.4f}"
+
+
+# ---------------------------------------------------------------------------
+# J. memory-only switches (gradient checkpointing + encoder offload)
+# ---------------------------------------------------------------------------
+
+class Block(nn.Module):
+    """Official-style DiT block: tensor kwargs (``feat_rope``) are passed through."""
+
+    def __init__(self, hidden: int) -> None:
+        super().__init__()
+        self.conv = nn.Conv2d(hidden, hidden, 3, padding=1)
+        self.act = nn.SiLU()
+
+    def forward(self, h: torch.Tensor, feat_rope: torch.Tensor = None) -> torch.Tensor:
+        out = self.act(self.conv(h))
+        return out if feat_rope is None else out + feat_rope
+
+
+class BlockDiT(nn.Module):
+    """DiT-shaped net with a ``blocks`` ModuleList, as the official DiT has."""
+
+    def __init__(self, ch: int = 3, hidden: int = 8, n_blocks: int = 3) -> None:
+        super().__init__()
+        self.conv_in = nn.Conv2d(ch, hidden, 3, padding=1)
+        self.blocks = nn.ModuleList([Block(hidden) for _ in range(n_blocks)])
+        self.rope = torch.zeros(1)          # non-grad tensor, like feat_rope
+        self.conv_out = nn.Conv2d(hidden, ch, 3, padding=1)
+
+    def forward(self, zt: torch.Tensor, t: torch.Tensor, y: torch.Tensor = None) -> torch.Tensor:
+        h = self.conv_in(zt) + t.view(-1, 1, 1, 1)
+        for blk in self.blocks:
+            h = blk(h, feat_rope=self.rope)   # kwargs path through the wrapper
+        return self.conv_out(h)
+
+
+def test_j_memory_switches():
+    """Checkpointing must not change gradients; encoder offload must be exact."""
+    seed_all(7)
+    rae = TinyRAE()
+    M.freeze_encoder(rae)
+    M.freeze_decoder(rae)
+    x = _batch(2, 16, seed=21)
+    z0 = rae.encode(x).detach()
+
+    # (a) same loss/grads with and without activation recomputation
+    def run(checkpoint: bool):
+        seed_all(11)
+        dit = BlockDiT()
+        if checkpoint:
+            wrapped = M.enable_gradient_checkpointing(dit, rae)
+            assert wrapped == len(dit.blocks)
+        t = torch.full((2,), 0.5)
+        v = dit(z0, t)
+        loss = (v ** 2).mean()
+        loss.backward()
+        grads = [p.grad.detach().clone() for p in dit.parameters()]
+        return float(loss), grads
+
+    loss_plain, grads_plain = run(False)
+    loss_ckpt, grads_ckpt = run(True)
+    assert loss_plain == pytest.approx(loss_ckpt, rel=1e-6, abs=1e-8)
+    for a, b in zip(grads_plain, grads_ckpt):
+        assert torch.allclose(a, b, rtol=1e-5, atol=1e-7), "checkpointing changed gradients"
+
+    # (b) no_grad / eval path still runs, and wrapping is idempotent
+    dit = BlockDiT()
+    assert M.enable_gradient_checkpointing(dit, rae) == len(dit.blocks)
+    assert M.enable_gradient_checkpointing(dit, rae) == len(dit.blocks)
+    with torch.no_grad():
+        assert dit(z0, torch.full((2,), 0.5)).shape == z0.shape
+        assert rae.decode(z0).shape == x.shape
+
+    # (c) decoder fine-tuning still receives gradients through the wrapper
+    dit = BlockDiT()
+    M.enable_gradient_checkpointing(dit, rae)
+    M.unfreeze_decoder(rae)
+    recon = rae.decode(dit(z0, torch.full((2,), 0.5)))
+    (recon ** 2).mean().backward()
+    assert all(p.grad is not None for p in rae.decoder.parameters())
+
+    # (d) offload is exact: same latents, encoder on CPU afterwards
+    rae2 = TinyRAE()
+    M.freeze_encoder(rae2)
+    before = rae2.encode(x)
+    M.offload_encoder(rae2)
+    assert next(rae2.encoder.parameters()).device.type == "cpu"
+    after = rae2.encode(x)
+    assert torch.equal(before, after)
+

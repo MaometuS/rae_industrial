@@ -51,8 +51,10 @@ rae_dit_iad/
 │   └── infer.py      # single/multi/ode reconstruction, anomaly maps, viz grids
 ├── rae_dit_iad.py    # CLI: `train` and `eval` subcommands
 ├── configs/          # experiment + noise-ablation YAMLs
-├── tests/test_iad.py # Tests A–I
-└── run_dit_iad.sh    # cluster runner (train + eval matrix)
+├── tests/test_iad.py # Tests A–I (+J: memory switches)
+├── run_dit_iad.sh    # cluster runner (shared train + eval matrix engine)
+├── run_dit_iad_default.sh    # preset: no memory optimizations (> 30 GB VRAM)
+└── run_dit_iad_efficient.sh  # preset: all memory optimizations (24 GB VRAM)
 ```
 
 ### Core math (all derived from the official code, `iad/core.py`)
@@ -76,10 +78,20 @@ Environment: cluster conda env `rae` (py3.10, torch 2.8.0); RAE weights under
 
 ```bash
 # full matrix (pilot categories: carpet grid hazelnut screw transistor)
-bash run_dit_iad.sh
+bash run_dit_iad_default.sh      # no memory optimizations (needs > 30 GB VRAM)
+bash run_dit_iad_efficient.sh    # all memory optimizations (24 GB VRAM)
+
+# both forward to run_dit_iad.sh (shared engine); every knob below still applies
 
 # subset / smoke test
-EXPT="A B" CATS="carpet" SEEDS="0" STEPS=500 bash run_dit_iad.sh
+EXPT="A B" CATS="carpet" SEEDS="0" STEPS=500 bash run_dit_iad_efficient.sh
+
+# 24 GB GPU, or force a preset explicitly
+MEM=low bash run_dit_iad.sh      # activation recompute + CPU EMA
+MEM=full bash run_dit_iad.sh     # no recompute, EMA on GPU (needs > 30 GB)
+
+# large GPU: fastest settings (raise the micro-batch too if memory allows)
+MEM=full BATCH=4 GRAD_ACCUM=2 bash run_dit_iad.sh
 
 # eval-only, noise sweep over modes + levels
 STAGE=eval EXPT="B" MODES="single,multi,ode" T_VALUES="0.1,0.3,0.5,0.7,0.9" \
@@ -97,7 +109,7 @@ python rae_dit_iad.py eval --config configs/B_image_l1.yaml \
     --mode single --t 0.5 --seed 0
 ```
 
-Tests (Tests A–I; weight-independent, CPU):
+Tests (Tests A–I from the spec, plus J for the memory switches; weight-independent, CPU):
 
 ```bash
 pytest rae_dit_iad/tests/test_iad.py -v
@@ -108,21 +120,49 @@ optional after training; checkpoints are EMA weights by default (the raw model
 weights are also stored, `--ckpt-which` picks the checkpoint file, EMA usage
 follows `training.use_ema`).
 
-### GPU memory (24 GB cards)
+### GPU memory: two presets (same math, different hardware)
 
-DiT-XL (30 blocks, hidden 2048) + released decoder + EMA do not fit a 24 GB
-GPU at batch 8 in fp32 (≈21 GB allocated → OOM). Training therefore uses
-**micro-batch × gradient accumulation**: configs default to
-`batch_size: 2, grad_accum_steps: 4` (effective batch 8, unchanged
-optimization semantics — one optimizer/EMA/scheduler step per effective
-batch). Override with `BATCH` / `GRAD_ACCUM`, or directly
-`--batch-size` / `--grad-accum`. Eval runs under `no_grad` and uses
-`EVAL_BATCH` (default 8). The runner exports
+Measured on the cluster 4090: DiT-XL (~840 M params) + released decoder + EMA in
+fp32 peaks at ≈22 GB *before* the first Adam state allocation, so even
+micro-batch 2/accum 4 OOMs on 24 GB. The fixed cost dominates:
+
+| item | fp32 size |
+|---|---|
+| DiT params + grads + Adam (m, v) | ≈ 4 × 3.36 GB |
+| EMA copy of the DiT | 3.36 GB |
+| frozen decoder (+ grads/Adam when fine-tuning) | 1.2 GB (+3.6 GB) |
+| fp32 activations (2 × 256 tokens × 30 blocks) | ≈ 6 GB |
+
+So memory is controlled by switches that **do not change the objective**, exposed
+as two launch presets:
+
+```bash
+bash run_dit_iad_default.sh      # MEM=full: no recompute, EMA on GPU (> 30 GB)
+bash run_dit_iad_efficient.sh    # MEM=low: recompute + EMA on CPU (24 GB)
+MEM=full BATCH=4 GRAD_ACCUM=2 bash run_dit_iad.sh   # explicit, larger GPU
+```
+
+* `--grad-checkpoint / --no-grad-checkpoint` (`training.grad_checkpoint`,
+  default `false`) — wraps every DiT block (and the decoder when it is being
+  fine-tuned) in `torch.utils.checkpoint`, i.e. activations are **recomputed**
+  in backward instead of stored. Identical forward values, ~30 % slower step,
+  activation memory drops from ≈6 GB to ≈0.3 GB.
+* `--ema-device {cuda,cpu}` (`training.ema_device`, default `cuda`) — `cpu`
+  keeps the EMA copy off the GPU (saves 3.36 GB, identical decay math, only
+  ~0.1 s/step of PCIe traffic; validation temporarily moves it back).
+* `--batch-size` / `--grad-accum` (`BATCH` / `GRAD_ACCUM`) — micro-batch ×
+  accumulation; configs default to 2 × 4 = effective batch 8, so optimizer,
+  EMA and scheduler still see one update per 8 images.
+* Autocast (`training.precision: bf16`) is available but **off**: it is a real
+  numerical change and `MEM=low` already fits fp32.
+
+With `MEM=low` the expected peaks are ≈15 GB (A), ≈16 GB (B/D), ≈19 GB (C/E);
+`MEM=full` is the fastest setting for a 40–80 GB card (raise `BATCH` too, e.g.
+`MEM=full BATCH=4 GRAD_ACCUM=2`). The frozen encoder is always moved to CPU
+once its latents are cached (exact: it is never used again), and the runner sets
 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` to limit fragmentation.
+Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
 
-If it still OOMs, lower `BATCH` (e.g. `BATCH=1 GRAD_ACCUM=8`); conversely,
-`training.precision: bf16` roughly halves activation memory at some numerical
-cost (fp16 additionally enables a GradScaler).
 
 ## 4. Evaluation
 
@@ -164,6 +204,13 @@ cost (fp16 additionally enables a GradScaler).
    linear-path velocity target exists there).
 7. `ode` inference integrates on the official warped time grid
    `warp(u) = s·u/(1+(s−1)u)`, `s = √(prod(latent)/4096) = √48`.
+8. **Memory-only switches, off by default** (`MEM=full`): activation
+   recomputation (`grad_checkpoint`) and a CPU-resident EMA (`ema_device: cpu`)
+   change where work/compute happens, not the math — the recomputed forward is
+   bit-identical up to deterministic kernels and the EMA decay is the same
+   per-parameter update. `MEM=low` enables both to fit a 24 GB card. The frozen
+   encoder is always offloaded to CPU after latent caching (it is unused
+   afterwards).
 
 ## 6. Known limitations
 
