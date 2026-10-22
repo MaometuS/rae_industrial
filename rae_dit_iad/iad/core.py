@@ -250,10 +250,17 @@ def compute_losses(
     size: int = 256,
     clamp_recon: bool = False,
     generator: Optional[torch.Generator] = None,
+    adaptor: Optional[torch.nn.Module] = None,
 ) -> Tuple[torch.Tensor, Dict[str, float], torch.Tensor, torch.Tensor]:
     """Build the training objective for one batch.
 
     ``loss_type``: ``flow_matching`` | ``image_l1`` | ``hybrid``.
+
+    ``adaptor`` (optional): a feature adaptor ``A`` applied to the *clean*
+    latents right after the encoder, i.e. ``z0 <- A(z0)``.  The adapted space is
+    then the space the DiT models and the decoder decodes (both here and at
+    inference), so no inverse of ``A`` is needed.  Identity-initialized
+    adaptors therefore reproduce the baseline loss exactly at step 0.
 
     For ``flow_matching`` the untouched official ``training_losses`` is used
     (it draws its own time/noise).  For ``image_l1`` and ``hybrid`` a single
@@ -266,6 +273,8 @@ def compute_losses(
     estimate (``None`` for the pure flow-matching branch).
     """
     terms: Dict[str, float] = {}
+    if adaptor is not None:
+        z0 = adaptor(z0)
 
     if loss_type == "flow_matching":
         # Untouched official objective; it draws its own (t, eps) internally.

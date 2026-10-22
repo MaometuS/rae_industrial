@@ -7,10 +7,11 @@
 #   bash run_dit_iad_efficient.sh    # all memory optimizations (24 GB VRAM)
 # This script is the shared engine; MEM picks the memory preset (auto/full/low).
 #
-#   bash run_dit_iad.sh                                                   # train+eval A–E, pilot cats, seed 0
+#   bash run_dit_iad.sh                                                   # train+eval A–G, pilot cats, seed 0
 #   EXPT="A B C" CATS="carpet screw" SEEDS="0 1" bash run_dit_iad.sh       # subset / more seeds
 #   STAGE=eval EXPT="B" T_VALUES="0.1,0.3,0.5,0.7,0.9" bash run_dit_iad.sh # eval-only noise sweep
 #   STAGE=train STEPS=500 EXPT="A" bash run_dit_iad.sh                     # quick smoke run
+#   ADAPTOR=mlp EXPT="F" bash run_dit_iad.sh                               # swap the adaptor family
 #   BATCH=1 GRAD_ACCUM=8 EXPT="A" bash run_dit_iad.sh                     # tighter memory
 #   MEM=low bash run_dit_iad.sh                                           # force 24 GB preset
 #   MEM=full BATCH=4 GRAD_ACCUM=2 bash run_dit_iad.sh                     # big GPU: fastest settings
@@ -24,7 +25,7 @@ OUT=${OUT:-$HERE/results_dit_iad}
 ENV_NAME=${ENV_NAME:-rae}
 CATS=${CATS:-"carpet grid hazelnut screw transistor"}
 SEEDS=${SEEDS:-"0"}
-EXPT=${EXPT:-"A B C D E"}
+EXPT=${EXPT:-"A B C D E F G"}
 STAGE=${STAGE:-"train eval"}      # "train", "eval" or "train eval"
 STEPS=${STEPS:-""}                # empty = config default (4000)
 BATCH=${BATCH:-2}                 # micro-batch
@@ -41,6 +42,7 @@ REPEATS=${REPEATS:-1}             # repetitions for mode=multi
 ODE_STEPS=${ODE_STEPS:-50}
 VIZ=${VIZ:-6}
 LAMBDA_FM=${LAMBDA_FM:-""}        # override hybrid weight (experiments D/E)
+ADAPTOR=${ADAPTOR:-""}            # override adaptor type (experiments F/G)
 
 # letter -> config file
 config_for() {
@@ -50,6 +52,8 @@ config_for() {
     C) echo "$HERE/configs/C_image_l1_decfinetune.yaml" ;;
     D) echo "$HERE/configs/D_hybrid.yaml" ;;
     E) echo "$HERE/configs/E_hybrid_decfinetune.yaml" ;;
+    F) echo "$HERE/configs/F_image_l1_adaptor.yaml" ;;
+    G) echo "$HERE/configs/G_image_l1_adaptor_decfinetune.yaml" ;;
     *) echo "$HERE/configs/$1.yaml" ;;   # full basename, e.g. noise_fixed_t03
   esac
 }
@@ -84,6 +88,7 @@ for exp in $EXPT; do
       EXTRA=""
       [ -n "$STEPS" ] && EXTRA="$EXTRA --steps $STEPS"
       [ -n "$LAMBDA_FM" ] && EXTRA="$EXTRA --lambda-fm $LAMBDA_FM"
+      [ -n "$ADAPTOR" ] && EXTRA="$EXTRA --adaptor $ADAPTOR"
       case "$MEM" in
         full) EXTRA="$EXTRA --no-grad-checkpoint --ema-device cuda" ;;
         low)  EXTRA="$EXTRA --grad-checkpoint --ema-device cpu" ;;

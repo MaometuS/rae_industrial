@@ -7,6 +7,10 @@ image-space L1 loss through the frozen/fine-tuned RAE decoder (Experiments
 B/C), or a configurable hybrid (D/E) — and evaluates reconstruction-based
 anomaly localization (pixel AUROC / AP / AUPRO, image AUROC / AP).
 
+Experiments F/G add the ``adaptor:`` block: a small feature adaptor (SimpleNet
+style, or ``mlp``/``linear``/``conv1x1``/``affine``) inserted between the frozen
+encoder and the DiT/decoder, see ``iad/adaptor.py``.
+
 Subcommands
 -----------
 ``train``
@@ -49,6 +53,7 @@ if str(_LATENT_DRAEM_DIR) not in sys.path:
     sys.path.insert(0, str(_LATENT_DRAEM_DIR))
 
 from latent_draem import PILOT_CATEGORIES, evaluate_maps, load_mask, load_rgb, mvtec_split, seed_all  # noqa: E402
+from iad import adaptor as A  # noqa: E402
 from iad import core, models as M  # noqa: E402
 from iad import infer as I  # noqa: E402
 from iad import train as T  # noqa: E402
@@ -114,6 +119,10 @@ def cmd_train(args: argparse.Namespace) -> None:
         cfg["training"]["grad_checkpoint"] = bool(args.grad_checkpoint)
     if args.ema_device is not None:
         cfg["training"]["ema_device"] = str(args.ema_device)
+    if args.adaptor is not None:
+        cfg.setdefault("adaptor", {})["type"] = str(args.adaptor)
+    if args.adaptor_rank is not None:
+        cfg.setdefault("adaptor", {})["rank"] = int(args.adaptor_rank)
     seed = int(cfg.get("seed", 0))
 
     rae_root = M.setup_rae_root(Path(args.rae_root))
@@ -196,8 +205,23 @@ def _build_models_from_ckpt(ckpt_path: Path, rae_root: Path, device: torch.devic
         dit.load_state_dict(state["ema"], strict=True)
     if state.get("decoder") is not None:
         rae.decoder.load_state_dict(state["decoder"], strict=True)
+
+    # feature adaptor (experiments F/G): same config as training, EMA weights
+    # preferred -- inference corrupts/decodes in the *adapted* latent space.
+    adaptor = A.build_adaptor(cfg.get("adaptor"),
+                              dim=M.latent_dim_from_misc(misc, cfg), device=device)
+    if adaptor is not None:
+        ad_state = state.get("ema_adaptor") if use_ema else None
+        if ad_state is None:
+            ad_state = state.get("adaptor")
+        if ad_state is None:
+            raise RuntimeError(
+                f"checkpoint {ckpt_path} has adaptor type '{adaptor.type}' but no "
+                "adaptor weights; was it trained without one?")
+        adaptor.load_state_dict(ad_state, strict=True)
+        adaptor.eval()
     dit.eval()
-    return rae, dit, misc, cfg, state, use_ema
+    return rae, dit, misc, cfg, state, use_ema, adaptor
 
 
 def cmd_eval(args: argparse.Namespace) -> None:
@@ -250,7 +274,8 @@ def cmd_eval(args: argparse.Namespace) -> None:
     new_rows: List[Dict[str, Any]] = []
     for cat in categories:
         ckpt_path = _resolve_ckpt(out, args.ckpt, cat, args.ckpt_which)
-        rae, dit, misc, cfg, state, used_ema = _build_models_from_ckpt(ckpt_path, rae_root, device)
+        rae, dit, misc, cfg, state, used_ema, adaptor = \
+            _build_models_from_ckpt(ckpt_path, rae_root, device)
         exp_id = str(cfg["experiment"].get("id", exp_id))  # provenance from the ckpt itself
         num_classes = int(misc.get("num_classes", 1000))
         shift = core.time_dist_shift_from_misc(misc)
@@ -286,7 +311,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
                 mode=mode0, t=t0_setting,
                 repeats=reps, ode_steps=ode_steps,
                 num_classes=num_classes, corruption=corruption, seed=seed,
-                time_dist_shift=shift,
+                time_dist_shift=shift, adaptor=adaptor,
             )
             infer_time += time.time() - t0
             dit_passes = meta["dit_passes"]
@@ -338,7 +363,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
                                       mode=extra_mode, t=extra_t, reps=reps,
                                       ode_steps=ode_steps, num_classes=num_classes,
                                       corruption=corruption, seed=seed, shift=shift,
-                                      device=device, bs=bs)
+                                      device=device, bs=bs, adaptor=adaptor)
                 if row_x is None:
                     continue
                 row_x, maps_x = row_x
@@ -353,7 +378,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
                 print(f"[eval/{cat}] extra mode={extra_mode} t={extra_t} "
                       f"I-AUROC(max)={row_x['img_auroc_max']:.4f} "
                       f"P-AUROC={row_x['px_auroc']:.4f} AUPRO={row_x['aupro']:.4f}", flush=True)
-        del rae, dit
+        del rae, dit, adaptor
 
     if new_rows:
         _append_rows(results_csv, new_rows)
@@ -373,7 +398,8 @@ def _per_image_rows(paths, labels, maps_np, *, exp_id, cat, seed, mode, t) -> Li
 
 
 def _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma, *, mode, t, reps,
-                  ode_steps, num_classes, corruption, seed, shift, device, bs):
+                  ode_steps, num_classes, corruption, seed, shift, device, bs,
+                  adaptor=None):
     """Run one (mode, t) setting. Returns ``(row, maps_np)`` or ``None``."""
     maps_list = []
     infer_time = 0.0
@@ -386,7 +412,7 @@ def _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma, *, mode, t, 
         _, maps, meta = I.reconstruct(
             rae, dit, x, idxs, mode=mode, t=t, repeats=reps, ode_steps=ode_steps,
             num_classes=num_classes, corruption=corruption, seed=seed,
-            time_dist_shift=shift)
+            time_dist_shift=shift, adaptor=adaptor)
         infer_time += time.time() - t0
         dit_passes = meta["dit_passes"]
         maps_list.append(maps.cpu().numpy())
@@ -577,6 +603,11 @@ def build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--ema-device", choices=["cuda", "cpu"], default=None,
                     help="where EMA weights live: cuda = fastest, cpu = frees "
                          "~4 bytes/param of GPU memory (default: use the config)")
+    tr.add_argument("--adaptor", choices=list(A.ADAPTOR_TYPES), default=None,
+                    help="feature adaptor between the frozen encoder and the "
+                         "DiT/decoder (experiments F/G; default: use the config)")
+    tr.add_argument("--adaptor-rank", type=int, default=None,
+                    help="adaptor bottleneck: hidden = latent_dim // rank")
     tr.add_argument("--device", default=None)
 
     ev = sub.add_parser("eval", help="evaluate anomaly detection metrics")

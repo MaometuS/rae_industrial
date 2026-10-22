@@ -21,6 +21,8 @@ metrics come from `../latent_draem/latent_draem.py`.
 | **C** | `configs/C_image_l1_decfinetune.yaml` | image L1 | **finetuned** | decoder lr = 0.1 × DiT lr (`decoder_lr_ratio`) |
 | **D** | `configs/D_hybrid.yaml` | `L1 + λ·L_FM` (λ = 0.1, `--lambda-fm`) | frozen | one shared (t, ε) draw / one DiT forward for both terms |
 | **E** | `configs/E_hybrid_decfinetune.yaml` | `L1 + λ·L_FM` | **finetuned** | |
+| **F** | `configs/F_image_l1_adaptor.yaml` | image L1 + **feature adaptor** | frozen | SimpleNet-style adaptor after the encoder; compare **F vs B** |
+| **G** | `configs/G_image_l1_adaptor_decfinetune.yaml` | image L1 + **feature adaptor** | **finetuned** | identical adaptor to F; compare **G vs C** |
 
 Shared: encoder **always frozen** (and latents pre-cached — exact, since the
 encoder never updates), official AdamW hyperparameters (lr 2e-4, betas
@@ -40,6 +42,40 @@ Noise ablations (train-time corruption, all based on B):
 
 Eval-time noise sweeps use `eval --t 0.1,0.3,0.5,0.7,0.9` (no retraining).
 
+### Feature adaptor: is ImageNet→MVTec feature adaptation worth it? (F/G)
+
+The encoder is frozen, so its latents carry an ImageNet inductive bias. F/G
+insert a small trainable **feature adaptor** `A` between the frozen encoder and
+the DiT/decoder; `A` defines the latent space both operate on:
+
+```
+x --encoder--> z0 --A--> z~0 --corruption--> z_t --DiT--> z^~ --decoder--> x^
+```
+
+Training and inference share that space, so no inverse of `A` is ever needed.
+`A` is a **residual bottleneck with a zero-initialized head**
+(`A(z) = z + h(z)`, `h ≡ 0` at init), hence *experiment F starts exactly at B*
+(baseline loss equality is unit-tested) and the frozen decoder in F stays
+in-distribution while `A` learns the domain correction; in G the decoder
+co-adapts at `0.1 ×` DiT lr. Variants (`adaptor.type`):
+
+| type | module | init | notes |
+|------|--------|------|-------|
+| `simplenet` (default) | `Linear → BatchNorm → LeakyReLU → Linear` per token | identity | SimpleNet's Feature Adaptor (CVPR 2023) |
+| `mlp` | `LayerNorm → Linear → GELU → Linear` | identity | feature-translator style |
+| `linear` / `conv1x1` | single linear map / 1×1 conv | identity | learned rotation/scale |
+| `affine` | per-channel scale + bias | identity **or** `train_stats` | `train_stats` = `(z − μ)/σ` with μ,σ fit on the MVTec **train split** — the training-free statistic alignment of PatchCore/PaDiM/FeaNorm-style pipelines (`trainable: false` keeps it purely statistical) |
+
+Note: PatchCore itself learns no adaptor (it adapts by greedy-coreset
+subsampling of nominal features + nearest-neighbour scoring); that mechanism is
+not applicable to a decoder-based pipeline, so `affine` + `train_stats` is the
+closest analogue. Other knobs: `rank` (bottleneck = `latent_dim // rank`),
+`norm` (`batch|layer|none`), `leaky_slope`, `dropout`, `trainable`;
+`--adaptor <type>` / `--adaptor-rank` override per run and `ADAPTOR=mlp ... bash
+run_dit_iad.sh` (or any preset) does the same for the whole matrix. The adaptor
+is EMA'd with the same decay as the DiT and stored in the checkpoints, so `eval`
+reconstructs it automatically from the checkpoint's own config.
+
 ## 2. Layout
 
 ```
@@ -47,11 +83,12 @@ rae_dit_iad/
 ├── iad/
 │   ├── core.py       # corruption, time sampling, velocity→clean conversion, losses
 │   ├── models.py     # official RAE/DiT/transport builders, freezing, optimizer
+│   ├── adaptor.py    # feature adaptors after the frozen encoder (experiments F/G)
 │   ├── train.py      # training engine (EMA, official scheduler, checkpoint/resume)
 │   └── infer.py      # single/multi/ode reconstruction, anomaly maps, viz grids
 ├── rae_dit_iad.py    # CLI: `train` and `eval` subcommands
 ├── configs/          # experiment + noise-ablation YAMLs
-├── tests/test_iad.py # Tests A–I (+J: memory switches)
+├── tests/test_iad.py # Tests A–I (+J: memory switches, +K: feature adaptor)
 ├── run_dit_iad.sh    # cluster runner (shared train + eval matrix engine)
 ├── run_dit_iad_default.sh    # preset: no memory optimizations (> 30 GB VRAM)
 └── run_dit_iad_efficient.sh  # preset: all memory optimizations (24 GB VRAM)
@@ -86,6 +123,12 @@ bash run_dit_iad_efficient.sh    # all memory optimizations (24 GB VRAM)
 # subset / smoke test
 EXPT="A B" CATS="carpet" SEEDS="0" STEPS=500 bash run_dit_iad_efficient.sh
 
+# adaptor ablation only (F vs B, G vs C), and a different adaptor family
+EXPT="B F" bash run_dit_iad_efficient.sh
+EXPT="G" ADAPTOR=mlp bash run_dit_iad_efficient.sh
+# edit `adaptor:` in configs/F_*.yaml / G_*.yaml for other variants
+# (type: affine + init: train_stats = PatchCore/FeaNorm-style statistics)
+
 # 24 GB GPU, or force a preset explicitly
 MEM=low bash run_dit_iad.sh      # activation recompute + CPU EMA
 MEM=full bash run_dit_iad.sh     # no recompute, EMA on GPU (needs > 30 GB)
@@ -104,12 +147,18 @@ Direct CLI:
 python rae_dit_iad.py train --config configs/B_image_l1.yaml \
     --mvtec-root $MVTEC_ROOT --out results_dit_iad --categories carpet screw --seed 0
 
+# experiment F with the adaptor swapped from the CLI (SimpleNet by default)
+python rae_dit_iad.py train --config configs/F_image_l1_adaptor.yaml \
+    --adaptor conv1x1 --adaptor-rank 8 \
+    --mvtec-root $MVTEC_ROOT --out results_dit_iad --categories carpet screw --seed 0
+
 python rae_dit_iad.py eval --config configs/B_image_l1.yaml \
     --mvtec-root $MVTEC_ROOT --out results_dit_iad --categories carpet screw \
     --mode single --t 0.5 --seed 0
 ```
 
-Tests (Tests A–I from the spec, plus J for the memory switches; weight-independent, CPU):
+Tests (Tests A–I from the spec, plus J for the memory switches and K for the
+adaptor; weight-independent, CPU):
 
 ```bash
 pytest rae_dit_iad/tests/test_iad.py -v
@@ -118,7 +167,9 @@ pytest rae_dit_iad/tests/test_iad.py -v
 `eval` reads the checkpoint's embedded config (provenance), so `--config` is
 optional after training; checkpoints are EMA weights by default (the raw model
 weights are also stored, `--ckpt-which` picks the checkpoint file, EMA usage
-follows `training.use_ema`).
+follows `training.use_ema`). For F/G the adaptor is rebuilt from that same
+embedded config and its EMA weights are loaded, so training and inference always
+agree on the latent space.
 
 ### GPU memory: two presets (same math, different hardware)
 
@@ -178,6 +229,10 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
   noise. Inference noise is per-image-index (`seed·1_000_003 + idx·97 +
   rep·13`), so results are **batch-size invariant** and comparable across model
   variants (unit test H).
+* **Adaptor (F/G)** is applied to the clean latents inside `compute_losses`
+  (`z0 ← A(z0)`) and to `rae.encode(x)` in `reconstruction`, so both use the
+  identical adapted space; `A`'s statistics (if any) are fit on the MVTec
+  **train split only** — no test leakage.
 * **Outputs** under `results_dit_iad/seed<S>/<exp_id>/`: `joint_{best,last}.pt`,
   `metrics.jsonl`, `results.csv` (deduplicated rows per setting),
   `per_image.csv`, `report.md` (aggregate + per-category tables),
@@ -204,7 +259,13 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
    linear-path velocity target exists there).
 7. `ode` inference integrates on the official warped time grid
    `warp(u) = s·u/(1+(s−1)u)`, `s = √(prod(latent)/4096) = √48`.
-8. **Memory-only switches, off by default** (`MEM=full`): activation
+8. **Feature adaptor (F/G only)** — an addition, not part of the official RAE:
+   a small module between the frozen encoder and the DiT/decoder
+   (`iad/adaptor.py`). Experiments A–E are untouched by construction: with no
+   `adaptor:` block (or `type: none`) the module is never built, and even with
+   one the residual head is zero-initialized, so step 0 of F/G is numerically
+   identical to B/C (unit test K asserts this to 1e-12).
+9. **Memory-only switches, off by default** (`MEM=full`): activation
    recomputation (`grad_checkpoint`) and a CPU-resident EMA (`ema_device: cpu`)
    change where work/compute happens, not the math — the recomputed forward is
    bit-identical up to deterministic kernels and the EMA decay is the same
@@ -223,7 +284,18 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
   leakage, but the best-loss checkpoint is not necessarily the best detector.
 * Decoder fine-tuning (C/E) has no proximal/anchor regularizer to the released
   decoder weights; with few MVTec images it can overfit (compare against B).
-* EMA covers the DiT only; a finetuned decoder is checkpointed raw.
+* EMA covers the DiT (and the adaptor in F/G); a finetuned decoder is
+  checkpointed raw.
+* **Adaptor variants are not apples-to-apples in one respect**: with a *frozen*
+  decoder (F) the adaptor must stay near the decoder's input manifold, so a
+  `train_stats` affine (PatchCore/FeaNorm-style whitening) or a non-residual
+  re-mapping is only meaningful with a fine-tuned decoder (G). F and G use the
+  identical SimpleNet adaptor by design.
+* The adaptor is tiny (~0.3 M params at `rank: 4`) next to the 840 M DiT, so a
+  *null* result (F ≈ B) is the expected outcome unless the domain gap is the
+  bottleneck; the BatchNorm in `simplenet` uses batch statistics during
+  training and running statistics at validation/inference (SimpleNet's own
+  convention).
 * Per-category runs (`--scope per_category`) reset the DiT to the official
   initialization and the decoder to its released weights for every category.
 * Joint training mixes all categories (categories are not model classes — the
@@ -235,6 +307,10 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
 
 ## 7. Status
 
-Implementation + configs + tests written; cluster execution pending (this
-subproject is run entirely on the cluster — `run_dit_iad.sh`). Result tables
-land in `results_dit_iad/seed*/<exp_id>/report.md` after the matrix runs.
+Implementation + configs + tests written (A–G + noise ablations + Tests A–K);
+cluster execution pending (this subproject is run entirely on the cluster —
+`run_dit_iad_default.sh` / `run_dit_iad_efficient.sh`). Result tables land in
+`results_dit_iad/seed*/<exp_id>/report.md` after the matrix runs; the adaptor
+question is answered by the paired comparisons **F vs B** (frozen decoder) and
+**G vs C** (fine-tuned decoder) at the same seed, step budget and inference
+settings.

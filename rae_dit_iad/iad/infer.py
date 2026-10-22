@@ -116,6 +116,7 @@ def reconstruct(
     corruption: str = "flow",
     seed: int = 0,
     time_dist_shift: float = 1.0,
+    adaptor: Optional[nn.Module] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, Any]]:
     """Reconstruct a batch of images.
 
@@ -126,6 +127,12 @@ def reconstruct(
       absolute reconstruction error ``|x - x_hat|_mean-over-C`` (the pixel
       anomaly map before blurring);
     * ``meta``: forward-pass accounting for cost reporting.
+
+    ``adaptor`` (optional): feature adaptor applied to the encoded latent
+    *before* corruption — identical to the training convention, so the DiT
+    generates in the adapted space and the decoder decodes it.  No inverse is
+    needed (the decoder is either fine-tuned or an identity-initialized
+    residual keeps it in-distribution).
     """
     assert mode in ("single", "multi", "ode"), f"unknown inference mode {mode}"
     assert corruption == "flow" or mode != "ode", \
@@ -135,7 +142,11 @@ def reconstruct(
 
     dit.eval()
     rae.eval()
+    if adaptor is not None:
+        adaptor.eval()
     z0 = rae.encode(x)
+    if adaptor is not None:
+        z0 = adaptor(z0)
     y = torch.full((x.shape[0],), int(num_classes), device=x.device, dtype=torch.long)
     tc = conditioning_time(torch.tensor([t], device=x.device), corruption).item()
 
@@ -167,6 +178,7 @@ def reconstruct(
         "reps": reps,
         "dit_passes": dit_passes,
         "decode_passes": reps,
+        "adaptor": getattr(adaptor, "type", None),
     }
     return recon_sum / reps, map_sum / reps, meta
 

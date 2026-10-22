@@ -1,4 +1,8 @@
-"""Tests A–J for the RAE-DiT IAD experiments (spec §7; J covers the memory switches).
+"""Tests A–K for the RAE-DiT IAD experiments (spec §7).
+
+Extra groups beyond the spec: J covers the memory switches (activation
+recomputation, CPU EMA, encoder offload) and K the feature adaptor of
+experiments F/G.
 
 All tests are *weight-independent*: they run on CPU with tiny stand-in
 modules (``TinyRAE`` / ``TinyDiT``) wherever the official 3.35 GB
@@ -15,6 +19,11 @@ checkpoints are not needed.  What they cover:
     H. inference modes      — single/multi/ode pass accounting, batch-size
                               invariant noise, image-score aggregations
     I. tiny overfit         — image L1 on a fixed batch actually decreases
+    J. memory switches      — checkpointed grads == plain grads, CPU EMA /
+                              encoder offload are exact
+    K. feature adaptor      — identity at init (F step 0 == B), grads reach the
+                              adaptor, train-stats init, checkpoint roundtrip,
+                              inference uses the same adapted latent space
 
 Run:  pytest rae_dit_iad/tests/test_iad.py -v   (cluster env `rae` for torch)
 """
@@ -23,6 +32,7 @@ from __future__ import annotations
 
 import copy
 import math
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -32,6 +42,7 @@ import torch.nn as nn  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
 from latent_draem import seed_all  # noqa: E402
+from iad import adaptor as A  # noqa: E402
 from iad import core  # noqa: E402
 from iad import models as M  # noqa: E402
 from iad import infer as I  # noqa: E402
@@ -540,4 +551,127 @@ def test_j_memory_switches():
     assert next(rae2.encoder.parameters()).device.type == "cpu"
     after = rae2.encode(x)
     assert torch.equal(before, after)
+
+
+# ---------------------------------------------------------------------------
+# K. feature adaptor between the frozen encoder and the DiT/decoder (F/G)
+# ---------------------------------------------------------------------------
+
+def _img_l1_loss(rae, dit, transport, x, z0, adaptor=None, seed=3):
+    """One image-L1 loss value under a fixed draw (and the DiT grads)."""
+    seed_all(seed)
+    y = M.null_labels(z0.shape[0], 1000, torch.device("cpu"))
+    total, _, _, _ = core.compute_losses(
+        rae, dit, transport, x, z0, loss_type="image_l1",
+        noise_cfg={"time_dist": "fixed", "t": 0.5, "warp": False},
+        lambda_fm=0.0, y=y, size=16, adaptor=adaptor)
+    total.backward()
+    grads = [p.grad.detach().clone() for p in dit.parameters() if p.grad is not None]
+    return float(total), grads
+
+
+def test_k_feature_adaptor_identity_and_loss_equivalence():
+    """Identity-initialized adaptors must not change the baseline at all."""
+    seed_all(17)
+    rae, dit, transport = TinyRAE(), TinyDiT(), _tiny_transport()
+    M.freeze_encoder(rae)
+    M.freeze_decoder(rae)
+    x = _batch(2, 16, seed=31)
+    z0 = rae.encode(x).detach()
+
+    baseline, grads_base = _img_l1_loss(rae, dit, transport, x, z0)
+    for kind in ("simplenet", "mlp", "linear", "conv1x1", "affine"):
+        ad = A.build_adaptor({"type": kind, "rank": 2}, dim=z0.shape[1])
+        assert ad is not None and ad.type == kind
+        # (a) A(z) == z exactly: residual head / affine are zero-initialized
+        assert torch.equal(ad(z0), z0), f"{kind} is not identity at init"
+        # (b) identical loss and identical DiT grads vs. no-adaptor
+        for p in dit.parameters():
+            p.grad = None
+        loss, grads = _img_l1_loss(rae, dit, transport, x, z0, adaptor=ad)
+        assert loss == pytest.approx(baseline, rel=1e-12, abs=1e-12), kind
+        for a, b in zip(grads_base, grads):
+            assert torch.allclose(a, b, rtol=1e-6, atol=1e-8), kind
+
+    # (c) gradients reach the adaptor and one step moves it off identity
+    ad = A.build_adaptor({"type": "simplenet", "rank": 2}, dim=z0.shape[1])
+    opt = torch.optim.Adam(ad.parameters(), lr=1e-2)
+    for p in dit.parameters():
+        p.grad = None
+    _img_l1_loss(rae, dit, transport, x, z0, adaptor=ad)
+    grads = [p.grad for p in ad.parameters() if p.grad is not None]
+    assert grads and any(float(g.abs().sum()) > 0 for g in grads), \
+        "no gradient reached the adaptor"
+    opt.step()
+    assert not torch.equal(ad(z0), z0), "adaptor did not move off identity"
+
+    # (d) train_stats affine = PatchCore/FeaNorm-style standardization
+    stats_ad = A.build_adaptor({"type": "affine", "init": "train_stats"}, dim=z0.shape[1])
+    A.fit_train_stats(stats_ad, {Path("a"): z0[0], Path("b"): z0[1]}, [Path("a"), Path("b")])
+    flat = z0.transpose(1, 0).reshape(z0.shape[1], -1).double()
+    assert torch.allclose(stats_ad.train_mean.double(), flat.mean(1), rtol=1e-5, atol=1e-6)
+    assert torch.allclose(stats_ad.train_std.double(), flat.std(1, unbiased=False),
+                          rtol=1e-4, atol=1e-6)
+    expected = (z0 - stats_ad.train_mean.view(1, -1, 1, 1)) / \
+        stats_ad.train_std.view(1, -1, 1, 1)
+    assert torch.allclose(stats_ad(z0), expected, rtol=1e-5, atol=1e-6)
+    frozen_ad = A.build_adaptor({"type": "affine", "init": "train_stats", "trainable": False},
+                                dim=z0.shape[1])
+    assert not frozen_ad.trainable and frozen_ad.trainable is False
+
+    # (e) "none" builds nothing; bad types fail loudly
+    assert A.build_adaptor(None) is None
+    assert A.build_adaptor({"type": "none"}) is None
+    with pytest.raises(ValueError):
+        A.build_adaptor({"type": "does-not-exist"})
+    with pytest.raises(ValueError):
+        A.build_adaptor({"type": "linear", "residual": False, "zero_init": True})
+
+
+def test_k_feature_adaptor_checkpoint_and_inference(tmp_path):
+    """Adaptor weights must survive the checkpoint roundtrip and be used at inference."""
+    seed_all(23)
+    rae, dit, transport = TinyRAE(), TinyDiT(), _tiny_transport()
+    M.freeze_encoder(rae)
+    M.freeze_decoder(rae)
+    x = _batch(2, 16, seed=41)
+    z0 = rae.encode(x).detach()
+
+    ad = A.build_adaptor({"type": "simplenet", "rank": 2}, dim=z0.shape[1])
+    with torch.no_grad():                      # make it non-trivial
+        ad.net[-1].weight.normal_(0, 0.05)
+    ema_ad = copy.deepcopy(ad)
+    ema = copy.deepcopy(dit)
+
+    cfg = {"experiment": {"decoder_finetune": False}, "adaptor": {"type": "simplenet", "rank": 2}}
+    meta = {"adaptor": A.adaptor_meta(ad)}
+    opt = torch.optim.AdamW(list(dit.parameters()) + list(ad.parameters()), lr=1e-4)
+    path = tmp_path / "tiny.pt"
+    T.save_checkpoint(path, 7, dit, ema, rae, opt, None, cfg, meta,
+                      adaptor=ad, ema_adaptor=ema_ad)
+    state = T.load_checkpoint(path)
+    assert state["adaptor"] is not None and state["ema_adaptor"] is not None
+    assert state["meta"]["adaptor"]["type"] == "simplenet"
+    assert state["meta"]["adaptor"]["params"] == sum(p.numel() for p in ad.parameters())
+
+    rae2, dit2 = TinyRAE(), TinyDiT()
+    ad2 = A.build_adaptor(cfg["adaptor"], dim=z0.shape[1])
+    ad2_ema = A.build_adaptor(cfg["adaptor"], dim=z0.shape[1])
+    T.apply_checkpoint(state, dit2, None, rae2, None, None, restore_rng=False,
+                       adaptor=ad2, ema_adaptor=ad2_ema)
+    for a, b in zip(ad.state_dict().values(), ad2.state_dict().values()):
+        assert torch.equal(a, b)
+    assert torch.equal(ad2(z0), ad2_ema(z0))
+
+    # inference uses the adaptor: same convention as training => identical to
+    # the no-adaptor path when the adaptor is identity, different otherwise
+    ident = A.build_adaptor({"type": "simplenet", "rank": 2}, dim=z0.shape[1])
+    idx = [0, 1]
+    _, maps_none, meta_none = I.reconstruct(rae, dit, x, idx, mode="single", t=0.5, seed=5)
+    _, maps_ident, meta_ident = I.reconstruct(rae, dit, x, idx, mode="single", t=0.5, seed=5,
+                                              adaptor=ident)
+    assert meta_none["adaptor"] is None and meta_ident["adaptor"] == "simplenet"
+    assert torch.allclose(maps_none, maps_ident, rtol=0, atol=0)
+    _, maps_ad, _ = I.reconstruct(rae, dit, x, idx, mode="single", t=0.5, seed=5, adaptor=ad)
+    assert not torch.allclose(maps_none, maps_ad)
 

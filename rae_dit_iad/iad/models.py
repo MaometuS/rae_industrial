@@ -183,6 +183,19 @@ def build_transport(transport_cfg: Dict[str, Any], misc_cfg: Dict[str, Any]):
     )
 
 
+def latent_dim_from_misc(misc: Dict[str, Any], cfg: Optional[Dict[str, Any]] = None) -> int:
+    """Latent channel count of the RAE (768 for DINOv2-B at 256 px).
+
+    ``cfg`` may pin it explicitly (``latent_dim``); otherwise it is read from
+    the official ``misc.latent_size`` so the feature adaptor always matches the
+    encoder output.
+    """
+    if cfg is not None and cfg.get("latent_dim"):
+        return int(cfg["latent_dim"])
+    latent_size = misc.get("latent_size") if misc else None
+    return int(latent_size[0]) if latent_size else 768
+
+
 def null_labels(batch: int, num_classes: int, device: torch.device) -> torch.Tensor:
     """Class-conditional-free labels: the official CFG null token (1000).
 
@@ -299,23 +312,29 @@ def build_optimizer(
     rae: Optional[nn.Module],
     decoder_finetune: bool,
     train_cfg: Dict[str, Any],
+    adaptor: Optional[nn.Module] = None,
 ):
     """AdamW with the official hyperparameters (utils.optim_utils defaults).
 
     Returns ``(optimizer, base_lr, decoder_lr)``.  When fine-tuning, the
     decoder gets its own param group at ``decoder_lr_ratio * lr`` (default
-    0.1).  Official ``build_scheduler`` clobbers *all* groups' lr to base_lr,
-    so group learning rates are re-applied after scheduler construction by the
-    caller (see ``iad.train``).
+    0.1).  Adaptor parameters (when present) are trained with the DiT's
+    learning rate.  Official ``build_scheduler`` clobbers *all* groups' lr to
+    base_lr, so group learning rates are re-applied after scheduler
+    construction by the caller (see ``iad.train``).
     """
     from utils.optim_utils import build_optimizer as official_build_optimizer
 
     opt_cfg = dict(train_cfg.get("optimizer", {}))
     lr = float(opt_cfg.get("lr", 2.0e-4))
+    adaptor_params = ([p for p in adaptor.parameters() if p.requires_grad]
+                      if adaptor is not None else [])
+    ad_msg = f" + adaptor({sum(p.numel() for p in adaptor_params)} params)" \
+        if adaptor_params else ""
 
     if decoder_finetune:
         assert rae is not None, "decoder_finetune requires a RAE"
-        dit_params = [p for p in dit.parameters() if p.requires_grad]
+        dit_params = [p for p in dit.parameters() if p.requires_grad] + adaptor_params
         dec_params = [p for p in rae.decoder.parameters() if p.requires_grad]
         # official builder creates a single-group AdamW; we build the two-group
         # version with identical hyperparameters (same defaults as optim_utils).
@@ -331,12 +350,13 @@ def build_optimizer(
             betas=betas, weight_decay=weight_decay, eps=eps,
         )
         msg = (f"Optimizer: AdamW(lr={lr}, decoder_lr={lr * ratio}, "
-               f"betas={betas}, wd={weight_decay}, eps={eps}) [DiT + decoder groups]")
+               f"betas={betas}, wd={weight_decay}, eps={eps}) "
+               f"[DiT{ad_msg} + decoder groups]")
         return optimizer, lr, lr * ratio, msg
 
-    params = [p for p in dit.parameters() if p.requires_grad]
+    params = [p for p in dit.parameters() if p.requires_grad] + adaptor_params
     optimizer, msg = official_build_optimizer(params, train_cfg)
-    return optimizer, lr, None, msg
+    return optimizer, lr, None, f"{msg}{ad_msg}"
 
 
 def fix_param_group_lrs(
