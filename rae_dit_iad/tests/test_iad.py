@@ -433,7 +433,11 @@ def test_h_inference_modes_and_scoring():
     assert I.image_score(maps, "max")[0] == pytest.approx(10.0)
     assert I.image_score(maps, "mean")[1] == pytest.approx(1.0)
     top1 = I.image_score(maps, "top1")[0]
-    assert top1 > 1.0  # the outlier pixel is inside the top 1%
+    # top 1% of 10,000 pixels = the 100 highest: the outlier (10) + 99 zeros -> 0.1,
+    # i.e. 100x the plain mean (0.001): the outlier dominates the top-1% score
+    assert top1 == pytest.approx(10.0 / 100)
+    assert top1 > I.image_score(maps, "mean")[0] * 50
+    assert I.image_score(maps, "top1")[1] == pytest.approx(1.0)
     with pytest.raises(ValueError):
         I.image_score(maps, "median")
 
