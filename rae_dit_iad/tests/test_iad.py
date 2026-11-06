@@ -103,7 +103,7 @@ class TinyDiT(nn.Module):
         self.conv_out = nn.Conv2d(hidden, ch, 3, padding=1)
 
     def forward(self, zt: torch.Tensor, t: torch.Tensor, y: torch.Tensor = None) -> torch.Tensor:
-        h = self.conv_in(zt) + self.t_emb(t.view(-1, 1)).view(-1, -1, 1, 1)
+        h = self.conv_in(zt) + self.t_emb(t.view(-1, 1)).view(t.shape[0], -1, 1, 1)
         return self.conv_out(F.silu(h))
 
 
@@ -703,7 +703,7 @@ def test_l_simplenet_corruption_and_conversion():
     assert m.shape == (4, 1, 16, 16) and torch.all(m == 1)
     eps = torch.randn_like(z0)
     zt = core.simplenet_corrupt(z0, eps, 0.1, m)
-    assert torch.allclose(zt - z0, 0.1 * eps, atol=1e-7)
+    assert torch.allclose(zt - z0, 0.1 * eps, atol=1e-6)  # float32 rounding of z0 + d - z0
 
     # (b) Perlin mask: soft token coverage in [0, 1]; untouched tokens stay exactly
     #     clean; p_clean samples are fully clean

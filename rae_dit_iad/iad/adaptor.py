@@ -170,7 +170,10 @@ class FeatureAdaptor(nn.Module):
             return h
         else:
             b, c, hgt, wid = z.shape
-            tokens = z.permute(0, 2, 3, 1).reshape(b, hgt * wid, c)
+            # every token is one sample: (B*H*W, C). BatchNorm1d on a (B, N, C) tensor
+            # would treat the N token positions as channels (SimpleNet normalizes
+            # per feature over all patches).
+            tokens = z.permute(0, 2, 3, 1).reshape(b * hgt * wid, c)
             tokens = self.net(tokens)
             h = tokens.reshape(b, hgt, wid, c).permute(0, 3, 1, 2)
         return z + h if self.residual else h
