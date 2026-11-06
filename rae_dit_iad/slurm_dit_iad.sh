@@ -20,9 +20,12 @@
 #   SKIP_TESTS=1 STEPS=200 sbatch slurm_dit_iad.sh    # quick smoke run of everything
 #   bash slurm_dit_iad.sh --setup-env                  # only build the conda env (login node)
 #
-# The conda env is created / completed automatically if needed (same recipe as
-# ../rae_fidelity/run_cluster.sh). That needs internet: if compute nodes are offline,
-# run the --setup-env line once on the login node first.
+# Everything the run needs is fetched automatically on first use (needs internet; if
+# compute nodes are offline, run the --setup-env line once on the login node first):
+#   - the official RAE code (bytetriper/RAE, pinned commit) into ../rae_fidelity/RAE
+#     (the rae_industrial repo only stores a pointer to it, so a fresh clone is empty)
+#   - the conda env (same recipe as ../rae_fidelity/run_cluster.sh)
+#   - the three RAE checkpoints this pipeline loads + the DINOv2-B encoder (HF cache)
 
 set -uo pipefail
 
@@ -127,12 +130,71 @@ ensure_env() {
   echo "conda env '$ENV_NAME' ready"
 }
 
+# ---- official RAE code + weights ---------------------------------------------
+RAE_COMMIT=${RAE_COMMIT:-a4d18c4db766419cbe7cb8c02cd9f7ceb0ec9041}   # the commit the project used
+RAE_FILES=(   # what the configs load (rae_config + rae_config_overrides)
+  "decoders/dinov2/wReg_base/ViTXL_n08/model.pt"
+  "stats/dinov2/wReg_base/imagenet1k/stat.pt"
+  "DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt"
+)
+
+with_lock() {   # one setup at a time, even if several jobs start together
+  if command -v flock >/dev/null; then
+    ( flock 9; "$@" ) 9>"$HOME/.rae_industrial_setup.lock"
+  else
+    "$@"
+  fi
+}
+
+ensure_rae() {
+  [ -f "$RAE_ROOT/requirements.txt" ] && return 0
+  if [ -d "$RAE_ROOT" ] && [ -n "$(ls -A "$RAE_ROOT" 2>/dev/null)" ]; then
+    echo "$RAE_ROOT exists and is not empty, but has no requirements.txt; fix it or set RAE_ROOT"
+    return 1
+  fi
+  getent hosts github.com >/dev/null || {
+    echo "no internet on $(hostname) to clone RAE; run on the login node: bash slurm_dit_iad.sh --setup-env"
+    return 1; }
+  echo "cloning the official RAE repo (bytetriper/RAE @ ${RAE_COMMIT:0:7}) into $RAE_ROOT"
+  rmdir "$RAE_ROOT" 2>/dev/null   # the empty placeholder left by the gitlink
+  git clone -q https://github.com/bytetriper/RAE.git "$RAE_ROOT" &&
+    git -C "$RAE_ROOT" checkout -q "$RAE_COMMIT"
+}
+
+ensure_weights() {   # needs the env active (huggingface_hub)
+  local missing=() f
+  for f in "${RAE_FILES[@]}"; do [ -f "$RAE_ROOT/models/$f" ] || missing+=("$f"); done
+  if [ "${#missing[@]}" -gt 0 ]; then
+    echo "downloading RAE checkpoints from nyu-visionx/RAE-collections (${#missing[@]} files, a few GB)"
+  fi
+  python - "$RAE_ROOT/models" "${missing[@]}" <<'PYDL'
+import sys
+from huggingface_hub import hf_hub_download, snapshot_download
+dest, files = sys.argv[1], sys.argv[2:]
+for f in files:
+    print("  ", f, flush=True)
+    hf_hub_download("nyu-visionx/RAE-collections", f, local_dir=dest)
+enc = "facebook/dinov2-with-registers-base"   # loaded by the RAE encoder at run time
+try:
+    snapshot_download(enc, local_files_only=True)
+except Exception:
+    print("   caching encoder", enc, flush=True)
+    snapshot_download(enc)
+PYDL
+  for f in "${RAE_FILES[@]}"; do
+    [ -f "$RAE_ROOT/models/$f" ] || { echo "still missing: $RAE_ROOT/models/$f"; return 1; }
+  done
+  echo "RAE weights ready under $RAE_ROOT/models"
+}
+
+with_lock ensure_rae || { echo "RAE code setup failed; nothing was run"; exit 1; }
 source "$CONDA_SH" || { echo "cannot source conda from $CONDA_SH (set CONDA_SH)"; exit 1; }
 set +u   # conda's activation scripts can reference unset variables
 ensure_env || { echo "environment setup failed; nothing was run"; exit 1; }
+with_lock ensure_weights || { echo "RAE weights setup failed; nothing was run"; exit 1; }
 set -u
 if [ "${1:-}" = "--setup-env" ]; then
-  echo "env '$ENV_NAME' is ready. Submit with:  sbatch slurm_dit_iad.sh"; exit 0
+  echo "RAE code, weights and env '$ENV_NAME' are ready. Submit with:  sbatch slurm_dit_iad.sh"; exit 0
 fi
 cd "$HERE"
 for c in carpet grid hazelnut screw transistor; do
