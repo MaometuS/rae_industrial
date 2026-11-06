@@ -54,6 +54,7 @@ if str(_LATENT_DRAEM_DIR) not in sys.path:
 
 from latent_draem import PILOT_CATEGORIES, evaluate_maps, load_mask, load_rgb, mvtec_split, seed_all  # noqa: E402
 from iad import adaptor as A  # noqa: E402
+from iad import disc as DS  # noqa: E402
 from iad import core, models as M  # noqa: E402
 from iad import infer as I  # noqa: E402
 from iad import train as T  # noqa: E402
@@ -111,6 +112,10 @@ def cmd_train(args: argparse.Namespace) -> None:
         cfg["scope"] = args.scope
     if args.lambda_fm is not None:
         cfg["experiment"]["lambda_fm"] = float(args.lambda_fm)
+    if args.noise_sigma is not None:
+        cfg.setdefault("noise", {})["sigma"] = float(args.noise_sigma)
+    if args.lambda_latent is not None:
+        cfg["experiment"]["lambda_latent"] = float(args.lambda_latent)
     if args.grad_accum is not None:
         cfg["training"]["grad_accum_steps"] = int(args.grad_accum)
     if args.no_ema:
@@ -220,8 +225,21 @@ def _build_models_from_ckpt(ckpt_path: Path, rae_root: Path, device: torch.devic
                 "adaptor weights; was it trained without one?")
         adaptor.load_state_dict(ad_state, strict=True)
         adaptor.eval()
+    # DRAEM discriminative head (SimpleNet arms): EMA weights preferred, paired
+    # with the EMA DiT exactly as at validation
+    disc = DS.build_discriminator(cfg.get("discriminator"),
+                                  dim=M.latent_dim_from_misc(misc, cfg), device=device)
+    if disc is not None:
+        ds_state = state.get("ema_disc") if use_ema else None
+        if ds_state is None:
+            ds_state = state.get("disc")
+        if ds_state is None:
+            raise RuntimeError(f"checkpoint {ckpt_path} enables a discriminator but "
+                               "stores no discriminator weights")
+        disc.load_state_dict(ds_state, strict=True)
+        disc.eval()
     dit.eval()
-    return rae, dit, misc, cfg, state, use_ema, adaptor
+    return rae, dit, misc, cfg, state, use_ema, adaptor, disc
 
 
 def cmd_eval(args: argparse.Namespace) -> None:
@@ -263,6 +281,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
     reps = max(int(_inf_arg(args.repeats, "repeats", 1)), 1)
     ode_steps = int(_inf_arg(args.ode_steps, "ode_steps", 50))
     blur_sigma = float(_inf_arg(args.blur_sigma, "blur_sigma", 4.0))
+    score = str(_inf_arg(args.score, "score", "pixel"))
 
     t_list = [float(v) for v in _as_list(t_str)]
     modes = [str(m).strip() for m in _as_list(mode_str)]
@@ -274,12 +293,30 @@ def cmd_eval(args: argparse.Namespace) -> None:
     new_rows: List[Dict[str, Any]] = []
     for cat in categories:
         ckpt_path = _resolve_ckpt(out, args.ckpt, cat, args.ckpt_which)
-        rae, dit, misc, cfg, state, used_ema, adaptor = \
+        rae, dit, misc, cfg, state, used_ema, adaptor, disc = \
             _build_models_from_ckpt(ckpt_path, rae_root, device)
         exp_id = str(cfg["experiment"].get("id", exp_id))  # provenance from the ckpt itself
         num_classes = int(misc.get("num_classes", 1000))
         shift = core.time_dist_shift_from_misc(misc)
-        corruption = cfg["experiment"].get("corruption", "flow")
+        corruption = cfg["experiment"].get("corruption", "simplenet")
+        cat_modes, cat_t_list, cat_reps = modes, t_list, reps
+        if corruption == "simplenet":
+            # no test-time noise: t = the checkpoint's training sigma (unless --t
+            # is given), and the pass is deterministic, so only mode=single
+            if args.t is None:
+                cat_t_list = [core.simplenet_cfg(cfg.get("noise", {}))["sigma"]]
+            if any(m != "single" for m in modes):
+                print(f"[eval/{cat}] corruption=simplenet adds no test noise: evaluating "
+                      f"mode=single only (requested {modes})", flush=True)
+            cat_modes, cat_reps = ["single"], 1
+        cat_score = score
+        if args.score is None and "score" not in inf:  # no --config: follow the ckpt
+            cat_score = str(cfg.get("inference", {}).get("score", "pixel"))
+        if cat_score == "disc" and disc is None:
+            print(f"[eval/{cat}] score=disc skipped: {ckpt_path.name} has no discriminator "
+                  f"(flow-path arm A, or discriminator disabled)", flush=True)
+            del rae, dit, adaptor
+            continue
         size = int(cfg.get("size", 256))
         seed_all(seed)
 
@@ -293,7 +330,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
 
         # batched inference (loading lazily per batch to bound memory)
         bs = int(args.batch_size)
-        mode0, t0_setting = modes[0], t_list[0]
+        mode0, t0_setting = cat_modes[0], cat_t_list[0]
         maps_all: List[np.ndarray] = []
         recons_uint8: List[np.ndarray] = []
         inputs_uint8: List[np.ndarray] = []
@@ -309,9 +346,9 @@ def cmd_eval(args: argparse.Namespace) -> None:
             xhat, maps, meta = I.reconstruct(
                 rae, dit, x, idxs,
                 mode=mode0, t=t0_setting,
-                repeats=reps, ode_steps=ode_steps,
+                repeats=cat_reps, ode_steps=ode_steps,
                 num_classes=num_classes, corruption=corruption, seed=seed,
-                time_dist_shift=shift, adaptor=adaptor,
+                time_dist_shift=shift, adaptor=adaptor, score=cat_score, disc=disc,
             )
             infer_time += time.time() - t0
             dit_passes = meta["dit_passes"]
@@ -326,7 +363,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
         inputs_np = np.concatenate(inputs_uint8, axis=0)
         recons_np = np.concatenate(recons_uint8, axis=0)
 
-        key_base = dict(exp=exp_id, cat=cat, seed=seed, reps=reps,
+        key_base = dict(exp=exp_id, cat=cat, seed=seed, reps=cat_reps, score=cat_score,
                         ckpt=ckpt_path.name, ema=int(used_ema))
         row = _score_setting(maps_np, masks, labels, size, blur_sigma)
         row.update(key_base, mode=mode_used, t=t_used,
@@ -341,29 +378,31 @@ def cmd_eval(args: argparse.Namespace) -> None:
                 paths, labels, maps_np, exp_id=exp_id, cat=cat, seed=seed,
                 mode=mode_used, t=t_used))
         if int(args.viz) > 0:
-            viz_path = out / "viz" / f"{cat}_{exp_id}_{mode_used}_t{t_used}.png"
+            sfx = "" if cat_score == "pixel" else f"_{cat_score}"
+            viz_path = out / "viz" / f"{cat}_{exp_id}_{mode_used}_t{t_used}{sfx}.png"
             n_normal = max(1, int(args.viz) // 3)
             I.save_viz(inputs_np, recons_np, maps_np, masks, labels, viz_path,
                        n_normal=n_normal)
-        print(f"[eval/{cat}] {ckpt_path.name} mode={mode_used} t={t_used} reps={reps} "
+        print(f"[eval/{cat}] {ckpt_path.name} mode={mode_used} t={t_used} reps={cat_reps} score={cat_score} "
               f"I-AUROC(max)={row['img_auroc_max']:.4f} P-AUROC={row['px_auroc']:.4f} "
               f"AUPRO={row['aupro']:.4f} ({infer_time / max(len(paths), 1):.3f}s/img)", flush=True)
 
         # ---- additional (mode, t) settings for sweeps --------------------------
-        for extra_mode in modes:
-            for extra_t in t_list:
+        for extra_mode in cat_modes:
+            for extra_t in cat_t_list:
                 if extra_mode == mode_used and extra_t == t_used:
                     continue
                 # skip settings already in results.csv (no wasted inference)
                 cand_sig = (exp_id, cat, seed, ckpt_path.name, int(used_ema),
-                            extra_mode, extra_t, reps, blur_sigma)
+                            extra_mode, extra_t, cat_reps, blur_sigma, cat_score)
                 if cand_sig in done:
                     continue
                 row_x = _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma,
-                                      mode=extra_mode, t=extra_t, reps=reps,
+                                      mode=extra_mode, t=extra_t, reps=cat_reps,
                                       ode_steps=ode_steps, num_classes=num_classes,
                                       corruption=corruption, seed=seed, shift=shift,
-                                      device=device, bs=bs, adaptor=adaptor)
+                                      device=device, bs=bs, adaptor=adaptor,
+                                      score=cat_score, disc=disc)
                 if row_x is None:
                     continue
                 row_x, maps_x = row_x
@@ -378,7 +417,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
                 print(f"[eval/{cat}] extra mode={extra_mode} t={extra_t} "
                       f"I-AUROC(max)={row_x['img_auroc_max']:.4f} "
                       f"P-AUROC={row_x['px_auroc']:.4f} AUPRO={row_x['aupro']:.4f}", flush=True)
-        del rae, dit, adaptor
+        del rae, dit, adaptor, disc
 
     if new_rows:
         _append_rows(results_csv, new_rows)
@@ -399,7 +438,7 @@ def _per_image_rows(paths, labels, maps_np, *, exp_id, cat, seed, mode, t) -> Li
 
 def _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma, *, mode, t, reps,
                   ode_steps, num_classes, corruption, seed, shift, device, bs,
-                  adaptor=None):
+                  adaptor=None, score="pixel", disc=None):
     """Run one (mode, t) setting. Returns ``(row, maps_np)`` or ``None``."""
     maps_list = []
     infer_time = 0.0
@@ -412,7 +451,7 @@ def _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma, *, mode, t, 
         _, maps, meta = I.reconstruct(
             rae, dit, x, idxs, mode=mode, t=t, repeats=reps, ode_steps=ode_steps,
             num_classes=num_classes, corruption=corruption, seed=seed,
-            time_dist_shift=shift, adaptor=adaptor)
+            time_dist_shift=shift, adaptor=adaptor, score=score, disc=disc)
         infer_time += time.time() - t0
         dit_passes = meta["dit_passes"]
         maps_list.append(maps.cpu().numpy())
@@ -448,7 +487,7 @@ def _score_setting(maps_np: np.ndarray, masks: np.ndarray, labels: np.ndarray,
 # ---------------------------------------------------------------------------
 
 RESULT_FIELDS = [
-    "exp", "cat", "seed", "ckpt", "ema", "mode", "t", "reps",
+    "exp", "cat", "seed", "ckpt", "ema", "mode", "t", "reps", "score",
     "blur_sigma", "n_images", "img_auroc_mean", "img_auroc_max", "img_auroc_top1",
     "img_ap_mean", "img_ap_max", "img_ap_top1", "px_auroc", "px_ap", "aupro",
     "infer_s_per_img", "dit_passes_per_img",
@@ -458,7 +497,7 @@ RESULT_FIELDS = [
 def _row_sig(row: Dict[str, Any]) -> tuple:
     return (row.get("exp"), row.get("cat"), row.get("seed"), row.get("ckpt"),
             row.get("ema"), row.get("mode"), row.get("t"), row.get("reps"),
-            row.get("blur_sigma"))
+            row.get("blur_sigma"), row.get("score") or "pixel")
 
 
 def _read_done(csv_path: Path) -> set:
@@ -469,7 +508,8 @@ def _read_done(csv_path: Path) -> set:
         for r in csv.DictReader(f):
             done.add((r.get("exp"), r.get("cat"), int(r.get("seed", 0)), r.get("ckpt"),
                       int(r.get("ema", 0)), r.get("mode"), float(r.get("t", 0)),
-                      int(r.get("reps", 1)), float(r.get("blur_sigma", 0))))
+                      int(r.get("reps", 1)), float(r.get("blur_sigma", 0)),
+                      r.get("score") or "pixel"))  # rows from before 'score' = pixel
     return done
 
 
@@ -525,7 +565,8 @@ def write_report(csv_path: Path, report_path: Path, exp_id: str) -> None:
                "px_auroc", "px_ap", "aupro"]
     groups: Dict[tuple, List[Dict[str, str]]] = {}
     for r in rows:
-        groups.setdefault((r.get("mode"), r.get("t"), r.get("reps"), r.get("ckpt")), []).append(r)
+        groups.setdefault((r.get("mode"), r.get("t"), r.get("reps"), r.get("ckpt"),
+                           r.get("score") or "pixel"), []).append(r)
 
     def mean(vals: List[float]) -> float:
         vals = [v for v in vals if not math.isnan(v)]
@@ -540,7 +581,7 @@ def write_report(csv_path: Path, report_path: Path, exp_id: str) -> None:
         except ValueError:
             return str(v)
 
-    config_cols = ["mode", "t", "reps", "ckpt"]
+    config_cols = ["mode", "t", "reps", "ckpt", "score"]
 
     def table_header(cols: List[str]) -> List[str]:
         hdr = "| " + " | ".join(cols + metrics) + " |"
@@ -551,19 +592,19 @@ def write_report(csv_path: Path, report_path: Path, exp_id: str) -> None:
              "aggregations (mean / max / top-1% pixel scores).", "", "## Aggregate", ""]
     lines += table_header(config_cols)
     for key, rs in sorted(groups.items()):
-        mode, t, reps, ckpt = key
+        mode, t, reps, ckpt, sc = key
         cells = []
         for m in metrics:
             vals = [float(r[m]) for r in rs if r.get(m) not in (None, "")]
             cells.append(f"{mean(vals):.4f}" if vals else "n/a")
-        lines.append(f"| {mode} | {t} | {reps} | {ckpt} | " + " | ".join(cells) + " |")
+        lines.append(f"| {mode} | {t} | {reps} | {ckpt} | {sc} | " + " | ".join(cells) + " |")
 
     lines += ["", "## Per-category", ""]
     lines += table_header(["cat"] + config_cols)
     for r in sorted(rows, key=lambda r: (r.get("ckpt", ""), r.get("mode", ""),
                                          float(r.get("t", 0)), r.get("cat", ""))):
         head = [str(r.get("cat")), str(r.get("mode")), str(r.get("t")),
-                str(r.get("reps")), str(r.get("ckpt"))]
+                str(r.get("reps")), str(r.get("ckpt")), str(r.get("score") or "pixel")]
         lines.append("| " + " | ".join(head + [fmt(r, m) for m in metrics]) + " |")
     report_path.write_text("\n".join(lines) + "\n")
 
@@ -594,6 +635,10 @@ def build_parser() -> argparse.ArgumentParser:
                     help="gradient accumulation steps (effective batch = batch-size * grad-accum)")
     tr.add_argument("--lambda-fm", type=float, default=None,
                     help="override experiment.lambda_fm (hybrid ablations)")
+    tr.add_argument("--noise-sigma", type=float, default=None,
+                    help="override noise.sigma (SimpleNet-style corruption: every arm but A)")
+    tr.add_argument("--lambda-latent", type=float, default=None,
+                    help="override experiment.lambda_latent (latent restore term)")
     tr.add_argument("--resume", default=None, help="checkpoint to resume from")
     tr.add_argument("--no-ema", action="store_true")
     tr.add_argument("--grad-checkpoint", action=argparse.BooleanOptionalAction,
@@ -630,6 +675,11 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--repeats", type=int, default=None, help="repetitions for mode=multi")
     ev.add_argument("--ode-steps", type=int, default=None)
     ev.add_argument("--blur-sigma", type=float, default=None)
+    ev.add_argument("--score", choices=["pixel", "latent_cos", "latent_l2", "disc"], default=None,
+                    help="anomaly map: pixel = |x - D(z^)| after the decoder; latent_cos / "
+                         "latent_l2 = token distance between E(x) and the DiT output z^, "
+                         "no decoder (experiment J; works on any checkpoint); disc = "
+                         "DRAEM's learned segmentation map (SimpleNet arms)")
     ev.add_argument("--batch-size", type=int, default=16)
     ev.add_argument("--viz", type=int, default=6, help="grid images per category (0=off)")
     ev.add_argument("--device", default=None)

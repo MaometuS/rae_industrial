@@ -40,6 +40,7 @@ from latent_draem import load_rgb, mvtec_split, seed_all
 
 from iad import adaptor as A
 from iad import core
+from iad import disc as DS
 from iad import models as M
 
 
@@ -156,6 +157,8 @@ def save_checkpoint(
     meta: Dict[str, Any],
     adaptor: Optional[nn.Module] = None,
     ema_adaptor: Optional[nn.Module] = None,
+    disc: Optional[nn.Module] = None,
+    ema_disc: Optional[nn.Module] = None,
 ) -> None:
     state = {
         "step": step,
@@ -165,6 +168,8 @@ def save_checkpoint(
         if cfg.get("experiment", {}).get("decoder_finetune") else None,
         "adaptor": adaptor.state_dict() if adaptor is not None else None,
         "ema_adaptor": ema_adaptor.state_dict() if ema_adaptor is not None else None,
+        "disc": disc.state_dict() if disc is not None else None,
+        "ema_disc": ema_disc.state_dict() if ema_disc is not None else None,
         "optimizer": optimizer.state_dict(),
         "scheduler": scheduler.state_dict() if scheduler is not None else None,
         "config": cfg,
@@ -196,6 +201,8 @@ def apply_checkpoint(
     restore_rng: bool = True,
     adaptor: Optional[nn.Module] = None,
     ema_adaptor: Optional[nn.Module] = None,
+    disc: Optional[nn.Module] = None,
+    ema_disc: Optional[nn.Module] = None,
 ) -> int:
     dit.load_state_dict(state["model"])
     if ema is not None and state.get("ema") is not None:
@@ -206,6 +213,10 @@ def apply_checkpoint(
         adaptor.load_state_dict(state["adaptor"])
     if ema_adaptor is not None and state.get("ema_adaptor") is not None:
         ema_adaptor.load_state_dict(state["ema_adaptor"])
+    if disc is not None and state.get("disc") is not None:
+        disc.load_state_dict(state["disc"])
+    if ema_disc is not None and state.get("ema_disc") is not None:
+        ema_disc.load_state_dict(state["ema_disc"])
     if optimizer is not None and state.get("optimizer") is not None:
         optimizer.load_state_dict(state["optimizer"])
     if scheduler is not None and state.get("scheduler") is not None:
@@ -255,6 +266,7 @@ def validate(
     val_seed: int,
     num_classes: int,
     adaptor: Optional[nn.Module] = None,
+    disc: Optional[nn.Module] = None,
 ) -> Dict[str, float]:
     """Deterministic validation: identical noise draws on every call.
 
@@ -274,7 +286,10 @@ def validate(
     dit.eval()
     if adaptor is not None:
         adaptor.eval()
-    modules = [dit] + ([adaptor] if adaptor is not None else [])
+    was_training_ds = disc.training if disc is not None else False
+    if disc is not None:
+        disc.eval()
+    modules = [dit] + [m for m in (adaptor, disc) if m is not None]
     moved = [m for m in modules
              if next(iter(m.parameters())).device != device]
     for m in moved:
@@ -294,10 +309,12 @@ def validate(
                     rae, dit, transport, x, z,
                     loss_type=exp["loss"], noise_cfg=noise_cfg,
                     lambda_fm=float(exp.get("lambda_fm", 0.0)), y=y,
-                    corruption=exp.get("corruption", "flow"),
+                    corruption=exp.get("corruption", "simplenet"),
                     size=int(cfg.get("size", 256)),
                     clamp_recon=bool(exp.get("clamp_recon", False)),
                     adaptor=adaptor,
+                    lambda_latent=float(exp.get("lambda_latent", 0.0)),
+                    disc=disc, disc_cfg=cfg.get("discriminator"),
                 )
                 for k, v in terms.items():
                     totals.setdefault(k, []).append(v)
@@ -310,6 +327,8 @@ def validate(
         dit.train()
     if adaptor is not None and was_training_ad:
         adaptor.train()
+    if disc is not None and was_training_ds:
+        disc.train()
     return {f"val_{k}": float(np.mean(v)) for k, v in totals.items()}
 
 
@@ -351,11 +370,22 @@ def train(
     ema_decay = float(tcfg.get("ema_decay", 0.9995))
     cache = bool(tcfg.get("cache_latents", True))
     loss_type = exp["loss"]
-    corruption = exp.get("corruption", "flow")
+    corruption = exp.get("corruption", "simplenet")  # project default
     lambda_fm = float(exp.get("lambda_fm", 0.0))
     if loss_type == "hybrid" and corruption != "flow":
         raise ValueError("hybrid loss requires corruption='flow'")
-    best_metric = exp.get("best_metric") or ("fm" if loss_type == "flow_matching" else "img")
+    if corruption == "simplenet":
+        if loss_type not in ("image_l1", "latent"):
+            raise ValueError("corruption='simplenet' needs loss='image_l1' or 'latent' "
+                             "(plus optional experiment.lambda_latent for image_l1)")
+        core.simplenet_cfg(cfg["noise"])  # validate the noise block before any work
+    if DS.disc_cfg(cfg.get("discriminator"))["enabled"] and corruption != "simplenet":
+        raise ValueError("discriminator.enabled needs corruption='simplenet' "
+                         "(its targets are the synthetic-anomaly masks)")
+    if loss_type == "latent" and exp.get("decoder_finetune"):
+        raise ValueError("loss='latent' never calls the decoder: decoder_finetune must be false")
+    best_metric = exp.get("best_metric") or {"flow_matching": "fm",
+                                             "latent": "lat"}.get(loss_type, "img")
 
     seed_all(seed)
     out_dir = Path(out_dir)
@@ -385,6 +415,13 @@ def train(
         print(f"[iad] feature adaptor: {adaptor} "
               f"({M.count_params(adaptor)} params)", flush=True)
     transport = M.build_transport(M._to_dict(transport_cfg), misc)
+    disc = DS.build_discriminator(cfg.get("discriminator"),
+                                  dim=M.latent_dim_from_misc(misc, cfg), device=device, seed=seed)
+    init_disc_state = copy.deepcopy(disc.state_dict()) if disc is not None else None
+    if disc is not None:
+        print(f"[iad] discriminator (DRAEM segmentation head, token grid): "
+              f"{M.count_params(disc)} params, cfg={DS.disc_cfg(cfg.get('discriminator'))}",
+              flush=True)
 
     scopes = [(c, [c]) for c in categories] if scope == "per_category" else [("joint", list(categories))]
     summaries = []
@@ -395,6 +432,8 @@ def train(
             rae.decoder.load_state_dict(init_decoder_state)
             if adaptor is not None:
                 adaptor.load_state_dict(init_adaptor_state)
+            if disc is not None:
+                disc.load_state_dict(init_disc_state)
             if exp.get("decoder_finetune"):
                 M.unfreeze_decoder(rae)
             else:
@@ -412,7 +451,7 @@ def train(
             n_val=n_val, size=size, use_ema=use_ema, ema_decay=ema_decay,
             cache=cache, loss_type=loss_type, corruption=corruption,
             lambda_fm=lambda_fm, best_metric=best_metric, resume=resume,
-            build_scheduler=build_scheduler,
+            build_scheduler=build_scheduler, disc=disc,
         )
         summaries.append(s)
     return {"runs": summaries}
@@ -423,7 +462,7 @@ def _train_scope(
     rae_root, mvtec_root, out_dir, device, misc, num_classes,
     n_steps, bs, precision, clip_grad, log_every, val_every, save_every,
     n_val, size, use_ema, ema_decay, cache, loss_type, corruption, lambda_fm,
-    best_metric, resume, build_scheduler, adaptor=None,
+    best_metric, resume, build_scheduler, adaptor=None, disc=None,
 ) -> Dict[str, Any]:
     exp = cfg["experiment"]
     tag = scope_name
@@ -445,6 +484,11 @@ def _train_scope(
         # exact: with cached latents the frozen encoder is never called again
         M.offload_encoder(rae)
         print(f"[iad/{tag}] encoder offloaded to CPU (latents cached)", flush=True)
+    if loss_type == "latent" and not exp.get("decoder_finetune") and device.type == "cuda":
+        # exact: the decoder-free objective never calls the decoder
+        rae.decoder.to("cpu")
+        torch.cuda.empty_cache()
+        print(f"[iad/{tag}] decoder offloaded to CPU (loss=latent never decodes)", flush=True)
 
     if adaptor is not None and adaptor.wants_stats:
         if latents is None:
@@ -460,7 +504,7 @@ def _train_scope(
 
     # ---- optimizer / scheduler / EMA ----------------------------------------
     optimizer, base_lr, dec_lr, opt_msg = M.build_optimizer(
-        dit, rae, bool(exp.get("decoder_finetune")), tcfg, adaptor=adaptor)
+        dit, rae, bool(exp.get("decoder_finetune")), tcfg, adaptor=adaptor, disc=disc)
     scheduler = None
     if tcfg.get("scheduler"):
         scheduler, sched_msg = build_scheduler(optimizer, 1, tcfg)
@@ -482,11 +526,18 @@ def _train_scope(
         ema_ad.requires_grad_(False)
         ema_ad.eval()
 
+    ema_ds = None
+    if disc is not None and use_ema:  # paired with the EMA DiT at validation/eval
+        ema_ds = copy.deepcopy(disc)
+        ema_ds.requires_grad_(False)
+        ema_ds.eval()
+
     start_step = 0
     if resume is not None:
         state = load_checkpoint(Path(resume))
         start_step = apply_checkpoint(state, dit, ema, rae, optimizer, scheduler,
-                                      adaptor=adaptor, ema_adaptor=ema_ad)
+                                      adaptor=adaptor, ema_adaptor=ema_ad,
+                    disc=disc, ema_disc=ema_ds)
         print(f"[iad/{tag}] resumed from {resume} at step {start_step}", flush=True)
 
     autocast_ctx, scaler = _autocast(device, precision)
@@ -502,6 +553,8 @@ def _train_scope(
         ema.to("cpu")
         if ema_ad is not None:
             ema_ad.to("cpu")
+        if ema_ds is not None:
+            ema_ds.to("cpu")
         print(f"[iad/{tag}] EMA kept on CPU ({M.count_params(ema) / 1e6:.0f}M params "
               f"off the GPU)", flush=True)
 
@@ -525,6 +578,7 @@ def _train_scope(
         "grad_checkpoint": bool(tcfg.get("grad_checkpoint", False)),
         "ema_device": str(tcfg.get("ema_device", "cuda")).lower(),
         "adaptor": A.adaptor_meta(adaptor),
+        "discriminator": DS.disc_meta(disc, cfg.get("discriminator")),
         "size": size,
         "init": cfg.get("init", {}),
         "null_label": num_classes,
@@ -543,12 +597,15 @@ def _train_scope(
     t_last = time.time()
     ema_model = ema if ema is not None else dit
     ad_model = ema_ad if ema_ad is not None else adaptor
+    ds_model = ema_ds if ema_ds is not None else disc
 
     step = start_step
     while step < n_steps:
         dit.train()
         if adaptor is not None:
             adaptor.train()
+        if disc is not None:
+            disc.train()
         if exp.get("decoder_finetune"):
             rae.decoder.train()
 
@@ -570,6 +627,8 @@ def _train_scope(
                     lambda_fm=lambda_fm, y=y, corruption=corruption,
                     size=size, clamp_recon=bool(exp.get("clamp_recon", False)),
                     adaptor=adaptor,
+                    lambda_latent=float(exp.get("lambda_latent", 0.0)),
+                    disc=disc, disc_cfg=cfg.get("discriminator"),
                 )
             # gradient accumulation: divide so the accumulated gradient is the
             # mean over the effective batch
@@ -584,17 +643,23 @@ def _train_scope(
             scaler.unscale_(optimizer)  # grads must be unscaled before clipping
             grad_norm = torch.nn.utils.clip_grad_norm_(
                 trainable, clip_grad if clip_grad else math.inf)
+            if disc is not None:  # own clip: the head never rescales the DiT's update
+                torch.nn.utils.clip_grad_norm_(list(disc.parameters()),
+                                               clip_grad if clip_grad else math.inf)
             scaler.step(optimizer)
             scaler.update()
         else:
             grad_norm = torch.nn.utils.clip_grad_norm_(
                 trainable, clip_grad if clip_grad else math.inf)
+            if disc is not None:  # own clip: the head never rescales the DiT's update
+                torch.nn.utils.clip_grad_norm_(list(disc.parameters()),
+                                               clip_grad if clip_grad else math.inf)
             optimizer.step()
         if scheduler is not None:
             scheduler.step()
-        if ema is not None or ema_ad is not None:
+        if ema is not None or ema_ad is not None or ema_ds is not None:
             from utils.train_utils import update_ema  # official
-            for em, mod in ((ema, dit), (ema_ad, adaptor)):
+            for em, mod in ((ema, dit), (ema_ad, adaptor), (ema_ds, disc)):
                 if em is None:
                     continue
                 with torch.no_grad():
@@ -641,7 +706,7 @@ def _train_scope(
         if val_every > 0 and (step % val_every == 0 or step >= n_steps) and val_paths:
             vals = validate(rae, ema_model, transport, val_paths, images,
                             latents, cfg, device, bs, seed + 42, num_classes,
-                            adaptor=ad_model)
+                            adaptor=ad_model, disc=ds_model)
             rec = {"step": step, "scope": tag, **vals}
             with metrics_f.open("a") as f:
                 f.write(json.dumps(rec) + "\n")
@@ -652,20 +717,24 @@ def _train_scope(
                 best_val = vals[key]
                 save_checkpoint(best_path, step, dit, ema, rae, optimizer,
                                 scheduler, cfg, meta,
-                                adaptor=adaptor, ema_adaptor=ema_ad)
+                                adaptor=adaptor, ema_adaptor=ema_ad,
+                    disc=disc, ema_disc=ema_ds)
                 print(f"[iad/{tag}] new best {key}={best_val:.4f} -> {best_path}", flush=True)
 
         if save_every > 0 and step % save_every == 0:
             save_checkpoint(last_path, step, dit, ema, rae, optimizer,
                             scheduler, cfg, meta,
-                            adaptor=adaptor, ema_adaptor=ema_ad)
+                            adaptor=adaptor, ema_adaptor=ema_ad,
+                    disc=disc, ema_disc=ema_ds)
 
     save_checkpoint(last_path, step, dit, ema, rae, optimizer, scheduler, cfg,
-                    meta, adaptor=adaptor, ema_adaptor=ema_ad)
+                    meta, adaptor=adaptor, ema_adaptor=ema_ad,
+                    disc=disc, ema_disc=ema_ds)
     if best_val == math.inf and val_paths:
         save_checkpoint(best_path, step, dit, ema, rae, optimizer,
                         scheduler, cfg, meta,
-                        adaptor=adaptor, ema_adaptor=ema_ad)
+                        adaptor=adaptor, ema_adaptor=ema_ad,
+                    disc=disc, ema_disc=ema_ds)
 
     # explicit post-conditions (spec §6 / §2.3)
     enc_frozen = M.encoder_status(rae)

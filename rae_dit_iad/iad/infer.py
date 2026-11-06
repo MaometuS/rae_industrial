@@ -22,7 +22,19 @@ their cost (number of DiT/decoder forward passes per image):
     ``ode_steps`` DiT passes + 1 decode.
 
 All modes corrupt with the *training* corruption (default: the original
-linear flow path ``z_t = (1-t) z_0 + t eps``).  Seeding: noise for image
+linear flow path ``z_t = (1-t) z_0 + t eps``).  Exception: the SimpleNet-style
+arms (``corruption: simplenet``, every arm but A) add **no** noise at test time -- the real
+defect plays the role of the training corruption; ``t`` is then the training
+sigma and only sets the conditioning time ``sigma / (1 + sigma)``.  That pass is
+deterministic, so ``multi`` collapses to one repetition and ``ode`` is refused.
+
+Anomaly maps: ``score='pixel'`` (default) is ``mean_c |x - x^|`` after the
+decoder; ``latent_cos`` / ``latent_l2`` compare the test latent ``z`` with the
+DiT's restoration ``z^`` token by token, before any decoder, and upsample the
+16x16 token map to the image size (decoder-free scoring, experiment J; usable
+with any checkpoint).  ``disc`` is DRAEM's learned map: ``sigmoid`` of the
+discriminative head applied to (input latent, restoration), upsampled the same
+way (SimpleNet arms with a ``discriminator:`` block only).  Seeding: noise for image
 index ``i``, repetition ``r`` is drawn from a generator seeded with
 ``seed -> (i, r)``, so results do not depend on batch size and are identical
 across model variants given the same seed (spec §9.3).
@@ -38,7 +50,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from iad.core import corrupt_latent, conditioning_time, prediction_to_clean_latent, warp_time
+from iad.core import (LATENT_SCORES, conditioning_time, corrupt_latent, latent_anomaly_map,
+                      prediction_to_clean_latent, warp_time)
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +130,8 @@ def reconstruct(
     seed: int = 0,
     time_dist_shift: float = 1.0,
     adaptor: Optional[nn.Module] = None,
+    score: str = "pixel",
+    disc: Optional[nn.Module] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, Any]]:
     """Reconstruct a batch of images.
 
@@ -135,8 +150,12 @@ def reconstruct(
     residual keeps it in-distribution).
     """
     assert mode in ("single", "multi", "ode"), f"unknown inference mode {mode}"
+    assert score in ("pixel", "disc") + LATENT_SCORES, f"unknown anomaly score {score}"
+    assert score != "disc" or disc is not None, "score='disc' needs a discriminator"
     assert corruption == "flow" or mode != "ode", \
         "ode integration requires corruption='flow' (linear path is the ODE the DiT was trained on)"
+    if corruption == "simplenet":
+        repeats = 1  # no test-time noise: every repetition would be identical
     reps = int(repeats) if mode == "multi" else 1
     reps = max(reps, 1)
 
@@ -144,6 +163,8 @@ def reconstruct(
     rae.eval()
     if adaptor is not None:
         adaptor.eval()
+    if disc is not None:
+        disc.eval()
     z0 = rae.encode(x)
     if adaptor is not None:
         z0 = adaptor(z0)
@@ -154,9 +175,12 @@ def reconstruct(
     map_sum = torch.zeros(x.shape[0], *x.shape[-2:], device=x.device, dtype=torch.float32)
     dit_passes = 0
     for rep in range(reps):
-        eps = _stack_eps(indices, tuple(z0.shape[1:]), x.device, seed, rep)
-        zt = corrupt_latent(z0, eps, torch.full((z0.shape[0],), float(t), device=x.device),
-                            mode=corruption)
+        if corruption == "simplenet":
+            zt = z0  # SimpleNet-style: the real defect is the only "corruption"
+        else:
+            eps = _stack_eps(indices, tuple(z0.shape[1:]), x.device, seed, rep)
+            zt = corrupt_latent(z0, eps, torch.full((z0.shape[0],), float(t), device=x.device),
+                                mode=corruption)
         if mode == "ode":
             zhat = _ode_to_data(dit, zt, t, ode_steps, y, time_dist_shift)
             dit_passes += int(ode_steps)
@@ -165,12 +189,21 @@ def reconstruct(
             zhat = prediction_to_clean_latent(zt, v, torch.tensor([t], device=x.device),
                                               corruption=corruption)
             dit_passes += 1
-        xhat = rae.decode(zhat)
+        # anchored adaptor (K): map the restoration back to the decoder's space
+        xhat = rae.decode(adaptor.invert(zhat) if getattr(adaptor, "is_anchored", False)
+                          else zhat)
         if xhat.shape[-2:] != x.shape[-2:]:
             xhat = F.interpolate(xhat, size=x.shape[-2:], mode="bilinear", align_corners=False)
         xhat = xhat.float().clamp(0.0, 1.0)
         recon_sum += xhat
-        map_sum += (x - xhat).abs().mean(dim=1)
+        if score == "pixel":
+            map_sum += (x - xhat).abs().mean(dim=1)
+        elif score == "disc":  # DRAEM: the learned segmentation map, not the residual
+            prob = torch.sigmoid(disc(zt, zhat)).float()
+            map_sum += F.interpolate(prob, size=tuple(x.shape[-2:]), mode="bilinear",
+                                     align_corners=False)[:, 0]
+        else:  # decoder-free: compare latents before the decoder
+            map_sum += latent_anomaly_map(z0, zhat, score, tuple(x.shape[-2:]))
 
     meta = {
         "mode": mode,
@@ -179,6 +212,8 @@ def reconstruct(
         "dit_passes": dit_passes,
         "decode_passes": reps,
         "adaptor": getattr(adaptor, "type", None),
+        "corruption": corruption,
+        "score": score,
     }
     return recon_sum / reps, map_sum / reps, meta
 

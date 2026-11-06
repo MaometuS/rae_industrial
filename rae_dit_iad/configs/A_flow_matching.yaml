@@ -1,3 +1,7 @@
+# NOTE: A is the only arm on the original FLOW path (z_t = (1-t) z0 + t eps, official
+# warped logit-normal t). Every other arm uses the default SimpleNet-style corruption.
+# Its flow-matching loss is also a latent-space loss (||v - v*||^2 = ||z^ - z0||^2 / t^2),
+# so A vs J, both scored with latent_cos, isolates the corruption change itself.
 # Experiment A: original flow matching (frozen decoder) — reproduces official RAE DiT objective
 experiment:
   id: A_flow_matching

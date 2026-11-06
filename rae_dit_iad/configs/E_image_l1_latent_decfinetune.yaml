@@ -1,0 +1,78 @@
+# Experiment E: image L1 through the FINE-TUNED decoder + a latent restore term to the clean latent:
+#   L = || D(z^) - x ||_1 / 3HW + lambda_latent * sum_p w_p (z^_p - z0_p)^2 / sum_p w_p,
+#   w = 1 + (w_anom - 1) * m  (corrupted tokens up-weighted).
+# Replaces the old flow-path hybrid (L1 + 0.1 * flow matching): on the SimpleNet path the
+# flow-matching target reduces to exactly this latent MSE (up to the constant 1/t_c^2).
+# Single-variable comparison against D (only decoder_finetune changes) and C.
+experiment:
+  id: E_image_l1_latent_decfinetune
+  loss: image_l1
+  lambda_fm: 0.0
+  lambda_latent: 1.0       # weighted token MSE to the clean (target-detached) latent
+  decoder_finetune: true   # decoder lr = 0.1 x DiT lr
+  corruption: simplenet
+  clamp_recon: false
+  best_metric: total       # val_total = img + lambda_latent * lat
+
+discriminator:   # DRAEM's discriminative sub-network on the token grid (iad/disc.py)
+  enabled: true
+  d: 256          # hidden channels
+  blocks: 4       # residual conv blocks
+  w_seg: 1.0      # weight of the focal segmentation loss
+  gamma: 2.0      # focal-loss focusing (DRAEM)
+  detach: true    # true: the head never changes the DiT's training (clean comparisons)
+
+rae_config: configs/stage2/training/ImageNet256/DiTDH-XL_DINOv2-B.yaml
+rae_config_overrides:
+  stage_2:
+    ckpt: "models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt"
+
+noise:
+  # SimpleNet-style corruption (iad.core.SIMPLENET_DEFAULTS). time_dist is unused.
+  sigma: 0.1      # normalized-latent units (~unit variance per channel). SimpleNet's 0.015
+                  # lives in its own feature scale; sweep with SIGMA=0.05/0.1/0.2.
+  mask: perlin    # perlin | all  (all = SimpleNet exactly: every token noised)
+  p_clean: 0.2    # fraction of samples left clean
+  w_anom: 5.0     # latent-loss up-weight on corrupted tokens
+  mask_thr: 0.5
+
+size: 256
+seed: 42
+scope: joint
+
+training:
+  steps: 4000
+  batch_size: 2        # micro-batch (DiT-XL + decoder must fit in GPU memory)
+  grad_accum_steps: 4  # effective batch = 2 x 4 = 8
+  precision: fp32
+  clip_grad: 1.0
+  log_every: 50
+  val_every: 250
+  save_every: 500
+  n_val: 20
+  use_ema: true
+  ema_decay: 0.9995
+  # --- memory/speed knobs: defaults are the fastest (full-speed) settings ---
+  grad_checkpoint: false  # true = recompute activations in backward (slower step, much less VRAM)
+  ema_device: cuda        # cuda = fastest; cpu = keeps EMA off the GPU (frees ~4 bytes/param)
+  cache_latents: true
+  decoder_lr_ratio: 0.1  # decoder lr = 0.1 * 2e-4 = 2e-5
+  optimizer:
+    lr: 2.0e-4
+    betas: [0.9, 0.95]
+    weight_decay: 0.0
+    eps: 1.0e-8
+  scheduler:
+    type: linear
+    base_lr: 2.0e-4
+    final_lr: 2.0e-5
+    warmup_steps: 400
+    decay_end_steps: 4000
+    warmup_from_zero: false
+
+inference:
+  mode: single    # deterministic: no test-time noise, so multi/ode do not apply
+  t: 0.1          # = noise.sigma; eval uses the checkpoint's sigma when --t is omitted
+  reps: 1
+  ode_steps: 50
+  blur_sigma: 4.0

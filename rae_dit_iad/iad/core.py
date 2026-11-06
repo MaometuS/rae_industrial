@@ -21,6 +21,18 @@ All equations are derived from the official RAE implementation
 An optional *additive* corruption ``z_t = z_0 + sigma * eps`` is provided for
 noise ablations; its conditioning time is the flow-equivalent noise fraction
 ``t_cond = sigma / (1 + sigma)`` (see README "Known limitations").
+
+*SimpleNet-style* corruption (the project default for every arm except A,
+``corruption: simplenet``) adds
+small i.i.d. Gaussian noise to a Perlin-shaped subset of tokens only::
+
+    z_in = z_0 + m * sigma * eps,     m in [0, 1]^(B,1,h,w),  sigma small
+
+and grades the DiT against the clean latent.  Unlike the flow path it leaves
+the untouched tokens clean, so the model learns "replace tokens that do not
+fit their (clean) context" rather than global denoising.  The conditioning
+time is ``sigma / (1 + sigma)`` as for ``additive``; at test time no noise is
+added (the real defect plays the role of the training corruption).
 """
 
 from __future__ import annotations
@@ -28,6 +40,7 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, Optional, Tuple
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 
@@ -129,7 +142,7 @@ def conditioning_time(t: torch.Tensor, corruption: str) -> torch.Tensor:
     """
     if corruption == "flow":
         return t
-    if corruption == "additive":
+    if corruption in ("additive", "simplenet"):
         return t / (1.0 + t)
     raise ValueError(f"Unknown corruption mode '{corruption}'")
 
@@ -151,6 +164,134 @@ def prediction_to_clean_latent(
     """
     tc = conditioning_time(t, corruption).view(-1, *([1] * (zt.dim() - 1)))
     return zt - tc * velocity
+
+
+# ---------------------------------------------------------------------------
+# SimpleNet-style corruption (default for every arm except A)
+# ---------------------------------------------------------------------------
+
+#: ``noise:`` keys read by ``corruption: simplenet`` and their defaults
+SIMPLENET_DEFAULTS: Dict[str, Any] = {
+    # i.i.d. Gaussian std in normalized-latent units (each channel ~unit
+    # variance, so a token's squared norm is ~768 and sigma=0.1 adds ~1%).
+    # SimpleNet uses sigma=0.015 in its own adapted WideResNet feature scale,
+    # which does not transfer 1:1 -- sweep it (``--noise-sigma`` / ``SIGMA``).
+    "sigma": 0.1,
+    "mask": "perlin",   # perlin (DRAEM-style token blobs) | all (SimpleNet: every token)
+    "p_clean": 0.2,     # fraction of samples left uncorrupted (learn identity on normals)
+    "w_anom": 5.0,      # latent-loss up-weight on corrupted tokens (lambda_latent > 0)
+    "mask_thr": 0.5,    # Perlin threshold (latent_draem.perlin_mask convention)
+}
+
+
+def simplenet_cfg(noise_cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Resolve and validate the SimpleNet-style keys of a ``noise:`` block."""
+    cfg = dict(SIMPLENET_DEFAULTS)
+    for k in SIMPLENET_DEFAULTS:
+        if noise_cfg and k in noise_cfg:
+            cfg[k] = noise_cfg[k]
+    cfg["sigma"] = float(cfg["sigma"])
+    cfg["p_clean"] = float(cfg["p_clean"])
+    cfg["w_anom"] = float(cfg["w_anom"])
+    cfg["mask_thr"] = float(cfg["mask_thr"])
+    cfg["mask"] = str(cfg["mask"]).lower()
+    if not cfg["sigma"] > 0:
+        raise ValueError(f"simplenet noise sigma must be > 0 (got {cfg['sigma']})")
+    if cfg["mask"] not in ("perlin", "all"):
+        raise ValueError(f"simplenet mask must be 'perlin' or 'all' (got '{cfg['mask']}')")
+    if not 0.0 <= cfg["p_clean"] < 1.0:
+        raise ValueError(f"simplenet p_clean must be in [0, 1) (got {cfg['p_clean']})")
+    if cfg["w_anom"] < 1.0:
+        raise ValueError(f"simplenet w_anom must be >= 1 (got {cfg['w_anom']})")
+    return cfg
+
+
+def sample_token_mask(
+    z0: torch.Tensor,
+    noise_cfg: Optional[Dict[str, Any]],
+    size: int,
+    generator: Optional[torch.Generator] = None,
+) -> torch.Tensor:
+    """Per-token corruption weights ``m`` of shape ``(B, 1, h, w)`` in ``[0, 1]``.
+
+    ``perlin``: a DRAEM-style Perlin blob drawn at ``size`` px (the image
+    resolution) and average-pooled to the latent grid, so ``m`` is the fraction
+    of each token's patch inside the blob.  ``all``: every token (SimpleNet).
+    A ``p_clean`` fraction of samples gets ``m = 0``.  The numpy RNG is seeded
+    from the torch RNG, so ``seed_all`` makes masks reproducible.
+    """
+    sn = simplenet_cfg(noise_cfg)
+    b, _, h, w = z0.shape
+    if generator is None:
+        seed = int(torch.randint(0, 2 ** 31 - 1, (1,)).item())
+    else:
+        seed = int(torch.randint(0, 2 ** 31 - 1, (1,), generator=generator,
+                                 device=generator.device).item())
+    rng = np.random.default_rng(seed)
+    if sn["mask"] == "all":
+        m = torch.ones((b, 1, h, w))
+    else:
+        from latent_draem import perlin_mask  # same Perlin blobs as latent_draem / DRAEM
+        pm = np.stack([perlin_mask(int(size), rng, thr=sn["mask_thr"]) for _ in range(b)])
+        m = F.adaptive_avg_pool2d(torch.from_numpy(pm.astype(np.float32)).unsqueeze(1), (h, w))
+    clean = torch.from_numpy(rng.random(b) < sn["p_clean"])
+    m[clean] = 0.0
+    return m.to(device=z0.device, dtype=z0.dtype)
+
+
+def simplenet_corrupt(
+    z0: torch.Tensor,
+    eps: torch.Tensor,
+    sigma: float,
+    mask: torch.Tensor,
+) -> torch.Tensor:
+    """``z_in = z_0 + m * sigma * eps`` (untouched tokens stay exactly clean)."""
+    return z0 + mask * float(sigma) * eps
+
+
+def latent_restore_loss(
+    zhat: torch.Tensor,
+    z0: torch.Tensor,
+    mask: Optional[torch.Tensor] = None,
+    w_anom: float = 1.0,
+) -> torch.Tensor:
+    """Token MSE to the clean latent, corrupted tokens up-weighted by ``w_anom``.
+
+    ``L = sum_p w_p * mean_c (z^_p - z_p)^2 / sum_p w_p``, ``w = 1 + (w_anom-1)*m``
+    (``latent_draem.restore_loss`` weighting, MSE part only).
+    """
+    err = (zhat - z0).pow(2).mean(dim=1, keepdim=True)
+    if mask is None:
+        return err.mean()
+    wgt = 1.0 + (float(w_anom) - 1.0) * mask
+    return (err * wgt).sum() / wgt.sum()
+
+
+#: latent-space anomaly scores (decoder-free scoring, experiment J)
+LATENT_SCORES = ("latent_cos", "latent_l2")
+
+
+def latent_anomaly_map(
+    z: torch.Tensor,
+    zhat: torch.Tensor,
+    score: str,
+    out_hw: Tuple[int, int],
+) -> torch.Tensor:
+    """Token-wise distance between the test latent and the DiT's restoration.
+
+    ``latent_cos``: ``1 - cos(z_p, z^_p)`` per token (scale-invariant, the
+    ``latent_draem`` residual score); ``latent_l2``: ``mean_c (z^_p - z_p)^2``.
+    The ``(B, h, w)`` token map is bilinearly upsampled to ``out_hw`` so the
+    rest of the evaluation (blur, AUROC, AUPRO) is unchanged.
+    """
+    if score == "latent_cos":
+        d = 1.0 - F.cosine_similarity(zhat.float(), z.float(), dim=1, eps=1e-6)
+    elif score == "latent_l2":
+        d = (zhat.float() - z.float()).pow(2).mean(dim=1)
+    else:
+        raise ValueError(f"unknown latent score '{score}'; expected one of {LATENT_SCORES}")
+    return F.interpolate(d.unsqueeze(1), size=tuple(out_hw), mode="bilinear",
+                         align_corners=False)[:, 0]
 
 
 def prediction_to_noise(
@@ -251,10 +392,14 @@ def compute_losses(
     clamp_recon: bool = False,
     generator: Optional[torch.Generator] = None,
     adaptor: Optional[torch.nn.Module] = None,
+    lambda_latent: float = 0.0,
+    disc: Optional[torch.nn.Module] = None,
+    disc_cfg: Optional[Dict[str, Any]] = None,
 ) -> Tuple[torch.Tensor, Dict[str, float], torch.Tensor, torch.Tensor]:
     """Build the training objective for one batch.
 
-    ``loss_type``: ``flow_matching`` | ``image_l1`` | ``hybrid``.
+    ``loss_type``: ``flow_matching`` | ``image_l1`` | ``hybrid`` | ``latent``
+    (decoder-free: ``latent_restore_loss(z_hat, z_0)``, experiment J).
 
     ``adaptor`` (optional): a feature adaptor ``A`` applied to the *clean*
     latents right after the encoder, i.e. ``z0 <- A(z0)``.  The adapted space is
@@ -267,14 +412,41 @@ def compute_losses(
     shared ``(t, eps)`` draw and a single DiT forward feed both terms, so the
     hybrid's flow term is algebraically identical to the official loss.
 
+    ``corruption='simplenet'`` (default for B-J) replaces the flow draw by
+    ``z_in = z_0 + m*sigma*eps`` on a Perlin token mask (``sample_token_mask``)
+    and is only valid with ``loss_type='image_l1'``.  ``lambda_latent > 0``
+    adds ``lambda_latent * latent_restore_loss(z_hat, z_0)`` (corrupted tokens
+    up-weighted by ``noise.w_anom`` under the simplenet corruption).
+
+    ``disc`` (optional, ``iad.disc``): DRAEM's discriminative head on the token
+    grid, trained with a focal loss against the SimpleNet mask.  Its loss is
+    added to the returned tensor (for backward) but reported only as
+    ``terms['seg']`` -- ``terms['total']`` stays the restorer objective, so the
+    head cannot change checkpoint selection; with ``detach`` it cannot change
+    the DiT's gradients either.
+
     Returns ``(total_loss, terms_dict, zt, zhat)``: ``terms_dict`` holds the
     detached scalar terms (``total``/``img``/``fm`` as applicable), ``zt`` is
     the corrupted latent of the shared draw, and ``zhat`` the clean-latent
     estimate (``None`` for the pure flow-matching branch).
     """
     terms: Dict[str, float] = {}
+    z_enc = z0  # the encoder's latent, before any adaptor
+    anchored = bool(getattr(adaptor, "is_anchored", False))
     if adaptor is not None:
         z0 = adaptor(z0)
+    if corruption == "simplenet" and loss_type not in ("image_l1", "latent"):
+        raise ValueError("corruption='simplenet' needs loss='image_l1' or 'latent': flow "
+                         "matching and the hybrid need the linear flow path")
+    if loss_type == "latent" and adaptor is not None and not anchored and any(
+            p.requires_grad for p in adaptor.parameters()):
+        raise ValueError("loss='latent' with a plain trainable adaptor is degenerate: "
+                         "nothing anchors the adapted space, so the adaptor can shrink it "
+                         "to win the loss. Use an anchored adaptor (preserve_norm: true, "
+                         "inverse_head: true -- experiment K), a frozen one, or an image loss")
+    if disc is not None and corruption != "simplenet":
+        raise ValueError("the discriminator needs synthetic-anomaly masks: it requires "
+                         "corruption='simplenet' (the flow path has no mask)")
 
     if loss_type == "flow_matching":
         # Untouched official objective; it draws its own (t, eps) internally.
@@ -287,16 +459,28 @@ def compute_losses(
         _, zt, _ = transport.path_sampler.plan(t, eps, z0)
         return fm, terms, zt, None
 
-    # shared draw for image / hybrid
-    t, eps = sample_time(noise_cfg, transport, z0, generator)
-    zt = corrupt_latent(z0, eps, t, mode=corruption)
+    mask: Optional[torch.Tensor] = None
+    if corruption == "simplenet":
+        # SimpleNet-style: small Gaussian on a Perlin subset of tokens, graded
+        # against the clean latent; conditioning time sigma / (1 + sigma)
+        sn = simplenet_cfg(noise_cfg)
+        mask = sample_token_mask(z0, noise_cfg, size, generator)
+        eps = torch.randn_like(z0) if generator is None else torch.randn(
+            z0.shape, device=z0.device, dtype=z0.dtype, generator=generator)
+        t = torch.full((z0.shape[0],), sn["sigma"], device=z0.device, dtype=z0.dtype)
+        zt = simplenet_corrupt(z0, eps, sn["sigma"], mask)
+    else:
+        # shared draw for image / hybrid
+        t, eps = sample_time(noise_cfg, transport, z0, generator)
+        zt = corrupt_latent(z0, eps, t, mode=corruption)
     tc = conditioning_time(t, corruption)
     v = dit(zt, tc, y=y)
     zhat = prediction_to_clean_latent(zt, v, t, corruption=corruption)
 
     loss_img = None
     if loss_type in ("image_l1", "hybrid"):
-        loss_img, _ = image_reconstruction_loss(rae, zhat, images, size, clamp=clamp_recon)
+        z_dec = adaptor.invert(zhat) if anchored else zhat  # back to the decoder's space
+        loss_img, _ = image_reconstruction_loss(rae, z_dec, images, size, clamp=clamp_recon)
         terms["img"] = float(loss_img.detach())
 
     if loss_type == "hybrid":
@@ -311,8 +495,38 @@ def compute_losses(
         total = loss_img + float(lambda_fm) * loss_fm
     elif loss_type == "image_l1":
         total = loss_img
+    elif loss_type == "latent":
+        # decoder-free (experiment J): restore the clean latent directly; the
+        # decoder is never called
+        w_anom = simplenet_cfg(noise_cfg)["w_anom"] if mask is not None else 1.0
+        total = latent_restore_loss(zhat, z0.detach(), mask, w_anom)
+        terms["lat"] = float(total.detach())
     else:
         raise ValueError(f"Unknown loss_type '{loss_type}'")
 
-    terms["total"] = float(total.detach())
+    if float(lambda_latent) > 0 and loss_type != "latent":
+        # target detached: an adaptor must not shrink the target to win the term
+        w_anom = simplenet_cfg(noise_cfg)["w_anom"] if mask is not None else 1.0
+        loss_lat = latent_restore_loss(zhat, z0.detach(), mask, w_anom)
+        terms["lat"] = float(loss_lat.detach())
+        total = total + float(lambda_latent) * loss_lat
+
+    if anchored and adaptor.lambda_inv > 0 and any(
+            p.requires_grad for p in adaptor.parameters()):
+        # invertibility anchor (experiment K): the adapted space must still hold z
+        loss_inv = adaptor.anchor_loss(z_enc.detach(), z0)
+        terms["inv"] = float(loss_inv.detach())
+        total = total + adaptor.lambda_inv * loss_inv
+
+    terms["total"] = float(total.detach())  # the restorer objective (no seg term)
+
+    if disc is not None:
+        # DRAEM's discriminative sub-network: predict the synthetic-anomaly mask
+        # from (corrupted input, restoration)
+        from iad.disc import disc_cfg as _disc_cfg, seg_loss as _seg_loss
+        dc = _disc_cfg(disc_cfg)
+        z_in, z_r = (zt.detach(), zhat.detach()) if dc["detach"] else (zt, zhat)
+        loss_seg = _seg_loss(disc(z_in, z_r), mask, dc["gamma"])
+        terms["seg"] = float(loss_seg.detach())
+        total = total + dc["w_seg"] * loss_seg
     return total, terms, zt, zhat

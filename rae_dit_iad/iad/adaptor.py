@@ -230,6 +230,67 @@ class FeatureAdaptor(nn.Module):
         return self
 
 
+class AnchoredAdaptor(FeatureAdaptor):
+    """A feature adaptor that cannot collapse without a decoder (experiment K).
+
+    With a decoder-free loss (``loss: latent``) the loss is measured inside the
+    space the adaptor defines, so a plain trainable adaptor can win it by
+    shrinking every latent, inflating it until the added noise is negligible, or
+    mapping all tokens to one vector.  Two constraints close those doors:
+
+    * ``preserve_norm``: each adapted token is rescaled to its original norm,
+      ``z~_p = A(z)_p * ||z_p|| / ||A(z)_p||`` -- no shrinking or inflating, so
+      the SimpleNet noise keeps the same relative size.
+    * ``inverse_head``: a second residual bottleneck ``B`` must rebuild the
+      original latent, ``L_inv = mean (B(z~) - z)^2`` -- the adaptor may
+      re-express the space but cannot throw information away.  ``B`` also maps
+      restorations back to the decoder's space for pixel scoring.
+
+    Both heads are zero-initialized residuals, so at step 0 ``z~ = z`` exactly
+    and ``L_inv = 0``: experiment K starts exactly at J (unit test O).
+    """
+
+    def __init__(self, *args, preserve_norm: bool = True, inverse_head: bool = True,
+                 lambda_inv: float = 1.0, **kw) -> None:
+        super().__init__(*args, **kw)
+        self.preserve_norm = bool(preserve_norm)
+        self.lambda_inv = float(lambda_inv)
+        if self.lambda_inv < 0:
+            raise ValueError(f"lambda_inv must be >= 0 (got {lambda_inv})")
+        self.inverse: Optional[FeatureAdaptor] = None
+        if inverse_head:
+            self.inverse = FeatureAdaptor(
+                dim=self.dim, type="simplenet", rank=int(kw.get("rank", 4)),
+                residual=True, zero_init=True, norm=str(kw.get("norm", "batch")),
+                leaky_slope=float(kw.get("leaky_slope", 0.2)),
+                trainable=bool(kw.get("trainable", True)))
+
+    @property
+    def is_anchored(self) -> bool:
+        """Safe for decoder-free training: norm-preserving *and* invertible."""
+        return self.preserve_norm and self.inverse is not None
+
+    def extra_repr(self) -> str:
+        return (super().extra_repr() + f", preserve_norm={self.preserve_norm}, "
+                f"inverse_head={self.inverse is not None}, lambda_inv={self.lambda_inv}")
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        za = super().forward(z)
+        if self.preserve_norm:
+            za = za * (z.norm(dim=1, keepdim=True)
+                       / za.norm(dim=1, keepdim=True).clamp_min(1e-12))
+        return za
+
+    def invert(self, z_tilde: torch.Tensor) -> torch.Tensor:
+        """Adapted space -> the original (decoder's) latent space."""
+        return z_tilde if self.inverse is None else self.inverse(z_tilde)
+
+    def anchor_loss(self, z: torch.Tensor, z_tilde: torch.Tensor) -> torch.Tensor:
+        if self.inverse is None:
+            return z_tilde.new_zeros(())
+        return (self.inverse(z_tilde) - z).pow(2).mean()
+
+
 def build_adaptor(
     cfg: Optional[Dict[str, Any]],
     dim: int = 768,
@@ -246,7 +307,12 @@ def build_adaptor(
     if kind in ("none", "", "identity"):
         return None
     cfg.pop("dim", None)
-    adaptor = FeatureAdaptor(dim=int(dim), type=kind, **cfg)
+    anchor_keys = {k: cfg.pop(k) for k in ("preserve_norm", "inverse_head", "lambda_inv")
+                   if k in cfg}
+    if anchor_keys.get("preserve_norm") or anchor_keys.get("inverse_head"):
+        adaptor = AnchoredAdaptor(dim=int(dim), type=kind, **anchor_keys, **cfg)
+    else:
+        adaptor = FeatureAdaptor(dim=int(dim), type=kind, **cfg)
     if device is not None:
         adaptor = adaptor.to(device)
     return adaptor
@@ -289,4 +355,7 @@ def adaptor_meta(adaptor: Optional[FeatureAdaptor]) -> Optional[Dict[str, Any]]:
         "trainable": adaptor.trainable,
         "stats_fitted": bool(adaptor.stats_fitted),
         "params": int(sum(p.numel() for p in adaptor.parameters())),
+        "preserve_norm": bool(getattr(adaptor, "preserve_norm", False)),
+        "inverse_head": getattr(adaptor, "inverse", None) is not None,
+        "lambda_inv": getattr(adaptor, "lambda_inv", None),
     }
