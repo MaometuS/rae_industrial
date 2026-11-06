@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# RAE-DiT industrial anomaly detection: full experiment matrix (A–E + noise ablations).
+# RAE-DiT industrial anomaly detection: full experiment matrix (A-G, J, K + noise ablations).
+# Corruption: SimpleNet-style (default) for every arm except A (original flow path).
 # Writes only to results_dit_iad/<exp_id>/.
 #
 # Usually launched through one of the two presets:
@@ -9,9 +10,11 @@
 #
 #   bash run_dit_iad.sh                                                   # train+eval A–G, pilot cats, seed 0
 #   EXPT="A B C" CATS="carpet screw" SEEDS="0 1" bash run_dit_iad.sh       # subset / more seeds
-#   STAGE=eval EXPT="B" T_VALUES="0.1,0.3,0.5,0.7,0.9" bash run_dit_iad.sh # eval-only noise sweep
+#   STAGE=eval EXPT="A" T_VALUES="0.1,0.3,0.5,0.7,0.9" bash run_dit_iad.sh # eval-only noise sweep (flow path: A)
 #   STAGE=train STEPS=500 EXPT="A" bash run_dit_iad.sh                     # quick smoke run
 #   ADAPTOR=mlp EXPT="F" bash run_dit_iad.sh                               # swap the adaptor family
+#   SIGMA=0.05 EXPT="B J" bash run_dit_iad.sh                             # SimpleNet-style noise level
+#   STAGE=eval EXPT="A B" SCORES="latent_l2" bash run_dit_iad.sh          # extra scoring, no retraining
 #   BATCH=1 GRAD_ACCUM=8 EXPT="A" bash run_dit_iad.sh                     # tighter memory
 #   MEM=low bash run_dit_iad.sh                                           # force 24 GB preset
 #   MEM=full BATCH=4 GRAD_ACCUM=2 bash run_dit_iad.sh                     # big GPU: fastest settings
@@ -19,13 +22,13 @@
 set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
-MVTEC_ROOT=${MVTEC_ROOT:-/home/maometus/Documents/datasets/mvtec_anomaly_detection}
+MVTEC_ROOT=${MVTEC_ROOT:-/po1/rakhimov/datasets/mvtec_anomaly_detection}
 RAE_ROOT=${RAE_ROOT:-$HERE/../rae_fidelity/RAE}
 OUT=${OUT:-$HERE/results_dit_iad}
 ENV_NAME=${ENV_NAME:-rae}
 CATS=${CATS:-"carpet grid hazelnut screw transistor"}
 SEEDS=${SEEDS:-"0"}
-EXPT=${EXPT:-"A B C D E F G"}
+EXPT=${EXPT:-"A B C D E F G J K"}
 STAGE=${STAGE:-"train eval"}      # "train", "eval" or "train eval"
 STEPS=${STEPS:-""}                # empty = config default (4000)
 BATCH=${BATCH:-2}                 # micro-batch
@@ -37,12 +40,15 @@ MEM=${MEM:-auto}
 # reduce allocator fragmentation on 24 GB cards
 export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
 MODES=${MODES:-"single"}          # single | multi | ode (comma list = sweep)
-T_VALUES=${T_VALUES:-"0.5"}       # noise level(s), comma list = sweep
+T_USER=${T_VALUES+set}            # did the caller set T_VALUES explicitly?
+T_VALUES=${T_VALUES:-"0.5"}       # A only (flow path); SimpleNet arms default to their trained sigma
 REPEATS=${REPEATS:-1}             # repetitions for mode=multi
 ODE_STEPS=${ODE_STEPS:-50}
 VIZ=${VIZ:-6}
-LAMBDA_FM=${LAMBDA_FM:-""}        # override hybrid weight (experiments D/E)
+LAMBDA_LAT=${LAMBDA_LAT:-""}      # override latent-term weight (experiments D/E)
 ADAPTOR=${ADAPTOR:-""}            # override adaptor type (experiments F/G)
+SIGMA=${SIGMA:-""}                # override SimpleNet-style noise sigma (every arm but A)
+SCORES=${SCORES:-"pixel latent_cos disc"}  # each arm scored with each: pixel | latent_cos | latent_l2 | disc
 
 # letter -> config file
 config_for() {
@@ -50,11 +56,13 @@ config_for() {
     A) echo "$HERE/configs/A_flow_matching.yaml" ;;
     B) echo "$HERE/configs/B_image_l1.yaml" ;;
     C) echo "$HERE/configs/C_image_l1_decfinetune.yaml" ;;
-    D) echo "$HERE/configs/D_hybrid.yaml" ;;
-    E) echo "$HERE/configs/E_hybrid_decfinetune.yaml" ;;
+    D) echo "$HERE/configs/D_image_l1_latent.yaml" ;;
+    E) echo "$HERE/configs/E_image_l1_latent_decfinetune.yaml" ;;
     F) echo "$HERE/configs/F_image_l1_adaptor.yaml" ;;
     G) echo "$HERE/configs/G_image_l1_adaptor_decfinetune.yaml" ;;
-    *) echo "$HERE/configs/$1.yaml" ;;   # full basename, e.g. noise_fixed_t03
+    J) echo "$HERE/configs/J_latent_simplenet_nodecoder.yaml" ;;
+    K) echo "$HERE/configs/K_latent_simplenet_adaptor.yaml" ;;
+    *) echo "$HERE/configs/$1.yaml" ;;   # full basename, e.g. noise_sigma02
   esac
 }
 
@@ -87,8 +95,9 @@ for exp in $EXPT; do
       # shellcheck disable=SC2086
       EXTRA=""
       [ -n "$STEPS" ] && EXTRA="$EXTRA --steps $STEPS"
-      [ -n "$LAMBDA_FM" ] && EXTRA="$EXTRA --lambda-fm $LAMBDA_FM"
+      [ -n "$LAMBDA_LAT" ] && EXTRA="$EXTRA --lambda-latent $LAMBDA_LAT"
       [ -n "$ADAPTOR" ] && EXTRA="$EXTRA --adaptor $ADAPTOR"
+      [ -n "$SIGMA" ] && EXTRA="$EXTRA --noise-sigma $SIGMA"
       case "$MEM" in
         full) EXTRA="$EXTRA --no-grad-checkpoint --ema-device cuda" ;;
         low)  EXTRA="$EXTRA --grad-checkpoint --ema-device cpu" ;;
@@ -103,14 +112,22 @@ for exp in $EXPT; do
     fi
 
     if [[ " $STAGE " == *" eval "* ]]; then
-      echo "=== eval exp=$exp seed=$SEED (mode=$MODES t=$T_VALUES) ==="
-      # shellcheck disable=SC2086
-      python "$HERE/rae_dit_iad.py" eval \
-        --config "$CFG" --rae-root "$RAE_ROOT" --mvtec-root "$MVTEC_ROOT" \
-        --out "$RUN_DIR" --categories $CATS --seed "$SEED" \
-        --mode "$MODES" --t "$T_VALUES" --repeats "$REPEATS" \
-        --ode-steps "$ODE_STEPS" --batch-size "$EVAL_BATCH" --viz "$VIZ" \
-        2>&1 | tee -a "$RUN_DIR/eval_${exp}.log"
+      # SimpleNet-style arms (all but A) add no test-time noise: unless T_VALUES was set
+      # explicitly, let eval use the checkpoint's own training sigma instead of 0.5
+      T_ARG="--t $T_VALUES"; T_SHOW="$T_VALUES"
+      if [ -z "$T_USER" ] && grep -q "^  corruption: simplenet" "$CFG"; then
+        T_ARG=""; T_SHOW="trained sigma"
+      fi
+      for SC in $SCORES; do
+        echo "=== eval exp=$exp seed=$SEED (mode=$MODES t=$T_SHOW score=$SC) ==="
+        # shellcheck disable=SC2086
+        python "$HERE/rae_dit_iad.py" eval \
+          --config "$CFG" --rae-root "$RAE_ROOT" --mvtec-root "$MVTEC_ROOT" \
+          --out "$RUN_DIR" --categories $CATS --seed "$SEED" \
+          --mode "$MODES" $T_ARG --score "$SC" --repeats "$REPEATS" \
+          --ode-steps "$ODE_STEPS" --batch-size "$EVAL_BATCH" --viz "$VIZ" \
+          2>&1 | tee -a "$RUN_DIR/eval_${exp}.log"
+      done
     fi
 
   done

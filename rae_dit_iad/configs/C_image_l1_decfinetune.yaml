@@ -5,9 +5,17 @@ experiment:
   loss: image_l1
   lambda_fm: 0.0
   decoder_finetune: true
-  corruption: flow
+  corruption: simplenet  # the default; A is the only flow-path arm
   clamp_recon: false
   best_metric: img
+
+discriminator:   # DRAEM's discriminative sub-network on the token grid (iad/disc.py)
+  enabled: true
+  d: 256          # hidden channels
+  blocks: 4       # residual conv blocks
+  w_seg: 1.0      # weight of the focal segmentation loss
+  gamma: 2.0      # focal-loss focusing (DRAEM)
+  detach: true    # true: the head never changes the DiT's training (clean comparisons)
 
 rae_config: configs/stage2/training/ImageNet256/DiTDH-XL_DINOv2-B.yaml
 rae_config_overrides:
@@ -15,8 +23,13 @@ rae_config_overrides:
     ckpt: "models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt"
 
 noise:
-  time_dist: logit-normal_0_1
-  warp: false
+  # Default corruption (SimpleNet-style, iad.core.SIMPLENET_DEFAULTS):
+  #   z_in = z0 + m * sigma * eps on a Perlin token mask m; no noise at test time.
+  sigma: 0.1      # normalized-latent units; sweep with SIGMA or the noise_* ablations
+  mask: perlin    # perlin | all  (all = SimpleNet exactly: every token noised)
+  p_clean: 0.2    # fraction of samples left clean
+  w_anom: 5.0     # latent-loss up-weight on corrupted tokens (when a latent term is used)
+  mask_thr: 0.5
 
 size: 256
 seed: 42
@@ -54,7 +67,7 @@ training:
 
 inference:
   mode: single
-  t: 0.5
+  t: 0.1          # = noise.sigma (conditioning only); eval uses the ckpt sigma if --t is omitted
   reps: 1
   ode_steps: 50
   blur_sigma: 4.0

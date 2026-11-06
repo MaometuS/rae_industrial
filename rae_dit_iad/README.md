@@ -1,10 +1,10 @@
 # RAE-DiT for Industrial Anomaly Detection (IAD)
 
 Trains the **original RAE DiT** (DiT-DH-XL, `bytetriper/RAE`) on MVTec AD
-*normal* images with one of three objectives and evaluates reconstruction-based
-anomaly detection. This is the implementation + experiment suite for the
-research spec: *image-space L1 reconstruction loss through the RAE decoder
-versus the original flow-matching baseline.*
+*normal* images as a **latent restorer** and evaluates reconstruction-based
+anomaly detection. The default corruption is **SimpleNet-style** (small Gaussian
+noise on a Perlin-masked subset of tokens); experiment A keeps the original
+flow-matching objective on the original flow path as the single reference.
 
 Nothing in the official RAE repo is modified; it is consumed as a library
 (`../rae_fidelity/RAE`, commit `a4d18c4`), and MVTec loading / benchmark
@@ -14,15 +14,26 @@ metrics come from `../latent_draem/latent_draem.py`.
 
 ## 1. Experiments
 
-| id | config | loss | decoder | notes |
-|----|--------|------|---------|-------|
-| **A** | `configs/A_flow_matching.yaml` | official flow matching (untouched `transport.training_losses`) | frozen | baseline, reproduces the original RAE objective on MVTec |
-| **B** | `configs/B_image_l1.yaml` | image L1 through the decoder | frozen | gradients flow *through* the frozen decoder into the DiT |
-| **C** | `configs/C_image_l1_decfinetune.yaml` | image L1 | **finetuned** | decoder lr = 0.1 × DiT lr (`decoder_lr_ratio`) |
-| **D** | `configs/D_hybrid.yaml` | `L1 + λ·L_FM` (λ = 0.1, `--lambda-fm`) | frozen | one shared (t, ε) draw / one DiT forward for both terms |
-| **E** | `configs/E_hybrid_decfinetune.yaml` | `L1 + λ·L_FM` | **finetuned** | |
-| **F** | `configs/F_image_l1_adaptor.yaml` | image L1 + **feature adaptor** | frozen | SimpleNet-style adaptor after the encoder; compare **F vs B** |
-| **G** | `configs/G_image_l1_adaptor_decfinetune.yaml` | image L1 + **feature adaptor** | **finetuned** | identical adaptor to F; compare **G vs C** |
+| id | config | corruption | loss | decoder | compare with |
+|----|--------|-----------|------|---------|--------------|
+| **A** | `configs/A_flow_matching.yaml` | **flow path** | official flow matching (untouched `transport.training_losses`) | unused in training | reference: the original RAE objective; **A vs J** isolates the corruption |
+| **B** | `configs/B_image_l1.yaml` | SimpleNet | image L1 through the decoder | frozen | the hinge: C–G and J each change one thing |
+| **C** | `configs/C_image_l1_decfinetune.yaml` | SimpleNet | image L1 | **fine-tuned** (0.1 × lr) | B (decoder) |
+| **D** | `configs/D_image_l1_latent.yaml` | SimpleNet | image L1 + λ·latent MSE (λ = 1) | frozen | B (latent term) |
+| **E** | `configs/E_image_l1_latent_decfinetune.yaml` | SimpleNet | image L1 + λ·latent MSE | **fine-tuned** | D (decoder), C (latent term) |
+| **F** | `configs/F_image_l1_adaptor.yaml` | SimpleNet | image L1 + **feature adaptor** | frozen | B (domain gap) |
+| **G** | `configs/G_image_l1_adaptor_decfinetune.yaml` | SimpleNet | image L1 + **feature adaptor** | **fine-tuned** | C (domain gap) |
+| **J** | `configs/J_latent_simplenet_nodecoder.yaml` | SimpleNet | **latent MSE only** | **dropped** | D (decoder), A (corruption), latent_draem restorer, kNN |
+| **K** | `configs/K_latent_simplenet_adaptor.yaml` | SimpleNet | latent MSE + **anchored feature adaptor** | **dropped** | J (adaptor), F (adaptor with a decoder) |
+
+Letters H and I were merged away: with SimpleNet as the default, "B with SimpleNet
+noise" is B, and "image L1 + latent term" is D. The old flow-path hybrid
+(L1 + 0.1·flow matching) is gone: on the SimpleNet path the flow-matching target
+reduces to the latent MSE (see *Corruption* below), which D/E now use directly.
+
+**Every arm is scored three ways** by the runner (`SCORES="pixel latent_cos disc"`): the
+pixel map `|x − D(ẑ)|` after the decoder, the latent map `1 − cos(E(x), ẑ)` before it, and
+DRAEM's learned segmentation map (`disc`, every arm but A — see *Discriminator* below).
 
 Shared: encoder **always frozen** (and latents pre-cached — exact, since the
 encoder never updates), official AdamW hyperparameters (lr 2e-4, betas
@@ -31,16 +42,15 @@ encoder never updates), official AdamW hyperparameters (lr 2e-4, betas
 (1000) because MVTec has no ImageNet label (a no-op w.r.t. the official label
 dropout).
 
-Noise ablations (train-time corruption, all based on B):
+Noise ablations (train-time corruption, all on top of B):
 
-| config | corruption | time distribution |
-|--------|-----------|-------------------|
-| `noise_fixed_t03.yaml` | flow | t fixed 0.3 |
-| `noise_fixed_t07.yaml` | flow | t fixed 0.7 |
-| `noise_range_02_08.yaml` | flow | t ~ U[0.2, 0.8] |
-| `noise_additive_sigma03.yaml` | additive `z0 + σ·ε` (documented deviation) | σ fixed 0.3 |
+| config | change vs B |
+|--------|-------------|
+| `noise_sigma005.yaml` | σ = 0.05 (default 0.1) |
+| `noise_sigma02.yaml` | σ = 0.2 |
+| `noise_mask_all.yaml` | `mask: all` — every token noised (SimpleNet exactly; no clean context) |
 
-Eval-time noise sweeps use `eval --t 0.1,0.3,0.5,0.7,0.9` (no retraining).
+`SIGMA=<value>` overrides σ for any arm but A without a new config.
 
 ### Feature adaptor: is ImageNet→MVTec feature adaptation worth it? (F/G)
 
@@ -76,6 +86,125 @@ run_dit_iad.sh` (or any preset) does the same for the whole matrix. The adaptor
 is EMA'd with the same decay as the DiT and stored in the checkpoints, so `eval`
 reconstructs it automatically from the checkpoint's own config.
 
+### Corruption: SimpleNet-style by default, flow path only in A
+
+**Flow path (A only).** The original RAE corruption mixes noise into *every*
+token and shrinks the clean signal: `z_t = (1−t)·z₀ + t·ε`, with t drawn from the
+official warped logit-normal (median t ≈ 0.87, only ~2.6% of draws below 0.5). The
+DiT learns the velocity `v* = ε − z₀` along that straight data→noise line, i.e.
+to *generate* a whole latent from mostly noise. At test time A corrupts at t = 0.5
+with per-image seeded ε and jumps back in one step, `ẑ = z_t − t·v`.
+
+**SimpleNet-style (default, B–J; `corruption: simplenet`, `iad/core.py`).** Small
+i.i.d. Gaussian noise (SimpleNet's idea) on a DRAEM-style Perlin token mask only:
+
+```
+train:  m  = Perlin blob at 256 px, avg-pooled to 16×16   (p_clean = 0.2 → m = 0)
+        z_in = z₀ + m · σ · ε,        σ = 0.1 (normalized-latent units)
+        ẑ   = z_in − t_c · v_θ(z_in, t_c),   t_c = σ / (1 + σ)
+        B/C/F/G:  L = ‖D(ẑ) − x‖₁ / 3HW
+        D/E:      L = ‖D(ẑ) − x‖₁ / 3HW + λ · Σ_p w_p‖ẑ_p − z₀_p‖² / Σ_p w_p,   w = 1 + 4m,  λ = 1
+        J:        L = Σ_p w_p‖ẑ_p − z₀_p‖² / Σ_p w_p                          (no decoder)
+test:   z_in = E(x)  (no noise: the real defect is the corruption); mode = single
+```
+
+* Untouched tokens stay exactly clean and the signal is not shrunk, so the DiT must
+  judge corrupted tokens against their clean context ("replace what does not
+  fit"): a *restorer*, not a generator — the mechanism of `latent_draem`'s
+  `latent_noise` restorer.
+* σ is small so corrupted tokens cannot be spotted by norm alone (σ = 0.1 adds ~1%
+  to a token's squared norm; `latent_noise` used σ ∈ [0.5, 1.5]). SimpleNet's own
+  σ = 0.015 lives in its adapted WideResNet feature scale and does not transfer
+  1:1, hence the σ ablations.
+* **Why flow matching and the hybrid do not exist on this path.** There is no
+  data→noise line, so "velocity along the path" is undefined. The output that makes
+  `ẑ = z₀` exactly is `v* = (z_in − z₀)/t_c`, and `‖v − v*‖² = ‖ẑ − z₀‖² / t_c²`:
+  flow matching collapses to the latent MSE (J's loss, D/E's extra term). The code
+  therefore refuses `flow_matching`/`hybrid` with `corruption: simplenet`.
+* **A vs J.** A's flow-matching loss is also a latent-space loss
+  (`‖v − v*‖² = ‖ẑ − z₀‖² / t²` on the flow path) and A never trains through the
+  decoder, so A and J differ essentially in the corruption. Compare them on the
+  `latent_cos` score.
+* `ode`/`multi` do not apply to SimpleNet arms (no test-time noise); eval uses the
+  checkpoint's σ unless `--t` is given.
+
+### Decoder-free: the DiT as a latent restorer (J) and latent scoring
+
+The DINOv2-B RAE decoder reconstructs normal MVTec images at PSNR ≈ 20 / SSIM ≈ 0.56
+(`rae_fidelity`), so every pixel-space loss and map carries decoder error. J drops
+the decoder from the loss (`loss: latent`) and is scored in latent space:
+
+```
+test:   z = E(x), ẑ = z − t_c·v_θ(z, t_c)
+        map_p = 1 − cos(z_p, ẑ_p)   (latent_l2: mean_c(ẑ_p − z_p)²)
+        16×16 token map → bilinear 256 px → Gaussian blur σ = 4 → usual metrics
+```
+
+* The decoder is offloaded to CPU while J trains and only used at eval (pixel score,
+  viz grids).
+* J is `latent_draem`'s `latent_noise` restorer + residual score with the
+  pretrained DiT as the restorer. Bars: that restorer (0.972 image AUROC, one seed)
+  and frozen-token kNN (0.969).
+* Latent scoring is an eval option for **every** checkpoint (`--score latent_cos`);
+  the runner scores all arms with `pixel` and `latent_cos`. Rows carry a `score`
+  column; rows from before it count as `pixel`.
+* A *plain* trainable adaptor is refused with `loss: latent`: nothing anchors the
+  adapted space, so it could shrink it, inflate it past the noise, or map every token
+  to one vector, and win the loss. `decoder_finetune` must be false.
+
+### K: the decoder-free arm with an anchored feature adaptor
+
+K is J plus the SimpleNet feature adaptor, made collapse-proof
+(`iad.adaptor.AnchoredAdaptor`, `preserve_norm` + `inverse_head`):
+
+```
+z~   = A(z₀) · ‖z₀‖ / ‖A(z₀)‖            per token: norm preserved (no shrink / inflate)
+z_in = z~ + m·σ·ε,   ẑ = z_in − t_c·v_θ(z_in, t_c)
+L    = Σ_p w_p ‖ẑ_p − z~_p‖² / Σ_p w_p  +  λ_inv · mean ‖B(z~) − z₀‖²     λ_inv = 1
+test: latent_cos 1 − cos(z~, ẑ) · disc head · pixel |x − D(B(ẑ))|
+```
+
+* `B` is a second residual bottleneck that must rebuild the encoder latent from the
+  adapted one, so the adaptor may re-express the space but not discard information;
+  it also maps restorations back to the decoder's space for the pixel score.
+* `A` and `B` are zero-initialized residuals: step 0 of K is exactly J (unit test O).
+* Remaining loophole: an invertible map can still squash some directions to tiny
+  magnitudes (with `B` scaling them back), which both the restoration loss and the
+  cosine score would then under-weight. The rank-192 bottleneck limits this; watch
+  `loss_inv` and per-channel spread of `z~` if K behaves oddly.
+* Resolution limit: latent maps have 16×16 token resolution, so defects smaller
+  than a 16-px patch (screw) are averaged into their token.
+
+### Discriminator: DRAEM's discriminative sub-network (every SimpleNet arm)
+
+DRAEM trains two networks: the reconstructive one (here the DiT) and a
+*discriminative* segmentation network that sees the corrupted input and the
+reconstruction together and predicts where the synthetic anomaly was pasted. At test
+time **its output, not the raw residual, is the anomaly map**: it learns which
+differences are defects and which are ordinary reconstruction error. B–G, J and the
+ablations carry it (`discriminator:` block, `iad/disc.py`), on the token grid:
+
+```
+logits = D([z_in, ẑ, z_in − ẑ, 1 − cos(z_in, ẑ)])     (latent_draem.Discriminator)
+L_seg  = focal_bce(logits, m)      m = the SimpleNet token mask (soft coverage), γ = 2
+score  = sigmoid(logits) → bilinear 256 px → blur σ = 4 → usual metrics   (--score disc)
+```
+
+* **It does not change any arm.** With `detach: true` (default) the head gets
+  detached copies of `z_in` and `ẑ`, its own gradient clipping and an RNG-forked
+  initialization, so the DiT's gradients are identical with and without it (unit
+  test N). Its loss is logged as `seg` and kept out of `total`, so it cannot change
+  which DiT checkpoint is selected as `best`. Every arm comparison stays valid; the
+  head only adds a learned score on top. `detach: false` trains it jointly (DRAEM's
+  own setting), which does change the DiT.
+* EMA'd like the DiT and stored in the checkpoints; eval pairs the EMA head with the
+  EMA DiT, exactly as validation does.
+* A (flow path) has no synthetic-anomaly mask, so no head: `--score disc` is skipped
+  for A with a message. In `noise_mask_all` the mask covers every token, so the head
+  can only learn "this sample was corrupted" — expect it to be weak there.
+* Resolution: token-level, like the latent scores. A pixel-level head on (image,
+  decoded restoration) would be the full-resolution DRAEM variant.
+
 ## 2. Layout
 
 ```
@@ -84,11 +213,12 @@ rae_dit_iad/
 │   ├── core.py       # corruption, time sampling, velocity→clean conversion, losses
 │   ├── models.py     # official RAE/DiT/transport builders, freezing, optimizer
 │   ├── adaptor.py    # feature adaptors after the frozen encoder (experiments F/G)
+│   ├── disc.py       # DRAEM discriminative head on the token grid (SimpleNet arms)
 │   ├── train.py      # training engine (EMA, official scheduler, checkpoint/resume)
 │   └── infer.py      # single/multi/ode reconstruction, anomaly maps, viz grids
 ├── rae_dit_iad.py    # CLI: `train` and `eval` subcommands
 ├── configs/          # experiment + noise-ablation YAMLs
-├── tests/test_iad.py # Tests A–I (+J: memory switches, +K: feature adaptor)
+├── tests/test_iad.py # Tests A–I (+J memory, +K adaptor, +L SimpleNet, +M decoder-free, +N disc, +O anchor)
 ├── run_dit_iad.sh    # cluster runner (shared train + eval matrix engine)
 ├── run_dit_iad_default.sh    # preset: no memory optimizations (> 30 GB VRAM)
 └── run_dit_iad_efficient.sh  # preset: all memory optimizations (24 GB VRAM)
@@ -101,8 +231,10 @@ rae_dit_iad/
 * Clean-latent conversion (velocity parameterization):
   `ẑ = z_t − t·v` — exact at `v = v*`, and exactly one Euler step of the
   probability-flow ODE from `t` to `0`.
-* Hybrid loss: `L = L1(x̂, x) + λ·mean_flat((v − v*)²)` on a **single shared**
-  `(t, ε)` draw, so the FM term is algebraically the official loss.
+* SimpleNet corruption: `z_in = z₀ + m·σ·ε`, conditioning time `t_c = σ/(1+σ)`,
+  `ẑ = z_in − t_c·v` (exact at `v* = (z_in − z₀)/t_c`). The `hybrid` loss
+  (`L1 + λ·mean_flat((v − v*)²)` on one shared flow draw) still exists in the code
+  but no config uses it any more.
 * Experiment A does not use these paths for training: it calls the untouched
   official `Transport.training_losses` (unit test F proves the two are the
   same objective when the draw is shared).
@@ -136,9 +268,13 @@ MEM=full bash run_dit_iad.sh     # no recompute, EMA on GPU (needs > 30 GB)
 # large GPU: fastest settings (raise the micro-batch too if memory allows)
 MEM=full BATCH=4 GRAD_ACCUM=2 bash run_dit_iad.sh
 
-# eval-only, noise sweep over modes + levels
-STAGE=eval EXPT="B" MODES="single,multi,ode" T_VALUES="0.1,0.3,0.5,0.7,0.9" \
+# eval-only, noise sweep over modes + levels (flow path: A only)
+STAGE=eval EXPT="A" MODES="single,multi,ode" T_VALUES="0.1,0.3,0.5,0.7,0.9" \
   REPEATS=4 bash run_dit_iad.sh
+
+# SimpleNet noise level for the SimpleNet arms, extra scoring without retraining
+SIGMA=0.05 EXPT="B J" bash run_dit_iad.sh
+STAGE=eval EXPT="A B J" SCORES="latent_l2" bash run_dit_iad.sh
 ```
 
 Direct CLI:
@@ -157,8 +293,9 @@ python rae_dit_iad.py eval --config configs/B_image_l1.yaml \
     --mode single --t 0.5 --seed 0
 ```
 
-Tests (Tests A–I from the spec, plus J for the memory switches and K for the
-adaptor; weight-independent, CPU):
+Tests (A–I from the spec, plus J memory switches, K adaptor, L SimpleNet-style
+corruption, M decoder-free loss and latent scoring, N discriminator, O anchored adaptor;
+weight-independent, CPU):
 
 ```bash
 pytest rae_dit_iad/tests/test_iad.py -v
@@ -224,7 +361,11 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
 * **Inference modes** (cost reported per image in `results.csv`):
   `single` (1 DiT pass, exactly one Euler step), `multi` (`--repeats`
   independent corruptions, maps averaged), `ode` (`--ode-steps` explicit Euler
-  steps on the official warped time grid).
+  steps on the official warped time grid). `multi`/`ode` apply to A only: the
+  SimpleNet arms add no test-time noise, so they run `single`.
+* **Scores** (`--score`): `pixel` = `mean_c |x − D(ẑ)|`, `latent_cos` /
+  `latent_l2` = token distance between `E(x)` and `ẑ` before the decoder, `disc` =
+  DRAEM's learned segmentation map (SimpleNet arms; skipped for A).
 * **Reproducibility**: `--seed` fixes training init/data order and inference
   noise. Inference noise is per-image-index (`seed·1_000_003 + idx·97 +
   rep·13`), so results are **batch-size invariant** and comparable across model
@@ -236,7 +377,7 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
 * **Outputs** under `results_dit_iad/seed<S>/<exp_id>/`: `joint_{best,last}.pt`,
   `metrics.jsonl`, `results.csv` (deduplicated rows per setting),
   `per_image.csv`, `report.md` (aggregate + per-category tables),
-  `viz/<cat>_<exp>_<mode>_t<t>.png` grids.
+  `viz/<cat>_<exp>_<mode>_t<t>[_<score>].png` grids.
 
 ## 5. Deviations from the official RAE repo (all documented in code)
 
@@ -254,9 +395,8 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
 5. **Two-group optimizer** when `decoder_finetune` (decoder lr = 0.1 × base);
    the official `build_scheduler` resets all group lrs, so group lrs are
    re-applied afterwards (`iad.models.fix_param_group_lrs`).
-6. **Additive corruption** `z_t = z_0 + σ·ε` exists only for noise ablations;
-   the conditioning time becomes `σ/(1+σ)` and `hybrid` loss rejects it (no
-   linear-path velocity target exists there).
+6. **Additive corruption** `z_t = z_0 + σ·ε` (all tokens) is still in the code but
+   no config uses it any more; the conditioning time is `σ/(1+σ)`.
 7. `ode` inference integrates on the official warped time grid
    `warp(u) = s·u/(1+(s−1)u)`, `s = √(prod(latent)/4096) = √48`.
 8. **Feature adaptor (F/G only)** — an addition, not part of the official RAE:
@@ -273,12 +413,24 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
    encoder is always offloaded to CPU after latent caching (it is unused
    afterwards).
 
+10. **SimpleNet-style corruption is the project default** (B–J) — an addition,
+   not part of the official RAE: masked additive noise `z₀ + m·σ·ε` instead of the
+   flow path, conditioning time σ/(1+σ), no noise at test time. A alone keeps the
+   official flow path and loss, untouched.
+11. **Latent loss and latent scoring** — additions: `loss: latent` (J) and the
+   `lambda_latent` term (D/E) train on a token MSE to the clean latent;
+   `score: latent_*` scores before the decoder. Neither touches the official
+   objective or decoder.
+12. **Discriminator (all SimpleNet arms)** — an addition: DRAEM's discriminative
+   sub-network on the token grid, trained with a focal loss against the synthetic
+   mask; detached by default, so it never changes the DiT's training.
+
 ## 6. Known limitations
 
 * **Experiment A ignores the config `noise:` block during training** — the
   official `training_losses` draws its own `(t, ε)` from the transport config
-  (`logit-normal_0_1` + official warp). The `noise:` block only drives
-  B/C/D/E and validation.
+  (`logit-normal_0_1` + official warp). A is the only flow-path arm; every other
+  arm reads the SimpleNet keys of its `noise:` block.
 * Image L1 at the *validation* step selects `best` checkpoints by validation
   loss (`val_img` / `val_fm`), not by anomaly-detection AUROC — no test-set
   leakage, but the best-loss checkpoint is not necessarily the best detector.
@@ -307,7 +459,8 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
 
 ## 7. Status
 
-Implementation + configs + tests written (A–G + noise ablations + Tests A–K);
+Implementation + configs + tests written (A–G, J, K + 3 noise ablations + Tests A–O;
+the SimpleNet/latent/discriminator additions have not been executed yet);
 cluster execution pending (this subproject is run entirely on the cluster —
 `run_dit_iad_default.sh` / `run_dit_iad_efficient.sh`). Result tables land in
 `results_dit_iad/seed*/<exp_id>/report.md` after the matrix runs; the adaptor

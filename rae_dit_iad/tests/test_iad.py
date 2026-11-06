@@ -24,6 +24,19 @@ checkpoints are not needed.  What they cover:
     K. feature adaptor      — identity at init (F step 0 == B), grads reach the
                               adaptor, train-stats init, checkpoint roundtrip,
                               inference uses the same adapted latent space
+    L. SimpleNet corruption — masked small-sigma noise leaves clean tokens
+                              untouched, reproducible masks, oracle exactness,
+                              loss = img + lambda_latent*lat, guards, and no
+                              test-time noise at inference (default corruption)
+    M. decoder-free arm     — loss='latent' never calls the decoder, equals the
+                              token MSE, rejects a trainable adaptor; latent
+                              anomaly maps (cos / l2) and their use in inference
+    N. discriminator        — DRAEM's segmentation head: leaves the DiT's gradients
+                              and the reported total unchanged (detach), learns
+                              from the mask, needs SimpleNet masks, disc score
+    O. anchored adaptor     — K starts exactly at J, keeps token norms, the
+                              invertibility anchor penalizes information loss,
+                              plain adaptors still refused, pixel decode via B
 
 Run:  pytest rae_dit_iad/tests/test_iad.py -v   (cluster env `rae` for torch)
 """
@@ -674,4 +687,407 @@ def test_k_feature_adaptor_checkpoint_and_inference(tmp_path):
     assert torch.allclose(maps_none, maps_ident, rtol=0, atol=0)
     _, maps_ad, _ = I.reconstruct(rae, dit, x, idx, mode="single", t=0.5, seed=5, adaptor=ad)
     assert not torch.allclose(maps_none, maps_ad)
+
+
+# ---------------------------------------------------------------------------
+# L. SimpleNet-style corruption (project default)
+# ---------------------------------------------------------------------------
+
+def test_l_simplenet_corruption_and_conversion():
+    """z_in = z0 + m*sigma*eps: exact on masked tokens, untouched elsewhere."""
+    seed_all(5)
+    z0 = torch.randn(4, 8, 16, 16)
+    # (a) mask=all, no clean samples: the added noise is exactly sigma * eps
+    cfg_all = {"sigma": 0.1, "mask": "all", "p_clean": 0.0}
+    m = core.sample_token_mask(z0, cfg_all, size=16)
+    assert m.shape == (4, 1, 16, 16) and torch.all(m == 1)
+    eps = torch.randn_like(z0)
+    zt = core.simplenet_corrupt(z0, eps, 0.1, m)
+    assert torch.allclose(zt - z0, 0.1 * eps, atol=1e-7)
+
+    # (b) Perlin mask: soft token coverage in [0, 1]; untouched tokens stay exactly
+    #     clean; p_clean samples are fully clean
+    cfg = {"sigma": 0.1, "mask": "perlin", "p_clean": 0.5}
+    zb = torch.randn(16, 8, 16, 16)
+    seed_all(6)
+    mp = core.sample_token_mask(zb, cfg, size=64)
+    assert mp.shape == (16, 1, 16, 16)
+    assert float(mp.min()) >= 0.0 and float(mp.max()) <= 1.0
+    clean_rows = mp.flatten(1).sum(1) == 0
+    assert clean_rows.any() and (~clean_rows).any()
+    ztp = core.simplenet_corrupt(zb, torch.randn_like(zb), 0.1, mp)
+    untouched = (mp == 0).expand_as(zb)
+    assert torch.equal(ztp[untouched], zb[untouched])
+
+    # (c) reproducible under seed_all (numpy RNG is seeded from torch)
+    seed_all(6)
+    assert torch.equal(core.sample_token_mask(zb, cfg, size=64), mp)
+
+    # (d) conditioning time sigma/(1+sigma) and oracle exactness z_hat == z0
+    t = torch.full((4,), 0.1)
+    tc = core.conditioning_time(t, "simplenet")
+    assert torch.allclose(tc, t / 1.1)
+    v_star = (zt - z0) / tc.view(-1, 1, 1, 1)
+    zhat = core.prediction_to_clean_latent(zt, v_star, t, corruption="simplenet")
+    assert torch.allclose(zhat, z0, atol=1e-6)
+
+    # (e) bad configs fail loudly
+    for bad in ({"sigma": 0.0}, {"mask": "box"}, {"p_clean": 1.0}, {"w_anom": 0.5}):
+        with pytest.raises(ValueError):
+            core.simplenet_cfg(bad)
+
+
+def test_l_simplenet_losses_and_guards():
+    """B/D objectives: finite, img + lambda_latent*lat, gradients reach the DiT."""
+    seed_all(7)
+    rae, dit = TinyRAE(), TinyDiT()
+    M.freeze_encoder(rae)
+    M.freeze_decoder(rae)
+    x = _batch(2, 32, seed=3)
+    z0 = rae.encode(x).detach()
+    y = torch.full((2,), 1000, dtype=torch.long)
+    noise = {"sigma": 0.1, "mask": "perlin", "p_clean": 0.0, "w_anom": 5.0}
+    kw = dict(noise_cfg=noise, lambda_fm=0.0, y=y, corruption="simplenet", size=32)
+
+    total, terms, zt, zhat = core.compute_losses(rae, dit, None, x, z0,
+                                                 loss_type="image_l1", lambda_latent=0.5, **kw)
+    assert math.isfinite(float(total)) and zhat.shape == z0.shape
+    assert terms["total"] == pytest.approx(terms["img"] + 0.5 * terms["lat"], rel=1e-6)
+    total.backward()
+    assert any(p.grad is not None and float(p.grad.abs().sum()) > 0 for p in dit.parameters())
+    assert all(p.grad is None for p in rae.parameters()), "frozen RAE received gradients"
+
+    # lambda_latent = 0 is the pure image-L1 objective (experiment H)
+    _, terms0, _, _ = core.compute_losses(rae, dit, None, x, z0,
+                                          loss_type="image_l1", lambda_latent=0.0, **kw)
+    assert "lat" not in terms0 and terms0["total"] == pytest.approx(terms0["img"])
+
+    # weighted latent loss up-weights corrupted tokens
+    err = torch.zeros(1, 2, 2, 2)
+    err[..., 0, 0] = 1.0  # error only on token (0, 0)
+    msk = torch.zeros(1, 1, 2, 2)
+    msk[..., 0, 0] = 1.0
+    assert float(core.latent_restore_loss(err, torch.zeros_like(err), msk, 5.0)) == \
+        pytest.approx(5.0 / 8.0)
+    assert float(core.latent_restore_loss(err, torch.zeros_like(err))) == pytest.approx(0.25)
+
+    # guards: flow matching and the hybrid need the linear flow path
+    for lt in ("flow_matching", "hybrid"):
+        with pytest.raises(ValueError):
+            core.compute_losses(rae, dit, None, x, z0, loss_type=lt, **kw)
+
+
+def test_l_simplenet_inference_adds_no_noise():
+    """At test time the real defect is the only corruption: zt == E(x)."""
+
+    class ZeroDiT(nn.Module):
+        def forward(self, zt, t, y=None):
+            return torch.zeros_like(zt)
+
+    rae = TinyRAE()
+    x = _batch(3, 16, seed=9)
+    xhat, maps, meta = I.reconstruct(rae, ZeroDiT(), x, [0, 1, 2], mode="multi", t=0.1,
+                                     repeats=4, corruption="simplenet", seed=0)
+    assert meta["reps"] == 1 and meta["dit_passes"] == 1 and meta["corruption"] == "simplenet"
+    # zero velocity => z_hat = z_in = E(x) => identity decode (no noise was added)
+    assert torch.allclose(xhat, x.clamp(0, 1), atol=1e-6)
+    assert float(maps.abs().max()) < 1e-5
+    with pytest.raises(AssertionError):
+        I.reconstruct(rae, ZeroDiT(), x, [0, 1, 2], mode="ode", t=0.1, corruption="simplenet")
+
+
+# ---------------------------------------------------------------------------
+# M. decoder-free arm (experiment J)
+# ---------------------------------------------------------------------------
+
+class _NoDecodeRAE(TinyRAE):
+    def decode(self, z):  # noqa: D401
+        raise AssertionError("the decoder must not be called by the decoder-free arm")
+
+
+def test_m_latent_loss_never_decodes():
+    """loss='latent': token MSE to the clean latent, decoder untouched."""
+    seed_all(11)
+    rae, dit = _NoDecodeRAE(), TinyDiT()
+    M.freeze_encoder(rae)
+    M.freeze_decoder(rae)
+    x = _batch(2, 32, seed=5)
+    z0 = rae.encode(x).detach()
+    y = torch.full((2,), 1000, dtype=torch.long)
+    kw = dict(lambda_fm=0.0, y=y, corruption="simplenet", size=32)
+
+    # (a) mask=all: uniform weights, so the loss is the plain token MSE; the
+    #     image term is absent and lambda_latent is ignored (no double count)
+    noise_all = {"sigma": 0.1, "mask": "all", "p_clean": 0.0, "w_anom": 5.0}
+    total, terms, _, zhat = core.compute_losses(rae, dit, None, x, z0, loss_type="latent",
+                                                noise_cfg=noise_all, lambda_latent=3.0, **kw)
+    assert set(terms) == {"lat", "total"}
+    assert terms["total"] == pytest.approx(terms["lat"])
+    assert terms["lat"] == pytest.approx(float(((zhat - z0) ** 2).mean()), rel=1e-5)
+    total.backward()
+    assert any(p.grad is not None and float(p.grad.abs().sum()) > 0 for p in dit.parameters())
+
+    # (b) Perlin mask: still finite, still no decoder call
+    noise = {"sigma": 0.1, "mask": "perlin", "p_clean": 0.0, "w_anom": 5.0}
+    total, _, _, _ = core.compute_losses(rae, dit, None, x, z0, loss_type="latent",
+                                         noise_cfg=noise, **kw)
+    assert math.isfinite(float(total))
+
+    # (c) a trainable adaptor is degenerate without a decoder anchor -> refused;
+    #     a frozen (statistics-only) adaptor is allowed
+    ad = A.build_adaptor({"type": "simplenet", "rank": 2}, dim=z0.shape[1])
+    with pytest.raises(ValueError):
+        core.compute_losses(rae, dit, None, x, z0, loss_type="latent", noise_cfg=noise,
+                            adaptor=ad, **kw)
+    frozen = A.build_adaptor({"type": "affine", "trainable": False}, dim=z0.shape[1])
+    total, _, _, _ = core.compute_losses(rae, dit, None, x, z0, loss_type="latent",
+                                         noise_cfg=noise, adaptor=frozen, **kw)
+    assert math.isfinite(float(total))
+
+
+def test_m_latent_loss_with_flow_corruption():
+    """loss='latent' also works on the flow path (no decoder call there either)."""
+    transport = _tiny_transport()
+    seed_all(12)
+    rae, dit = _NoDecodeRAE(), TinyDiT()
+    x = _batch(2, 16, seed=6)
+    z0 = rae.encode(x).detach()
+    y = torch.full((2,), 1000, dtype=torch.long)
+    total, terms, _, zhat = core.compute_losses(rae, dit, transport, x, z0, loss_type="latent",
+                                                noise_cfg=NOISE, lambda_fm=0.0, y=y,
+                                                corruption="flow", size=16)
+    assert terms["lat"] == pytest.approx(float(((zhat - z0) ** 2).mean()), rel=1e-5)
+
+
+def test_m_latent_anomaly_maps():
+    """Token distances: zero at a perfect restoration, located at the changed token."""
+    torch.manual_seed(13)
+    z = torch.randn(2, 8, 4, 4)
+    m = core.latent_anomaly_map(z, z.clone(), "latent_cos", (16, 16))
+    assert m.shape == (2, 16, 16) and float(m.abs().max()) < 1e-5
+
+    zh = z.clone()
+    zh[:, :, 1, 2] = -z[:, :, 1, 2]  # flip one token
+    d = core.latent_anomaly_map(z, zh, "latent_cos", (4, 4))  # same size: no resampling
+    assert torch.allclose(d[:, 1, 2], torch.full((2,), 2.0), atol=1e-5)
+    d[:, 1, 2] = 0
+    assert float(d.abs().max()) < 1e-5
+
+    # cos is scale-invariant, l2 is not
+    assert float(core.latent_anomaly_map(z, 3 * z, "latent_cos", (4, 4)).abs().max()) < 1e-5
+    l2 = core.latent_anomaly_map(z, 3 * z, "latent_l2", (4, 4))
+    assert torch.allclose(l2, (4 * z ** 2).mean(1), rtol=1e-5)
+    with pytest.raises(ValueError):
+        core.latent_anomaly_map(z, z, "pixel", (4, 4))
+
+
+def test_m_reconstruct_with_latent_score():
+    """inference: latent score compares E(x) with the DiT output, before the decoder."""
+
+    class ZeroDiT(nn.Module):
+        def forward(self, zt, t, y=None):
+            return torch.zeros_like(zt)
+
+    class NegDiT(nn.Module):  # v = -z  =>  z^ = (1 + t_c) z
+        def forward(self, zt, t, y=None):
+            return -zt
+
+    rae = TinyRAE()
+    x = _batch(2, 16, seed=14)
+    _, maps, meta = I.reconstruct(rae, ZeroDiT(), x, [0, 1], t=0.1, corruption="simplenet",
+                                  score="latent_cos")
+    assert meta["score"] == "latent_cos" and maps.shape == (2, 16, 16)
+    assert float(maps.abs().max()) < 1e-5
+    _, cos_maps, _ = I.reconstruct(rae, NegDiT(), x, [0, 1], t=0.1, corruption="simplenet",
+                                   score="latent_cos")
+    _, l2_maps, _ = I.reconstruct(rae, NegDiT(), x, [0, 1], t=0.1, corruption="simplenet",
+                                  score="latent_l2")
+    assert float(cos_maps.abs().max()) < 1e-5 and float(l2_maps.min()) > 0
+    _, _, meta_px = I.reconstruct(rae, ZeroDiT(), x, [0, 1], t=0.1, corruption="simplenet")
+    assert meta_px["score"] == "pixel"
+    with pytest.raises(AssertionError):
+        I.reconstruct(rae, ZeroDiT(), x, [0, 1], t=0.1, corruption="simplenet", score="bogus")
+
+
+# ---------------------------------------------------------------------------
+# N. discriminator (DRAEM's discriminative sub-network, token grid)
+# ---------------------------------------------------------------------------
+
+_DISC = {"enabled": True, "d": 16, "blocks": 1}
+
+
+def test_n_discriminator_leaves_dit_training_unchanged():
+    """detach: the head learns from the DiT but never changes the DiT's gradients."""
+    from iad import disc as DS
+    rae, dit = TinyRAE(), TinyDiT()
+    M.freeze_encoder(rae)
+    M.freeze_decoder(rae)
+    x = _batch(2, 32, seed=21)
+    z0 = rae.encode(x).detach()
+    y = torch.full((2,), 1000, dtype=torch.long)
+    kw = dict(loss_type="image_l1", noise_cfg={"sigma": 0.1, "mask": "perlin", "p_clean": 0.0},
+              lambda_fm=0.0, y=y, corruption="simplenet", size=32, lambda_latent=1.0)
+
+    seed_all(3)
+    tot0, terms0, _, _ = core.compute_losses(rae, dit, None, x, z0, **kw)
+    tot0.backward()
+    g0 = [p.grad.clone() for p in dit.parameters()]
+    for p in dit.parameters():
+        p.grad = None
+
+    head = DS.build_discriminator(_DISC, dim=z0.shape[1], seed=0)
+    seed_all(3)
+    tot1, terms1, _, _ = core.compute_losses(rae, dit, None, x, z0, disc=head,
+                                             disc_cfg=_DISC, **kw)
+    tot1.backward()
+    # reported restorer objective unchanged; seg reported separately, added for backward
+    assert terms1["total"] == pytest.approx(terms0["total"], rel=1e-6)
+    assert "seg" in terms1 and math.isfinite(terms1["seg"])
+    assert float(tot1) == pytest.approx(terms1["total"] + terms1["seg"], rel=1e-5)
+    # identical DiT gradients, and the head itself learns
+    for a, p in zip(g0, dit.parameters()):
+        assert torch.allclose(a, p.grad, rtol=1e-6, atol=1e-8)
+    assert any(p.grad is not None and float(p.grad.abs().sum()) > 0 for p in head.parameters())
+
+
+def test_n_discriminator_config_rng_and_guards():
+    from iad import disc as DS
+    assert DS.build_discriminator(None, dim=3) is None
+    assert DS.build_discriminator({"enabled": False}, dim=3) is None
+    state = torch.get_rng_state()
+    head = DS.build_discriminator(_DISC, dim=3, seed=5)
+    assert head is not None and torch.equal(state, torch.get_rng_state()), \
+        "building the head must not advance the global RNG"
+    same = DS.build_discriminator(_DISC, dim=3, seed=5)
+    for a, b in zip(head.parameters(), same.parameters()):
+        assert torch.equal(a, b)
+    for bad in ({"d": 12}, {"bogus": 1}, {"w_seg": 0.0}):
+        with pytest.raises(ValueError):
+            DS.disc_cfg(bad)
+    # focal loss: confident and right << confident and wrong
+    tgt = torch.ones(1, 1, 2, 2)
+    assert float(DS.seg_loss(torch.full_like(tgt, 5.0), tgt)) < \
+        float(DS.seg_loss(torch.full_like(tgt, -5.0), tgt))
+
+    # the flow path has no synthetic-anomaly mask -> refused
+    rae, dit = TinyRAE(), TinyDiT()
+    x = _batch(2, 16, seed=2)
+    with pytest.raises(ValueError):
+        core.compute_losses(rae, dit, None, x, rae.encode(x).detach(), loss_type="image_l1",
+                            noise_cfg=NOISE, lambda_fm=0.0,
+                            y=torch.full((2,), 1000, dtype=torch.long),
+                            corruption="flow", size=16, disc=head, disc_cfg=_DISC)
+
+
+def test_n_reconstruct_with_disc_score():
+    """score='disc' is sigmoid(head(z_in, z^)), upsampled to the image size."""
+
+    class ZeroDiT(nn.Module):
+        def forward(self, zt, t, y=None):
+            return torch.zeros_like(zt)
+
+    class ConstHead(nn.Module):
+        def forward(self, za, r):
+            return torch.zeros(za.shape[0], 1, *za.shape[-2:])
+
+    rae = TinyRAE()
+    x = _batch(2, 16, seed=22)
+    _, maps, meta = I.reconstruct(rae, ZeroDiT(), x, [0, 1], t=0.1, corruption="simplenet",
+                                  score="disc", disc=ConstHead())
+    assert meta["score"] == "disc" and maps.shape == (2, 16, 16)
+    assert torch.allclose(maps, torch.full_like(maps, 0.5))
+    with pytest.raises(AssertionError):
+        I.reconstruct(rae, ZeroDiT(), x, [0, 1], t=0.1, corruption="simplenet", score="disc")
+
+
+# ---------------------------------------------------------------------------
+# O. anchored adaptor for the decoder-free arm (experiment K)
+# ---------------------------------------------------------------------------
+
+_ANCHOR = {"type": "simplenet", "rank": 1, "preserve_norm": True, "inverse_head": True,
+           "lambda_inv": 1.0}
+
+
+def test_o_anchored_adaptor_starts_at_j_and_keeps_norms():
+    rae, dit = TinyRAE(), TinyDiT()
+    M.freeze_encoder(rae)
+    M.freeze_decoder(rae)
+    x = _batch(2, 32, seed=31)
+    z0 = rae.encode(x).detach()
+    ad = A.build_adaptor(_ANCHOR, dim=z0.shape[1])
+    assert isinstance(ad, A.AnchoredAdaptor) and ad.is_anchored
+    # identity at init: K's step 0 is exactly J's
+    assert torch.equal(ad(z0), z0)
+    assert float(ad.anchor_loss(z0, ad(z0))) == 0.0
+    y = torch.full((2,), 1000, dtype=torch.long)
+    kw = dict(loss_type="latent", noise_cfg={"sigma": 0.1, "mask": "perlin", "p_clean": 0.0},
+              lambda_fm=0.0, y=y, corruption="simplenet", size=32)
+    seed_all(4)
+    _, t_j, _, _ = core.compute_losses(rae, dit, None, x, z0, **kw)
+    seed_all(4)
+    _, t_k, _, _ = core.compute_losses(rae, dit, None, x, z0, adaptor=ad, **kw)
+    assert t_k["lat"] == pytest.approx(t_j["lat"], rel=1e-12, abs=1e-12)
+    assert t_k["inv"] == 0.0
+
+    # after the adaptor moves: token norms are still preserved, the anchor is
+    # positive, and gradients reach both the adaptor and its inverse head
+    with torch.no_grad():
+        for p in ad.parameters():
+            p.add_(0.3 * torch.randn_like(p))
+    zt = ad(z0)
+    assert torch.allclose(zt.norm(dim=1), z0.norm(dim=1), rtol=1e-5, atol=1e-6)
+    ad.zero_grad(set_to_none=True)
+    loss = ad.anchor_loss(z0, zt)
+    assert float(loss) > 0
+    loss.backward()
+    assert any(p.grad is not None and float(p.grad.abs().sum()) > 0
+               for n, p in ad.named_parameters() if n.startswith("inverse."))
+    assert any(p.grad is not None and float(p.grad.abs().sum()) > 0
+               for n, p in ad.named_parameters() if not n.startswith("inverse."))
+
+
+def test_o_anchor_penalizes_collapse_and_guards():
+    """A collapsed map (every token -> one vector) cannot be inverted: L_inv > 0."""
+    torch.manual_seed(32)
+    z = torch.randn(2, 3, 4, 4)
+    ad = A.build_adaptor(_ANCHOR, dim=3)
+    collapsed = torch.ones_like(z)  # all tokens identical
+    assert float(ad.anchor_loss(z, collapsed)) > 0.1
+
+    # plain trainable adaptor + latent loss is still refused; the anchored one is not
+    rae, dit = TinyRAE(), TinyDiT()
+    x = _batch(2, 16, seed=33)
+    z0 = rae.encode(x).detach()
+    kw = dict(loss_type="latent", noise_cfg={"sigma": 0.1, "mask": "all", "p_clean": 0.0},
+              lambda_fm=0.0, y=torch.full((2,), 1000, dtype=torch.long),
+              corruption="simplenet", size=16)
+    with pytest.raises(ValueError):
+        core.compute_losses(rae, dit, None, x, z0,
+                            adaptor=A.build_adaptor({"type": "simplenet", "rank": 1}, dim=3), **kw)
+    half = A.build_adaptor({**_ANCHOR, "inverse_head": False}, dim=3)
+    assert not half.is_anchored
+    with pytest.raises(ValueError):
+        core.compute_losses(rae, dit, None, x, z0, adaptor=half, **kw)
+    total, terms, _, _ = core.compute_losses(rae, dit, None, x, z0,
+                                             adaptor=A.build_adaptor(_ANCHOR, dim=3), **kw)
+    assert math.isfinite(float(total)) and "inv" in terms
+
+
+def test_o_pixel_score_decodes_through_the_inverse_head():
+    class ZeroDiT(nn.Module):
+        def forward(self, zt, t, y=None):
+            return torch.zeros_like(zt)
+
+    rae = TinyRAE()
+    x = _batch(2, 16, seed=34)
+    ad = A.build_adaptor(_ANCHOR, dim=3)
+    with torch.no_grad():
+        for p in ad.inverse.parameters():
+            p.add_(0.2 * torch.randn_like(p))
+    ad.eval()
+    xhat, _, _ = I.reconstruct(rae, ZeroDiT(), x, [0, 1], t=0.1, corruption="simplenet",
+                               adaptor=ad)
+    with torch.no_grad():
+        expected = ad.invert(ad(rae.encode(x))).clamp(0, 1)  # z^ = z~ with zero velocity
+    assert torch.allclose(xhat, expected, atol=1e-6)
 

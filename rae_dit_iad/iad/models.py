@@ -313,6 +313,7 @@ def build_optimizer(
     decoder_finetune: bool,
     train_cfg: Dict[str, Any],
     adaptor: Optional[nn.Module] = None,
+    disc: Optional[nn.Module] = None,
 ):
     """AdamW with the official hyperparameters (utils.optim_utils defaults).
 
@@ -331,6 +332,10 @@ def build_optimizer(
                       if adaptor is not None else [])
     ad_msg = f" + adaptor({sum(p.numel() for p in adaptor_params)} params)" \
         if adaptor_params else ""
+    if disc is not None:  # DRAEM head: DiT lr/schedule; Adam is per-parameter, so
+        disc_params = [p for p in disc.parameters() if p.requires_grad]  # no coupling
+        adaptor_params = adaptor_params + disc_params
+        ad_msg += f" + discriminator({sum(p.numel() for p in disc_params)} params)"
 
     if decoder_finetune:
         assert rae is not None, "decoder_finetune requires a RAE"
