@@ -241,7 +241,7 @@ done
 
 wait "${PIDS[@]}"
 echo "=== summary ==="
-grep -h "done\|FAILED" "$OUT"/logs/gpu*_"${SLURM_JOB_ID:-local}".log
+grep -h "done\|FAILED\|non-finite gradients:" "$OUT"/logs/gpu*_"${SLURM_JOB_ID:-local}".log
 grep -qh "FAILED" "$OUT"/logs/gpu*_"${SLURM_JOB_ID:-local}".log && STATUS=1 || STATUS=0
 if [ "$STATUS" -ne 0 ]; then
   echo "=== last lines before each failure ==="

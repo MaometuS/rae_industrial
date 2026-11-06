@@ -48,6 +48,7 @@ VIZ=${VIZ:-6}
 LAMBDA_LAT=${LAMBDA_LAT:-""}      # override latent-term weight (experiments D/E)
 ADAPTOR=${ADAPTOR:-""}            # override adaptor type (experiments F/G)
 SIGMA=${SIGMA:-""}                # override SimpleNet-style noise sigma (every arm but A)
+SDPA=${SDPA:-""}                  # attention kernels for training: auto | math (NaN debugging)
 SCORES=${SCORES:-"pixel latent_cos disc"}  # each arm scored with each: pixel | latent_cos | latent_l2 | disc
 
 # letter -> config file
@@ -107,6 +108,7 @@ for exp in $EXPT; do
       [ -n "$LAMBDA_LAT" ] && EXTRA="$EXTRA --lambda-latent $LAMBDA_LAT"
       [ -n "$ADAPTOR" ] && EXTRA="$EXTRA --adaptor $ADAPTOR"
       [ -n "$SIGMA" ] && EXTRA="$EXTRA --noise-sigma $SIGMA"
+      [ -n "$SDPA" ] && EXTRA="$EXTRA --sdpa $SDPA"
       case "$MEM" in
         full) EXTRA="$EXTRA --no-grad-checkpoint --ema-device cuda" ;;
         low)  EXTRA="$EXTRA --grad-checkpoint --ema-device cpu" ;;

@@ -116,6 +116,8 @@ def cmd_train(args: argparse.Namespace) -> None:
         cfg.setdefault("noise", {})["sigma"] = float(args.noise_sigma)
     if args.lambda_latent is not None:
         cfg["experiment"]["lambda_latent"] = float(args.lambda_latent)
+    if args.sdpa is not None:
+        cfg["training"]["sdpa"] = str(args.sdpa)
     if args.grad_accum is not None:
         cfg["training"]["grad_accum_steps"] = int(args.grad_accum)
     if args.no_ema:
@@ -468,6 +470,9 @@ def _score_setting(maps_np: np.ndarray, masks: np.ndarray, labels: np.ndarray,
                    size: int, blur_sigma: float) -> Dict[str, Any]:
     from sklearn.metrics import average_precision_score, roc_auc_score
 
+    if not np.isfinite(maps_np).all():
+        raise RuntimeError("anomaly maps contain NaN/inf: the checkpoint's weights are "
+                           "non-finite (check the training log for NON-FINITE gradients)")
     blurred = I.blur_maps(maps_np, float(blur_sigma))
     px = evaluate_maps(blurred, masks, labels, do_pro=True)
     row: Dict[str, Any] = {
@@ -637,6 +642,8 @@ def build_parser() -> argparse.ArgumentParser:
                     help="override experiment.lambda_fm (hybrid ablations)")
     tr.add_argument("--noise-sigma", type=float, default=None,
                     help="override noise.sigma (SimpleNet-style corruption: every arm but A)")
+    tr.add_argument("--sdpa", choices=["auto", "math"], default=None,
+                    help="attention kernels: auto (fused, default) or math (debug NaNs)")
     tr.add_argument("--lambda-latent", type=float, default=None,
                     help="override experiment.lambda_latent (latent restore term)")
     tr.add_argument("--resume", default=None, help="checkpoint to resume from")

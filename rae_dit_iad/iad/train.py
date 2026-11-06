@@ -369,6 +369,15 @@ def train(
     use_ema = bool(tcfg.get("use_ema", True))
     ema_decay = float(tcfg.get("ema_decay", 0.9995))
     cache = bool(tcfg.get("cache_latents", True))
+    sdpa = str(tcfg.get("sdpa", "auto")).lower()
+    if sdpa not in ("auto", "math"):
+        raise ValueError(f"training.sdpa must be 'auto' or 'math' (got '{sdpa}')")
+    if sdpa == "math" and torch.cuda.is_available():
+        # rule out the fused attention kernels as a NaN source (decoder + DiT)
+        torch.backends.cuda.enable_flash_sdp(False)
+        torch.backends.cuda.enable_mem_efficient_sdp(False)
+        print("[iad] SDPA: math backend only (flash / memory-efficient attention off)",
+              flush=True)
     loss_type = exp["loss"]
     corruption = exp.get("corruption", "simplenet")  # project default
     lambda_fm = float(exp.get("lambda_fm", 0.0))
@@ -599,6 +608,8 @@ def _train_scope(
     ad_model = ema_ad if ema_ad is not None else adaptor
     ds_model = ema_ds if ema_ds is not None else disc
 
+    n_skip_dit = n_skip_head = 0              # non-finite-gradient guard
+    max_skips = max(10, int(0.05 * n_steps))  # abort when it stops being rare
     step = start_step
     while step < n_steps:
         dit.train()
@@ -639,25 +650,49 @@ def _train_scope(
             for k, v in terms.items():
                 micro_terms.setdefault(k, []).append(v)
 
-        if scaler is not None and scaler.is_enabled():
+        use_scaler = scaler is not None and scaler.is_enabled()
+        if use_scaler:
             scaler.unscale_(optimizer)  # grads must be unscaled before clipping
-            grad_norm = torch.nn.utils.clip_grad_norm_(
-                trainable, clip_grad if clip_grad else math.inf)
-            if disc is not None:  # own clip: the head never rescales the DiT's update
-                torch.nn.utils.clip_grad_norm_(list(disc.parameters()),
-                                               clip_grad if clip_grad else math.inf)
-            scaler.step(optimizer)
-            scaler.update()
+        max_norm = clip_grad if clip_grad else math.inf
+        grad_norm = torch.nn.utils.clip_grad_norm_(trainable, max_norm)
+        disc_norm = (torch.nn.utils.clip_grad_norm_(list(disc.parameters()), max_norm)
+                     if disc is not None else None)  # own clip: never rescales the DiT
+        # Non-finite guard: clip_grad_norm_ turns one inf/NaN gradient into NaN for
+        # every element, and a single such update writes NaN into all weights for
+        # good (seen on the image-L1 arms, job 152307). Skip that update instead.
+        dit_ok = bool(torch.isfinite(grad_norm))
+        head_ok = disc_norm is None or bool(torch.isfinite(disc_norm))
+        if not head_ok:  # skip only the head's update (AdamW leaves grad=None params alone)
+            for p in disc.parameters():
+                p.grad = None
+        if dit_ok:
+            if use_scaler:
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                optimizer.step()
         else:
-            grad_norm = torch.nn.utils.clip_grad_norm_(
-                trainable, clip_grad if clip_grad else math.inf)
-            if disc is not None:  # own clip: the head never rescales the DiT's update
-                torch.nn.utils.clip_grad_norm_(list(disc.parameters()),
-                                               clip_grad if clip_grad else math.inf)
-            optimizer.step()
+            optimizer.zero_grad(set_to_none=True)
+            if use_scaler:
+                scaler.update()
+        if not (dit_ok and head_ok):
+            n_skip_dit += int(not dit_ok)
+            n_skip_head += int(not head_ok)
+            if n_skip_dit + n_skip_head <= 10:  # diagnose: forward (loss) or backward (grad)?
+                step_terms = {k: [round(float(v), 6) for v in vals]
+                              for k, vals in micro_terms.items()}
+                print(f"[iad/{tag}] step {step + 1}: NON-FINITE gradient in "
+                      f"{'the DiT/adaptor/decoder' if not dit_ok else 'the discriminator head'}"
+                      f" (dit_norm={float(grad_norm):.4g}, head_norm="
+                      f"{'n/a' if disc_norm is None else f'{float(disc_norm):.4g}'}); "
+                      f"loss terms this step={step_terms}; update skipped", flush=True)
+            if n_skip_dit > max_skips:
+                raise RuntimeError(
+                    f"{n_skip_dit} of {step + 1} steps had non-finite DiT gradients "
+                    f"(limit {max_skips}): not a rare event any more, stopping")
         if scheduler is not None:
             scheduler.step()
-        if ema is not None or ema_ad is not None or ema_ds is not None:
+        if dit_ok and (ema is not None or ema_ad is not None or ema_ds is not None):
             from utils.train_utils import update_ema  # official
             for em, mod in ((ema, dit), (ema_ad, adaptor), (ema_ds, disc)):
                 if em is None:
@@ -686,6 +721,8 @@ def _train_scope(
                 "lr_dit": optimizer.param_groups[0]["lr"],
                 "lr_dec": optimizer.param_groups[1]["lr"] if len(optimizer.param_groups) > 1 else None,
                 "grad_norm": float(grad_norm),
+                "skipped_dit": n_skip_dit,
+                "skipped_head": n_skip_head,
                 "batch_eff": effective_bs,
                 "step_time_s": dt / max(n, 1),
                 "peak_mem_gb": (torch.cuda.max_memory_allocated() / 1e9
@@ -743,11 +780,16 @@ def _train_scope(
           f"adaptor={getattr(adaptor, 'type', None)}; best_{best_metric}="
           f"{best_val if best_val is not math.inf else 'n/a'}", flush=True)
 
+    if n_skip_dit or n_skip_head:
+        print(f"[iad/{tag}] non-finite gradients: {n_skip_dit} DiT updates and "
+              f"{n_skip_head} head updates skipped of {step} steps", flush=True)
     del images, latents
     return {
         "scope": tag,
         "steps": step,
         "best_val": None if best_val == math.inf else best_val,
+        "skipped_dit_steps": n_skip_dit,
+        "skipped_head_steps": n_skip_head,
         "encoder_frozen": enc_frozen,
         "last_ckpt": str(last_path),
         "best_ckpt": str(best_path) if best_path.exists() else None,
