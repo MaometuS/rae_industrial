@@ -66,8 +66,17 @@ config_for() {
   esac
 }
 
-eval "$(conda shell.bash hook)"
-conda activate "$ENV_NAME"
+# conda's activation scripts read unset variables (e.g. PS1 in batch jobs), which
+# `set -u` turns into a fatal error: relax it around conda only. Skip activation
+# entirely when the env is already active (slurm_dit_iad.sh activates it).
+if [ "${CONDA_DEFAULT_ENV:-}" != "$ENV_NAME" ]; then
+  set +u
+  CONDA_BIN=${CONDA_EXE:-$(command -v conda || true)}
+  [ -n "$CONDA_BIN" ] || { echo "conda not found (source conda.sh first)"; exit 1; }
+  eval "$("$CONDA_BIN" shell.bash hook)"
+  conda activate "$ENV_NAME" || { echo "cannot activate conda env '$ENV_NAME'"; exit 1; }
+  set -u
+fi
 python -c "import torch; assert torch.cuda.is_available(), 'no GPU visible'; print('torch', torch.__version__, torch.cuda.get_device_name(0))"
 [ -d "$RAE_ROOT/models" ] || { echo "RAE weights not found under $RAE_ROOT/models"; exit 1; }
 python "$HERE/../latent_draem/latent_draem.py" --help >/dev/null || {

@@ -243,6 +243,12 @@ wait "${PIDS[@]}"
 echo "=== summary ==="
 grep -h "done\|FAILED" "$OUT"/logs/gpu*_"${SLURM_JOB_ID:-local}".log
 grep -qh "FAILED" "$OUT"/logs/gpu*_"${SLURM_JOB_ID:-local}".log && STATUS=1 || STATUS=0
+if [ "$STATUS" -ne 0 ]; then
+  echo "=== last lines before each failure ==="
+  for f in "$OUT"/logs/gpu*_"${SLURM_JOB_ID:-local}".log; do
+    grep -B 8 "FAILED" "$f" | grep -v "^\[gpu .*\] \(start\|done\)" | head -40
+  done
+fi
 echo "reports: $OUT/seed*/<exp_id>/report.md"
 set +u; conda deactivate
 exit $STATUS
