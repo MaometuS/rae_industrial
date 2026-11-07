@@ -137,6 +137,21 @@ def cmd_train(args: argparse.Namespace) -> None:
     categories = _parse_categories(args.categories)
     out = Path(args.out) / cfg["experiment"]["id"]
     out.mkdir(parents=True, exist_ok=True)
+    if not args.resume:
+        # A fresh training invalidates the previous run's results. Eval skips rows
+        # it already has (same ckpt name / mode / t / score), so old rows would
+        # silently shadow the new model's: move them (and old checkpoints, so a
+        # crashed run can never be evaluated with a stale one) out of the way.
+        old = [p for p in sorted(out.iterdir())
+               if p.name in ("results.csv", "per_image.csv", "report.md", "metrics.jsonl",
+                             "viz", "summary.json") or p.suffix == ".pt"]
+        if old:
+            arch = out / f"previous_{time.strftime('%Y%m%d-%H%M%S')}"
+            arch.mkdir()
+            for p in old:
+                p.rename(arch / p.name)
+            print(f"[train] fresh run: moved {len(old)} files of the previous run to {arch}",
+                  flush=True)
 
     with (out / "args.json").open("w") as f:
         json.dump({k: str(v) if isinstance(v, Path) else v

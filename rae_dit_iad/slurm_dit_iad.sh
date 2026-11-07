@@ -19,6 +19,7 @@
 #   SEEDS="0 1 2" sbatch slurm_dit_iad.sh             # three seeds (~3x the time)
 #   SKIP_TESTS=1 STEPS=200 sbatch slurm_dit_iad.sh    # quick smoke run of everything
 #   bash slurm_dit_iad.sh --setup-env                  # only build the conda env (login node)
+#   STAGE=eval ONLY="A C" sbatch slurm_dit_iad.sh      # re-evaluate some arms, no training
 #
 # Everything the run needs is fetched automatically on first use (needs internet; if
 # compute nodes are offline, run the --setup-env line once on the login node first):
@@ -227,6 +228,7 @@ for i in "${!QUEUES[@]}"; do
   (
     export CUDA_VISIBLE_DEVICES="${GPUS[$i]}"
     for exp in ${QUEUES[$i]}; do   # one exp at a time, so one failure doesn't stop the queue
+      if [ -n "${ONLY:-}" ] && [[ " $ONLY " != *" $exp "* ]]; then continue; fi
       echo "[gpu ${GPUS[$i]}] start $exp $(date +%T)"
       if EXPT="$exp" bash "$HERE/run_dit_iad.sh"; then
         echo "[gpu ${GPUS[$i]}] done  $exp $(date +%T)"
