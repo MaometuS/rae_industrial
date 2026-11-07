@@ -45,6 +45,8 @@ training:
   batch_size: 2        # micro-batch (DiT-XL + decoder must fit in GPU memory)
   grad_accum_steps: 4  # effective batch = 2 x 4 = 8
   precision: fp32
+  sdpa: math     # fused attention backward gave NaN gradients through the
+                 # RAE decoder (jobs 152307/152338); math kernels: none (152339)
   clip_grad: 1.0
   log_every: 50
   val_every: 250

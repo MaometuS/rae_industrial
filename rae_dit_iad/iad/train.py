@@ -182,9 +182,16 @@ def save_checkpoint(
     tmp.replace(path)
 
 
-def load_checkpoint(path: Path, map_location: str = "cpu") -> Dict[str, Any]:
+def load_checkpoint(path: Path, map_location: str = "cpu", mmap: bool = False) -> Dict[str, Any]:
     # our own checkpoints (numpy/python RNG state, config dicts) are not
     # weights-only; torch>=2.6 defaults to weights_only=True, so opt out.
+    # mmap=True (eval): tensors stay on disk until touched, so the optimizer
+    # state (~2/3 of the file) never enters RAM.
+    if mmap:
+        try:
+            return torch.load(path, map_location=map_location, weights_only=False, mmap=True)
+        except (TypeError, RuntimeError):  # old torch / legacy file format: load normally
+            pass
     try:
         return torch.load(path, map_location=map_location, weights_only=False)
     except TypeError:  # torch < 1.13 has no weights_only kwarg

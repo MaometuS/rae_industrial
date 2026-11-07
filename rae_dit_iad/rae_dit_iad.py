@@ -193,7 +193,9 @@ def _resolve_ckpt(out_dir: Path, spec: Optional[str], category: str, which: str)
 
 def _build_models_from_ckpt(ckpt_path: Path, rae_root: Path, device: torch.device):
     """Instantiate RAE + DiT; weights come from *our* checkpoint (not the official one)."""
-    state = T.load_checkpoint(ckpt_path)
+    state = T.load_checkpoint(ckpt_path, mmap=True)
+    for k in ("optimizer", "scheduler", "rng"):  # training-only: never needed for eval
+        state.pop(k, None)
     cfg = state["config"]
     sections = M.load_official_sections(cfg["rae_config"], rae_root,
                                         cfg.get("rae_config_overrides"))
@@ -293,10 +295,16 @@ def cmd_eval(args: argparse.Namespace) -> None:
 
     per_image_rows: List[Dict[str, Any]] = []
     new_rows: List[Dict[str, Any]] = []
+    model_cache: Dict[str, Any] = {}  # joint runs: one checkpoint for every category
     for cat in categories:
         ckpt_path = _resolve_ckpt(out, args.ckpt, cat, args.ckpt_which)
-        rae, dit, misc, cfg, state, used_ema, adaptor, disc = \
-            _build_models_from_ckpt(ckpt_path, rae_root, device)
+        if model_cache.get("path") != ckpt_path:  # build once, reuse across categories
+            model_cache.clear()
+            if device.type == "cuda":
+                torch.cuda.empty_cache()
+            model_cache["models"] = _build_models_from_ckpt(ckpt_path, rae_root, device)
+            model_cache["path"] = ckpt_path
+        rae, dit, misc, cfg, state, used_ema, adaptor, disc = model_cache["models"]
         exp_id = str(cfg["experiment"].get("id", exp_id))  # provenance from the ckpt itself
         num_classes = int(misc.get("num_classes", 1000))
         shift = core.time_dist_shift_from_misc(misc)
@@ -421,6 +429,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
                       f"P-AUROC={row_x['px_auroc']:.4f} AUPRO={row_x['aupro']:.4f}", flush=True)
         del rae, dit, adaptor, disc
 
+    model_cache.clear()
     if new_rows:
         _append_rows(results_csv, new_rows)
     pi_path = out / "per_image.csv"
