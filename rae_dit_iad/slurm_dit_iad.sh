@@ -10,13 +10,15 @@
 #SBATCH --error=RAE_DIT_IAD_%j.err
 #SBATCH -v
 #
-# RAE-DiT IAD matrix on one 4-GPU node: 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
+# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=next): J2, K2 (strong noise) and
+# A at seeds 1 and 2. PLAN=matrix: the 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
 # The pipeline is single-process (one model per GPU, no DDP), so instead of torchrun
 # each GPU gets its own queue of experiments and works through it with run_dit_iad.sh
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
-#   sbatch slurm_dit_iad.sh
-#   SEEDS="0 1 2" sbatch slurm_dit_iad.sh             # three seeds (~3x the time)
+#   sbatch slurm_dit_iad.sh                           # PLAN=next: J2 K2 A@1 A@2, ~2 h
+#   PLAN=matrix sbatch slurm_dit_iad.sh               # the full A-K matrix again
+#   SEEDS="0 1 2" PLAN=matrix sbatch slurm_dit_iad.sh # three seeds (~3x the time)
 #   SKIP_TESTS=1 STEPS=200 sbatch slurm_dit_iad.sh    # quick smoke run of everything
 #   bash slurm_dit_iad.sh --setup-env                  # only build the conda env (login node)
 #   STAGE=eval ONLY="A C" sbatch slurm_dit_iad.sh      # re-evaluate some arms, no training
@@ -41,13 +43,18 @@ export ENV_NAME
 export SEEDS=${SEEDS:-"0"}
 export STEPS=${STEPS:-""}                        # empty = config default (4000)
 
-# ---- one queue per GPU (balanced: decoder fine-tuning C/E/G is the heaviest) --
-QUEUES=(
-  "A B noise_sigma005"
-  "C D noise_sigma02"
-  "E F noise_mask_all"
-  "G J K"
-)
+# ---- one queue per GPU ----------------------------------------------------------
+# An entry is an experiment (letter or config basename), optionally with @SEED to
+# run that entry at one seed only (overrides SEEDS), e.g. "A@1".
+#   PLAN=next   (default) follow-up to job 152776: J and K with strong noise
+#               (sigma ~ U(0.5, 1.5)) and two more seeds of A, the arm that worked
+#   PLAN=matrix the full A-K matrix + noise ablations of job 152776
+PLAN=${PLAN:-next}
+case "$PLAN" in
+  next)   QUEUES=("J2" "K2" "A@1" "A@2") ;;
+  matrix) QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
+  *) echo "unknown PLAN '$PLAN' (next | matrix)"; exit 1 ;;
+esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------
 CUDA_TAG=${CUDA_TAG:-pypi}   # torch 2.8.0 source: pypi (bundles CUDA 12.8) | cu126 | cu128 | cu129
@@ -227,13 +234,18 @@ PIDS=()
 for i in "${!QUEUES[@]}"; do
   (
     export CUDA_VISIBLE_DEVICES="${GPUS[$i]}"
-    for exp in ${QUEUES[$i]}; do   # one exp at a time, so one failure doesn't stop the queue
-      if [ -n "${ONLY:-}" ] && [[ " $ONLY " != *" $exp "* ]]; then continue; fi
-      echo "[gpu ${GPUS[$i]}] start $exp $(date +%T)"
-      if EXPT="$exp" bash "$HERE/run_dit_iad.sh"; then
-        echo "[gpu ${GPUS[$i]}] done  $exp $(date +%T)"
+    for item in ${QUEUES[$i]}; do  # one exp at a time, so one failure doesn't stop the queue
+      exp=${item%@*}
+      seeds=$SEEDS
+      [[ "$item" == *@* ]] && seeds=${item#*@}
+      if [ -n "${ONLY:-}" ] && [[ " $ONLY " != *" $exp "* && " $ONLY " != *" $item "* ]]; then
+        continue
+      fi
+      echo "[gpu ${GPUS[$i]}] start $item $(date +%T)"
+      if EXPT="$exp" SEEDS="$seeds" bash "$HERE/run_dit_iad.sh"; then
+        echo "[gpu ${GPUS[$i]}] done  $item $(date +%T)"
       else
-        echo "[gpu ${GPUS[$i]}] FAILED $exp $(date +%T)"
+        echo "[gpu ${GPUS[$i]}] FAILED $item $(date +%T)"
       fi
     done
   ) > "$OUT/logs/gpu${i}_${SLURM_JOB_ID:-local}.log" 2>&1 &

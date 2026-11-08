@@ -37,6 +37,9 @@ checkpoints are not needed.  What they cover:
     O. anchored adaptor     — K starts exactly at J, keeps token norms, the
                               invertibility anchor penalizes information loss,
                               plain adaptors still refused, pixel decode via B
+    P. noise range, EMA     — sigma ~ U(lo, hi) per sample (exact per-sample
+                              noise, midpoint at test), validation never moves a
+                              GPU-resident EMA to the CPU
 
 Run:  pytest rae_dit_iad/tests/test_iad.py -v   (cluster env `rae` for torch)
 """
@@ -736,7 +739,8 @@ def test_l_simplenet_corruption_and_conversion():
     assert torch.allclose(zhat, z0, atol=1e-6)
 
     # (e) bad configs fail loudly
-    for bad in ({"sigma": 0.0}, {"mask": "box"}, {"p_clean": 1.0}, {"w_anom": 0.5}):
+    for bad in ({"sigma": 0.0}, {"mask": "box"}, {"p_clean": 1.0}, {"w_anom": 0.5},
+                {"sigma": [1.5, 0.5]}, {"sigma": [0.0, 1.0]}, {"sigma": [0.5, 1.0, 1.5]}):
         with pytest.raises(ValueError):
             core.simplenet_cfg(bad)
 
@@ -1095,3 +1099,62 @@ def test_o_pixel_score_decodes_through_the_inverse_head():
         expected = ad.invert(ad(rae.encode(x))).clamp(0, 1)  # z^ = z~ with zero velocity
     assert torch.allclose(xhat, expected, atol=1e-6)
 
+
+# ---------------------------------------------------------------------------
+# P. noise range and EMA placement
+# ---------------------------------------------------------------------------
+
+def test_p_sigma_range_is_per_sample_and_midpoint_at_test():
+    """sigma: [lo, hi] draws one sigma per sample; eval conditions on the midpoint."""
+    sn = core.simplenet_cfg({"sigma": [0.5, 1.5]})
+    assert sn["sigma_range"] == (0.5, 1.5) and sn["sigma"] == pytest.approx(1.0)
+    assert core.simplenet_cfg({"sigma": "0.5,1.5"})["sigma_range"] == (0.5, 1.5)
+    assert core.simplenet_cfg({"sigma": [0.2]})["sigma_range"] == (0.2, 0.2)
+    assert core.simplenet_cfg({"sigma": 0.1})["sigma_range"] == (0.1, 0.1)
+
+    seed_all(41)
+    z0 = torch.randn(64, 8, 4, 4)
+    s = core.sample_sigma(z0, {"sigma": [0.5, 1.5]})
+    assert s.shape == (64,) and float(s.min()) >= 0.5 and float(s.max()) <= 1.5
+    assert float(s.std()) > 0.1                         # actually varies
+    const = core.sample_sigma(z0, {"sigma": 0.1})
+    assert torch.equal(const, torch.full((64,), 0.1))
+
+    # per-sample noise is exact: z_in - z0 == sigma_b * eps on every element
+    m = torch.ones(64, 1, 4, 4)
+    eps = torch.randn_like(z0)
+    zt = core.simplenet_corrupt(z0, eps, s, m)
+    assert torch.allclose(zt - z0, s.view(-1, 1, 1, 1) * eps, atol=1e-5)
+
+    # oracle exactness still holds with per-sample t
+    tc = core.conditioning_time(s, "simplenet").view(-1, 1, 1, 1)
+    zhat = core.prediction_to_clean_latent(zt, (zt - z0) / tc, s, corruption="simplenet")
+    assert torch.allclose(zhat, z0, atol=1e-5)
+
+
+def test_p_latent_loss_with_sigma_range():
+    """J's objective runs with a range and is reproducible under seed_all."""
+    rae, dit = TinyRAE(), TinyDiT()
+    x = _batch(2, 32, seed=43)
+    z0 = rae.encode(x)
+    y = torch.full((2,), 1000, dtype=torch.long)
+    kw = dict(loss_type="latent", noise_cfg={"sigma": [0.5, 1.5], "mask": "perlin",
+                                              "p_clean": 0.0, "w_anom": 5.0},
+              lambda_fm=0.0, y=y, corruption="simplenet", size=32)
+    seed_all(44)
+    t1, terms1, _, _ = core.compute_losses(rae, dit, None, x, z0, **kw)
+    seed_all(44)
+    t2, _, _, _ = core.compute_losses(rae, dit, None, x, z0, **kw)
+    assert math.isfinite(float(t1)) and "lat" in terms1
+    assert torch.equal(t1, t2)
+
+
+def test_p_validation_keeps_gpu_ema_in_place():
+    """Only CPU-resident modules are moved; 'cuda:0' params are not 'different' from 'cuda'."""
+    from iad import train as T
+
+    cpu_mod = nn.Linear(2, 2)
+    gpu_like = nn.Linear(2, 2, device="meta")   # stands in for a GPU-resident EMA
+    assert T.modules_to_move([cpu_mod, gpu_like], torch.device("cuda")) == [cpu_mod]
+    assert T.modules_to_move([cpu_mod, gpu_like], torch.device("cuda", 0)) == [cpu_mod]
+    assert T.modules_to_move([cpu_mod], torch.device("cpu")) == []

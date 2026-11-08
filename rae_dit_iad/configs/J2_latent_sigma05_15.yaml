@@ -1,0 +1,95 @@
+# J2: J with strong noise, sigma ~ U(0.5, 1.5) per sample (test: no noise, t_c at the
+# midpoint sigma = 1, i.e. t_c = 0.5 -- the same conditioning time A is evaluated at).
+#
+# Why: the first full run (job 152776, 5 categories, seed 0) gave J at sigma = 0.1 only
+# 0.764 image AUROC with latent_cos, against 0.964 for A and 0.969 for kNN. sigma = 0.1 is
+# near-identity: the restorer learns to wipe faint jitter and copies real defects through.
+# latent_draem's noise restorer, which reached 0.972, used exactly this range.
+# Everything else is identical to J_latent_simplenet_nodecoder.
+#
+# Experiment J: decoder-free. Same DiT and default SimpleNet-style corruption as B-G, but the
+# decoder is dropped from BOTH the loss and the anomaly score.
+#
+#   train:  z_in = z0 + m * sigma * eps       (m = Perlin token mask, sigma small)
+#           z^   = z_in - t_c * v_theta(z_in, t_c),   t_c = sigma / (1 + sigma)
+#           L    = sum_p w_p * mean_c (z^_p - z0_p)^2 / sum_p w_p,   w = 1 + (w_anom - 1) * m
+#   test:   z = E(x_test), no noise;  z^ = z - t_c * v_theta(z, t_c)
+#           map_p = 1 - cos(z_p, z^_p)  (16x16 tokens -> bilinear 256 px -> blur sigma 4)
+#
+# Compare with: A (flow path, also a latent-space loss: isolates the corruption when both
+# are scored with latent_cos), D (same corruption, decoder in loss + score), the latent_draem
+# `latent_noise` restorer residual (small token transformer, 0.972 image AUROC, 1 seed)
+# and frozen-token kNN (0.969). J asks whether a pretrained 840M DiT is a better
+# latent restorer than a small one trained from scratch.
+experiment:
+  id: J2_latent_sigma05_15
+  loss: latent             # weighted token MSE to the clean latent; the decoder is never called
+  lambda_fm: 0.0
+  lambda_latent: 0.0       # unused with loss=latent (the latent term IS the loss)
+  decoder_finetune: false  # must be false: the decoder is offloaded to CPU during training
+  corruption: simplenet
+  clamp_recon: false
+  best_metric: lat         # val_lat (latent restore loss on the val split)
+
+discriminator:   # DRAEM's discriminative sub-network on the token grid (iad/disc.py)
+  enabled: true
+  d: 256          # hidden channels
+  blocks: 4       # residual conv blocks
+  w_seg: 1.0      # weight of the focal segmentation loss
+  gamma: 2.0      # focal-loss focusing (DRAEM)
+  detach: true    # true: the head never changes the DiT's training (clean comparisons)
+
+rae_config: configs/stage2/training/ImageNet256/DiTDH-XL_DINOv2-B.yaml
+rae_config_overrides:
+  stage_2:
+    ckpt: "models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt"
+
+noise:
+  # Default SimpleNet-style corruption (iad.core.SIMPLENET_DEFAULTS), identical to B-G.
+  sigma: [0.5, 1.5]   # U(lo, hi) per sample; test conditions on the midpoint (1.0)
+  mask: perlin    # perlin | all
+  p_clean: 0.2
+  w_anom: 5.0     # latent-loss up-weight on corrupted tokens
+  mask_thr: 0.5
+
+size: 256
+seed: 42
+scope: joint
+
+training:
+  steps: 4000
+  batch_size: 2        # micro-batch (DiT-XL + decoder must fit in GPU memory)
+  grad_accum_steps: 4  # effective batch = 2 x 4 = 8
+  precision: fp32
+  clip_grad: 1.0
+  log_every: 50
+  val_every: 250
+  save_every: 500
+  n_val: 20
+  use_ema: true
+  ema_decay: 0.9995
+  # --- memory/speed knobs: defaults are the fastest (full-speed) settings ---
+  grad_checkpoint: false  # true = recompute activations in backward (slower step, much less VRAM)
+  ema_device: cuda        # cuda = fastest; cpu = keeps EMA off the GPU (frees ~4 bytes/param)
+  cache_latents: true
+  decoder_lr_ratio: 0.1  # unused while decoder_finetune=false
+  optimizer:
+    lr: 2.0e-4
+    betas: [0.9, 0.95]
+    weight_decay: 0.0
+    eps: 1.0e-8
+  scheduler:
+    type: linear
+    base_lr: 2.0e-4
+    final_lr: 2.0e-5
+    warmup_steps: 400
+    decay_end_steps: 4000
+    warmup_from_zero: false
+
+inference:
+  mode: single      # deterministic: no test-time noise
+  t: 1.0            # = midpoint of noise.sigma; eval uses the checkpoint's sigma when --t is omitted
+  score: latent_cos # decoder-free map; latent_l2 also available, pixel for comparison
+  reps: 1
+  ode_steps: 50
+  blur_sigma: 4.0

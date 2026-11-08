@@ -1,0 +1,105 @@
+# K2: K with strong noise, sigma ~ U(0.5, 1.5) per sample (test: no noise, t_c at the
+# midpoint sigma = 1, i.e. t_c = 0.5 -- the same conditioning time A is evaluated at).
+#
+# Why: the first full run (job 152776, 5 categories, seed 0) gave K at sigma = 0.1 only
+# 0.764 image AUROC with latent_cos, against 0.964 for A and 0.969 for kNN. sigma = 0.1 is
+# near-identity: the restorer learns to wipe faint jitter and copies real defects through.
+# latent_draem's noise restorer, which reached 0.972, used exactly this range.
+# Everything else is identical to K_latent_simplenet_adaptor.
+#
+# Experiment K: experiment J (decoder-free DiT latent restorer) + a feature adaptor.
+#
+# Without a decoder the loss lives inside the space the adaptor defines, so a plain
+# trainable adaptor collapses it (shrink / inflate / map every token to one vector).
+# The anchored adaptor closes those doors:
+#   z~   = A(z0) * ||z0|| / ||A(z0)||          per token: the norm is preserved
+#   z_in = z~ + m * sigma * eps                 default SimpleNet corruption
+#   z^   = z_in - t_c * v_theta(z_in, t_c)
+#   L    = sum_p w_p (z^_p - z~_p)^2 / sum_p w_p   +   lambda_inv * mean (B(z~) - z0)^2
+#   test: map = 1 - cos(z~, z^) (latent_cos), disc head, or pixel |x - D(B(z^))|
+# A and B are zero-initialized residual bottlenecks, so step 0 of K is exactly J.
+# Compare with: J (adaptor vs none, decoder-free) and F (adaptor with a frozen decoder).
+experiment:
+  id: K2_latent_adaptor_sigma05_15
+  loss: latent             # weighted token MSE to the clean latent; the decoder is never called
+  lambda_fm: 0.0
+  lambda_latent: 0.0       # unused with loss=latent (the latent term IS the loss)
+  decoder_finetune: false  # must be false: the decoder is offloaded to CPU during training
+  corruption: simplenet
+  clamp_recon: false
+  best_metric: lat         # val_lat (latent restore loss on the val split)
+
+adaptor:          # anchored feature adaptor (iad.adaptor.AnchoredAdaptor)
+  type: simplenet # Linear-BN-LeakyReLU-Linear per token, residual, zero-init (= F/G)
+  rank: 4         # bottleneck 768 // 4 = 192
+  residual: true
+  zero_init: true
+  norm: batch
+  init: identity
+  trainable: true
+  preserve_norm: true   # z~_p rescaled to ||z_p||: no shrinking / inflating the space
+  inverse_head: true    # B: z~ -> z, must rebuild the encoder latent (no information loss)
+  lambda_inv: 1.0       # weight of mean (B(z~) - z)^2
+
+discriminator:   # DRAEM's discriminative sub-network on the token grid (iad/disc.py)
+  enabled: true
+  d: 256          # hidden channels
+  blocks: 4       # residual conv blocks
+  w_seg: 1.0      # weight of the focal segmentation loss
+  gamma: 2.0      # focal-loss focusing (DRAEM)
+  detach: true    # true: the head never changes the DiT's training (clean comparisons)
+
+rae_config: configs/stage2/training/ImageNet256/DiTDH-XL_DINOv2-B.yaml
+rae_config_overrides:
+  stage_2:
+    ckpt: "models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt"
+
+noise:
+  # Default SimpleNet-style corruption (iad.core.SIMPLENET_DEFAULTS), identical to B-G.
+  sigma: [0.5, 1.5]   # U(lo, hi) per sample; test conditions on the midpoint (1.0)
+  mask: perlin    # perlin | all
+  p_clean: 0.2
+  w_anom: 5.0     # latent-loss up-weight on corrupted tokens
+  mask_thr: 0.5
+
+size: 256
+seed: 42
+scope: joint
+
+training:
+  steps: 4000
+  batch_size: 2        # micro-batch (DiT-XL + decoder must fit in GPU memory)
+  grad_accum_steps: 4  # effective batch = 2 x 4 = 8
+  precision: fp32
+  clip_grad: 1.0
+  log_every: 50
+  val_every: 250
+  save_every: 500
+  n_val: 20
+  use_ema: true
+  ema_decay: 0.9995
+  # --- memory/speed knobs: defaults are the fastest (full-speed) settings ---
+  grad_checkpoint: false  # true = recompute activations in backward (slower step, much less VRAM)
+  ema_device: cuda        # cuda = fastest; cpu = keeps EMA off the GPU (frees ~4 bytes/param)
+  cache_latents: true
+  decoder_lr_ratio: 0.1  # unused while decoder_finetune=false
+  optimizer:
+    lr: 2.0e-4
+    betas: [0.9, 0.95]
+    weight_decay: 0.0
+    eps: 1.0e-8
+  scheduler:
+    type: linear
+    base_lr: 2.0e-4
+    final_lr: 2.0e-5
+    warmup_steps: 400
+    decay_end_steps: 4000
+    warmup_from_zero: false
+
+inference:
+  mode: single      # deterministic: no test-time noise
+  t: 1.0            # = midpoint of noise.sigma; eval uses the checkpoint's sigma when --t is omitted
+  score: latent_cos # decoder-free map; latent_l2 also available, pixel for comparison
+  reps: 1
+  ode_steps: 50
+  blur_sigma: 4.0

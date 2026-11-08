@@ -14,6 +14,7 @@
 #   STAGE=train STEPS=500 EXPT="A" bash run_dit_iad.sh                     # quick smoke run
 #   ADAPTOR=mlp EXPT="F" bash run_dit_iad.sh                               # swap the adaptor family
 #   SIGMA=0.05 EXPT="B J" bash run_dit_iad.sh                             # SimpleNet-style noise level
+#   SIGMA="0.5 1.5" EXPT="J" bash run_dit_iad.sh                          # sigma ~ U(0.5, 1.5) per sample
 #   STAGE=eval EXPT="A B" SCORES="latent_l2" bash run_dit_iad.sh          # extra scoring, no retraining
 #   BATCH=1 GRAD_ACCUM=8 EXPT="A" bash run_dit_iad.sh                     # tighter memory
 #   MEM=low bash run_dit_iad.sh                                           # force 24 GB preset
@@ -63,6 +64,8 @@ config_for() {
     G) echo "$HERE/configs/G_image_l1_adaptor_decfinetune.yaml" ;;
     J) echo "$HERE/configs/J_latent_simplenet_nodecoder.yaml" ;;
     K) echo "$HERE/configs/K_latent_simplenet_adaptor.yaml" ;;
+    J2) echo "$HERE/configs/J2_latent_sigma05_15.yaml" ;;
+    K2) echo "$HERE/configs/K2_latent_adaptor_sigma05_15.yaml" ;;
     *) echo "$HERE/configs/$1.yaml" ;;   # full basename, e.g. noise_sigma02
   esac
 }

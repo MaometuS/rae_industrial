@@ -176,6 +176,10 @@ SIMPLENET_DEFAULTS: Dict[str, Any] = {
     # variance, so a token's squared norm is ~768 and sigma=0.1 adds ~1%).
     # SimpleNet uses sigma=0.015 in its own adapted WideResNet feature scale,
     # which does not transfer 1:1 -- sweep it (``--noise-sigma`` / ``SIGMA``).
+    # A two-element list ``[lo, hi]`` draws sigma ~ U(lo, hi) per sample
+    # (latent_draem's working range is [0.5, 1.5]); test time then conditions
+    # on the midpoint.  The first full run showed 0.1 is far too weak: the
+    # restorer learns a near-identity map and copies real defects through.
     "sigma": 0.1,
     "mask": "perlin",   # perlin (DRAEM-style token blobs) | all (SimpleNet: every token)
     "p_clean": 0.2,     # fraction of samples left uncorrupted (learn identity on normals)
@@ -190,13 +194,26 @@ def simplenet_cfg(noise_cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     for k in SIMPLENET_DEFAULTS:
         if noise_cfg and k in noise_cfg:
             cfg[k] = noise_cfg[k]
-    cfg["sigma"] = float(cfg["sigma"])
+    sig = cfg["sigma"]
+    if isinstance(sig, str):
+        sig = [float(v) for v in sig.replace(",", " ").split()]
+    if isinstance(sig, (list, tuple)):
+        if len(sig) == 1:
+            sig = sig[0]
+        elif len(sig) != 2 or not float(sig[1]) >= float(sig[0]):
+            raise ValueError(f"simplenet sigma range must be [lo, hi] with hi >= lo (got {sig})")
+    if isinstance(sig, (list, tuple)):
+        lo, hi = float(sig[0]), float(sig[1])
+    else:
+        lo = hi = float(sig)
+    cfg["sigma_range"] = (lo, hi)
+    cfg["sigma"] = 0.5 * (lo + hi)   # the scalar used at test time (conditioning only)
     cfg["p_clean"] = float(cfg["p_clean"])
     cfg["w_anom"] = float(cfg["w_anom"])
     cfg["mask_thr"] = float(cfg["mask_thr"])
     cfg["mask"] = str(cfg["mask"]).lower()
-    if not cfg["sigma"] > 0:
-        raise ValueError(f"simplenet noise sigma must be > 0 (got {cfg['sigma']})")
+    if not cfg["sigma_range"][0] > 0:
+        raise ValueError(f"simplenet noise sigma must be > 0 (got {cfg['sigma_range']})")
     if cfg["mask"] not in ("perlin", "all"):
         raise ValueError(f"simplenet mask must be 'perlin' or 'all' (got '{cfg['mask']}')")
     if not 0.0 <= cfg["p_clean"] < 1.0:
@@ -239,14 +256,35 @@ def sample_token_mask(
     return m.to(device=z0.device, dtype=z0.dtype)
 
 
+def sample_sigma(
+    z0: torch.Tensor,
+    noise_cfg: Optional[Dict[str, Any]],
+    generator: Optional[torch.Generator] = None,
+) -> torch.Tensor:
+    """Per-sample noise std, shape ``(B,)``: constant, or ``U(lo, hi)`` for a range."""
+    lo, hi = simplenet_cfg(noise_cfg)["sigma_range"]
+    b = z0.shape[0]
+    if hi == lo:
+        return torch.full((b,), lo, device=z0.device, dtype=z0.dtype)
+    u = torch.rand(b, device=z0.device, dtype=z0.dtype) if generator is None else torch.rand(
+        b, device=z0.device, dtype=z0.dtype, generator=generator)
+    return lo + (hi - lo) * u
+
+
 def simplenet_corrupt(
     z0: torch.Tensor,
     eps: torch.Tensor,
-    sigma: float,
+    sigma,
     mask: torch.Tensor,
 ) -> torch.Tensor:
-    """``z_in = z_0 + m * sigma * eps`` (untouched tokens stay exactly clean)."""
-    return z0 + mask * float(sigma) * eps
+    """``z_in = z_0 + m * sigma * eps`` (untouched tokens stay exactly clean).
+
+    ``sigma`` is a float or a per-sample tensor of shape ``(B,)``."""
+    if torch.is_tensor(sigma):
+        sigma = sigma.view(-1, *([1] * (z0.dim() - 1)))
+    else:
+        sigma = float(sigma)
+    return z0 + mask * sigma * eps
 
 
 def latent_restore_loss(
@@ -467,8 +505,8 @@ def compute_losses(
         mask = sample_token_mask(z0, noise_cfg, size, generator)
         eps = torch.randn_like(z0) if generator is None else torch.randn(
             z0.shape, device=z0.device, dtype=z0.dtype, generator=generator)
-        t = torch.full((z0.shape[0],), sn["sigma"], device=z0.device, dtype=z0.dtype)
-        zt = simplenet_corrupt(z0, eps, sn["sigma"], mask)
+        t = sample_sigma(z0, noise_cfg, generator)   # raw sigma per sample
+        zt = simplenet_corrupt(z0, eps, t, mask)
     else:
         # shared draw for image / hybrid
         t, eps = sample_time(noise_cfg, transport, z0, generator)

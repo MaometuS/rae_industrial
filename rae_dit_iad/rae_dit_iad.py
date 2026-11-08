@@ -113,7 +113,8 @@ def cmd_train(args: argparse.Namespace) -> None:
     if args.lambda_fm is not None:
         cfg["experiment"]["lambda_fm"] = float(args.lambda_fm)
     if args.noise_sigma is not None:
-        cfg.setdefault("noise", {})["sigma"] = float(args.noise_sigma)
+        sig = [float(v) for v in args.noise_sigma]
+        cfg.setdefault("noise", {})["sigma"] = sig[0] if len(sig) == 1 else sig
     if args.lambda_latent is not None:
         cfg["experiment"]["lambda_latent"] = float(args.lambda_latent)
     if args.sdpa is not None:
@@ -664,8 +665,9 @@ def build_parser() -> argparse.ArgumentParser:
                     help="gradient accumulation steps (effective batch = batch-size * grad-accum)")
     tr.add_argument("--lambda-fm", type=float, default=None,
                     help="override experiment.lambda_fm (hybrid ablations)")
-    tr.add_argument("--noise-sigma", type=float, default=None,
-                    help="override noise.sigma (SimpleNet-style corruption: every arm but A)")
+    tr.add_argument("--noise-sigma", type=float, nargs="+", default=None, metavar="SIGMA",
+                    help="override noise.sigma (SimpleNet-style corruption: every arm but A); "
+                         "one value, or LO HI for sigma ~ U(LO, HI) per sample")
     tr.add_argument("--sdpa", choices=["auto", "math"], default=None,
                     help="attention kernels: auto (fused, default) or math (debug NaNs)")
     tr.add_argument("--lambda-latent", type=float, default=None,

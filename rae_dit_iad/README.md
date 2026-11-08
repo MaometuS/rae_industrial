@@ -25,6 +25,8 @@ metrics come from `../latent_draem/latent_draem.py`.
 | **G** | `configs/G_image_l1_adaptor_decfinetune.yaml` | SimpleNet | image L1 + **feature adaptor** | **fine-tuned** | C (domain gap) |
 | **J** | `configs/J_latent_simplenet_nodecoder.yaml` | SimpleNet | **latent MSE only** | **dropped** | D (decoder), A (corruption), latent_draem restorer, kNN |
 | **K** | `configs/K_latent_simplenet_adaptor.yaml` | SimpleNet | latent MSE + **anchored feature adaptor** | **dropped** | J (adaptor), F (adaptor with a decoder) |
+| **J2** | `configs/J2_latent_sigma05_15.yaml` | SimpleNet, **σ ~ U(0.5, 1.5)** | latent MSE | **dropped** | J (noise strength), A (flow path at the same test t_c = 0.5) |
+| **K2** | `configs/K2_latent_adaptor_sigma05_15.yaml` | SimpleNet, **σ ~ U(0.5, 1.5)** | latent MSE + anchored adaptor | **dropped** | K, J2 |
 
 Letters H and I were merged away: with SimpleNet as the default, "B with SimpleNet
 noise" is B, and "image L1 + latent term" is D. The old flow-path hybrid
@@ -459,11 +461,26 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
 
 ## 7. Status
 
-Implementation + configs + tests written (A–G, J, K + 3 noise ablations + Tests A–O;
-the SimpleNet/latent/discriminator additions have not been executed yet);
-cluster execution pending (this subproject is run entirely on the cluster —
-`run_dit_iad_default.sh` / `run_dit_iad_efficient.sh`). Result tables land in
-`results_dit_iad/seed*/<exp_id>/report.md` after the matrix runs; the adaptor
-question is answered by the paired comparisons **F vs B** (frozen decoder) and
-**G vs C** (fine-tuned decoder) at the same seed, step budget and inference
-settings.
+**First full run (job 152776, 5 pilot categories, seed 0, 4000 steps).** Means over
+carpet, grid, hazelnut, screw, transistor (image AUROC max / pixel AUROC / AUPRO):
+
+| Arm · score | Image AUROC | Pixel AUROC | AUPRO |
+|---|---|---|---|
+| kNN, frozen DINOv2-B tokens | 0.969 | 0.956 | 0.861 |
+| latent_draem `latent_noise` restorer, residual | 0.972 | 0.965 | 0.842 |
+| **A · latent_cos** | **0.964** | **0.963** | **0.879** |
+| J · latent_cos | 0.764 | 0.758 | 0.339 |
+| best pixel score (E) | 0.698 | 0.812 | 0.610 |
+| disc, every arm | 0.48–0.60 | ≈ 0.71 | ≤ 0.37 |
+
+- Only A works (ties kNN, slightly better AUPRO). Every SimpleNet arm at σ = 0.1 fails:
+  the corruption is near-identity, so the restorer copies real defects through, and the
+  DRAEM head learns to find faint jitter that never occurs at test time. latent_draem's
+  working range was σ ∈ [0.5, 1.5] → **J2 / K2**.
+- Decoded (pixel) scores are weak in every arm, A included (0.62 vs 0.96 with latent_cos).
+- latent_cos is inverted (< 0.5) for the image-L1-only arms B, C, F, G: without a latent
+  term ẑ drifts freely where the decoder does not care.
+- That run took ~11.5 h per arm because `validate()` moved the GPU EMA to the CPU after
+  step 250 (`cuda:0` != `cuda`); fixed in `train.modules_to_move` (Test P).
+
+**Next (`PLAN=next`, the SLURM default):** J2, K2 and A at seeds 1 and 2.

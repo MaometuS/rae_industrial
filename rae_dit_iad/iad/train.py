@@ -260,6 +260,19 @@ def _autocast(device: torch.device, precision: str):
 
 
 @torch.no_grad()
+def modules_to_move(modules: Sequence[nn.Module], device: torch.device) -> List[nn.Module]:
+    """Modules validation must bring onto ``device`` and send back to the CPU.
+
+    Only CPU-resident modules (``ema_device: cpu``) qualify.  Comparing devices
+    directly is wrong: parameters on ``cuda:0`` != ``torch.device('cuda')``, which
+    used to send the GPU EMA to the CPU after the first validation and made every
+    later EMA update ~8x slower (job 152776: 1.2 s -> 10 s per step from step 250).
+    """
+    if device.type == "cpu":
+        return []
+    return [m for m in modules if next(iter(m.parameters())).device.type == "cpu"]
+
+
 def validate(
     rae: nn.Module,
     dit: nn.Module,
@@ -297,8 +310,7 @@ def validate(
     if disc is not None:
         disc.eval()
     modules = [dit] + [m for m in (adaptor, disc) if m is not None]
-    moved = [m for m in modules
-             if next(iter(m.parameters())).device != device]
+    moved = modules_to_move(modules, device)
     for m in moved:
         m.to(device)
     totals: Dict[str, List[float]] = {}
