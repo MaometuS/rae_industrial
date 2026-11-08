@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 4000,
+      "best_val": 0.0005933660210575908,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/joint_best.pt"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 4000,
+      "best_val": 0.042742569409310815,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/B_image_l1/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/B_image_l1/joint_best.pt"
+    }
+  ]
+}

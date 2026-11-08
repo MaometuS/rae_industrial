@@ -1,0 +1,192 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.4747 P-AUROC=0.3628 AUPRO=0.1174 (0.047s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.7953 P-AUROC=0.8478 AUPRO=0.6841 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.9214 P-AUROC=0.9522 AUPRO=0.9035 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.2455 P-AUROC=0.8070 AUPRO=0.3784 (0.045s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.5246 P-AUROC=0.6581 AUPRO=0.4216 (0.044s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.5457 P-AUROC=0.5480 AUPRO=0.1206 (0.050s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.3292 P-AUROC=0.6247 AUPRO=0.2203 (0.051s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4379 P-AUROC=0.2078 AUPRO=0.0150 (0.045s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4698 P-AUROC=0.1544 AUPRO=0.0003 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4158 P-AUROC=0.5371 AUPRO=0.1969 (0.044s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4470 P-AUROC=0.6663 AUPRO=0.0897 (0.048s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4971 P-AUROC=0.4234 AUPRO=0.0855 (0.054s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4111 P-AUROC=0.5759 AUPRO=0.0103 (0.048s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5411 P-AUROC=0.2728 AUPRO=0.0487 (0.045s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5763 P-AUROC=0.4658 AUPRO=0.1781 (0.045s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.4747 P-AUROC=0.3628 AUPRO=0.1174 (0.045s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.7953 P-AUROC=0.8478 AUPRO=0.6841 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.9214 P-AUROC=0.9522 AUPRO=0.9035 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.2455 P-AUROC=0.8070 AUPRO=0.3784 (0.045s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.5246 P-AUROC=0.6581 AUPRO=0.4216 (0.046s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.5457 P-AUROC=0.5480 AUPRO=0.1206 (0.048s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.3292 P-AUROC=0.6247 AUPRO=0.2203 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4379 P-AUROC=0.2078 AUPRO=0.0150 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4698 P-AUROC=0.1544 AUPRO=0.0003 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4158 P-AUROC=0.5371 AUPRO=0.1969 (0.045s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4470 P-AUROC=0.6663 AUPRO=0.0897 (0.047s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4971 P-AUROC=0.4234 AUPRO=0.0855 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4111 P-AUROC=0.5759 AUPRO=0.0103 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5411 P-AUROC=0.2728 AUPRO=0.0487 (0.045s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5763 P-AUROC=0.4658 AUPRO=0.1781 (0.044s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.4049 P-AUROC=0.3457 AUPRO=0.0903 (0.049s/img)
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.4954 P-AUROC=0.6495 AUPRO=0.2317 (0.047s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.9036 P-AUROC=0.6269 AUPRO=0.5796 (0.048s/img)
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.9377 P-AUROC=0.8404 AUPRO=0.5722 (0.048s/img)
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.4367 P-AUROC=0.5223 AUPRO=0.2260 (0.048s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4414 P-AUROC=0.4031 AUPRO=0.1099 (0.050s/img)
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.6934 P-AUROC=0.7453 AUPRO=0.4197 (0.048s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4500 P-AUROC=0.4502 AUPRO=0.0451 (0.048s/img)
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.5663 P-AUROC=0.4815 AUPRO=0.1916 (0.048s/img)
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.3683 P-AUROC=0.4185 AUPRO=0.2943 (0.048s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4490 P-AUROC=0.7709 AUPRO=0.2426 (0.050s/img)
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5096 P-AUROC=0.5820 AUPRO=0.1482 (0.048s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4293 P-AUROC=0.5910 AUPRO=0.0121 (0.048s/img)
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5409 P-AUROC=0.2922 AUPRO=0.0655 (0.048s/img)
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5808 P-AUROC=0.5213 AUPRO=0.2485 (0.048s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.5345 P-AUROC=0.5620 AUPRO=0.3073 (0.049s/img)
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.7260 P-AUROC=0.8298 AUPRO=0.5825 (0.044s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.9121 P-AUROC=0.9835 AUPRO=0.8796 (0.044s/img)
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.2974 P-AUROC=0.8930 AUPRO=0.6503 (0.045s/img)
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.4467 P-AUROC=0.7052 AUPRO=0.3133 (0.044s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.8415 P-AUROC=0.1430 AUPRO=0.0032 (0.049s/img)
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.7226 P-AUROC=0.0331 AUPRO=0.0000 (0.045s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.2332 P-AUROC=0.0965 AUPRO=0.0016 (0.044s/img)
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.5889 P-AUROC=0.0842 AUPRO=0.0000 (0.047s/img)
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.3158 P-AUROC=0.5891 AUPRO=0.1516 (0.044s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.2970 P-AUROC=0.7928 AUPRO=0.4443 (0.051s/img)
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.8145 P-AUROC=0.6946 AUPRO=0.3830 (0.044s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.7982 P-AUROC=0.9370 AUPRO=0.6633 (0.044s/img)
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5581 P-AUROC=0.5373 AUPRO=0.0813 (0.046s/img)
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5058 P-AUROC=0.6430 AUPRO=0.2707 (0.044s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/report.md

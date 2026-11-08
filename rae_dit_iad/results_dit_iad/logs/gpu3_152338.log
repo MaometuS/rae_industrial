@@ -1,0 +1,281 @@
+[gpu 3] start G 18:22:41
+torch 2.8.0+cu128 NVIDIA RTX A6000
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=G seed=0 ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] feature adaptor: FeatureAdaptor(
+  type=simplenet, dim=768, hidden=192, residual=True, init=identity, trainable=True, stats_fitted=False
+  (net): Sequential(
+    (0): Linear(in_features=768, out_features=192, bias=True)
+    (1): BatchNorm1d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): LeakyReLU(negative_slope=0.2)
+    (3): Linear(in_features=192, out_features=768, bias=True)
+  )
+) (296256 params)
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW(lr=0.0002, decoder_lr=2e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + adaptor(296256 params) + discriminator(5315841 params) + decoder groups]
+[iad/joint] step 11: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=inf, head_norm=0.1157); loss terms this step={'img': [0.022317, 0.084204, 0.055413, 0.05004], 'total': [0.022317, 0.084204, 0.055413, 0.05004], 'seg': [0.031957, 0.075873, 0.010985, 0.131002]}; update skipped
+[iad/joint] step 12: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=inf, head_norm=0.06812); loss terms this step={'img': [0.041156, 0.09761, 0.115323, 0.081282], 'total': [0.041156, 0.09761, 0.115323, 0.081282], 'seg': [0.070193, 0.0171, 0.031084, 0.05152]}; update skipped
+[iad/joint] step 14: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=inf, head_norm=0.09554); loss terms this step={'img': [0.087013, 0.037457, 0.118958, 0.053935], 'total': [0.087013, 0.037457, 0.118958, 0.053935], 'seg': [0.04176, 0.087579, 0.0225, 0.030638]}; update skipped
+[iad/joint] step 15: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.1827); loss terms this step={'img': [0.071035, 0.084177, 0.10552, 0.084805], 'total': [0.071035, 0.084177, 0.10552, 0.084805], 'seg': [0.076996, 0.100854, 0.075915, 0.001951]}; update skipped
+[iad/joint] step 16: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=inf, head_norm=0.06238); loss terms this step={'img': [0.082221, 0.104345, 0.046616, 0.111676], 'total': [0.082221, 0.104345, 0.046616, 0.111676], 'seg': [0.072041, 0.035115, 0.029886, 0.003767]}; update skipped
+[iad/joint] step 17: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.05779); loss terms this step={'img': [0.113598, 0.054735, 0.102543, 0.080543], 'total': [0.113598, 0.054735, 0.102543, 0.080543], 'seg': [0.004107, 0.069789, 0.021658, 0.005249]}; update skipped
+[iad/joint] step 20: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.1713); loss terms this step={'img': [0.036982, 0.091991, 0.064587, 0.081393], 'total': [0.036982, 0.091991, 0.064587, 0.081393], 'seg': [0.138406, 0.065125, 0.016195, 0.015442]}; update skipped
+[iad/joint] step 22: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.1139); loss terms this step={'img': [0.075034, 0.053242, 0.077727, 0.077609], 'total': [0.075034, 0.053242, 0.077727, 0.077609], 'seg': [0.066293, 0.028745, 0.063737, 0.035472]}; update skipped
+[iad/joint] step 23: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=inf, head_norm=0.1679); loss terms this step={'img': [0.069822, 0.074667, 0.037342, 0.059923], 'total': [0.069822, 0.074667, 0.037342, 0.059923], 'seg': [0.010303, 0.008138, 0.115483, 0.070105]}; update skipped
+[iad/joint] step 25: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.1636); loss terms this step={'img': [0.100706, 0.038678, 0.0364, 0.027145], 'total': [0.100706, 0.038678, 0.0364, 0.027145], 'seg': [0.078802, 0.043875, 0.050722, 0.042315]}; update skipped
+Traceback (most recent call last):
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 705, in <module>
+    main()
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 699, in main
+    cmd_train(args)
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 147, in cmd_train
+    summary = T.train(
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/iad/train.py", line 453, in train
+    s = _train_scope(
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/iad/train.py", line 690, in _train_scope
+    raise RuntimeError(
+RuntimeError: 11 of 26 steps had non-finite DiT gradients (limit 10): not a rare event any more, stopping
+[gpu 3] FAILED G 18:26:53
+[gpu 3] start J 18:26:53
+torch 2.8.0+cu128 NVIDIA RTX A6000
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=J seed=0 ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] decoder offloaded to CPU (loss=latent never decodes)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW with lr=0.0002, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + discriminator(5315841 params)
+[iad/joint] step 50/200 loss_lat=0.0019 loss_total=0.0019 loss_seg=0.0344 lr_dit=0.0002 (1.08s/step)
+[iad/joint] step 100/200 loss_lat=0.0006 loss_total=0.0006 loss_seg=0.0298 lr_dit=0.0002 (1.07s/step)
+[iad/joint] step 150/200 loss_lat=0.0007 loss_total=0.0007 loss_seg=0.0310 lr_dit=0.0002 (1.08s/step)
+[iad/joint] step 200/200 loss_lat=0.0006 loss_total=0.0006 loss_seg=0.0283 lr_dit=0.0002 (0.94s/step)
+[iad/joint] step 200 val_lat=0.0063 val_total=0.0063 val_seg=0.0299
+[iad/joint] new best val_lat=0.0063 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/joint_best.pt
+[iad/joint] done at step 200; encoder_frozen=True; decoder_finetune=False; adaptor=None; best_lat=0.006335894241929054
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": 0.006335894241929054,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/joint_best.pt"
+    }
+  ]
+}
+=== eval exp=J seed=0 (mode=single t=trained sigma score=pixel) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.5273 P-AUROC=0.3543 AUPRO=0.0724 (0.045s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.4403 P-AUROC=0.5272 AUPRO=0.2053 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.8975 P-AUROC=0.8029 AUPRO=0.7941 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.6114 P-AUROC=0.8402 AUPRO=0.4961 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.3800 P-AUROC=0.3309 AUPRO=0.0704 (0.043s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/report.md
+=== eval exp=J seed=0 (mode=single t=trained sigma score=latent_cos) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.3744 P-AUROC=0.8452 AUPRO=0.5207 (0.046s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4127 P-AUROC=0.7730 AUPRO=0.4718 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4557 P-AUROC=0.6871 AUPRO=0.4616 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4210 P-AUROC=0.4060 AUPRO=0.0886 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.3862 P-AUROC=0.5130 AUPRO=0.1932 (0.043s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/report.md
+=== eval exp=J seed=0 (mode=single t=trained sigma score=disc) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4406 P-AUROC=0.6714 AUPRO=0.0995 (0.046s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5013 P-AUROC=0.4314 AUPRO=0.0886 (0.044s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4032 P-AUROC=0.6057 AUPRO=0.0189 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5003 P-AUROC=0.3505 AUPRO=0.0635 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5925 P-AUROC=0.4752 AUPRO=0.1894 (0.045s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J_latent_simplenet_nodecoder/report.md
+Reports: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed*/**/report.md   CSVs: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed*/**/results.csv   Grids: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed*/**/viz/
+[gpu 3] done  J 19:08:33
+[gpu 3] start K 19:08:33
+torch 2.8.0+cu128 NVIDIA RTX A6000
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=K seed=0 ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] feature adaptor: AnchoredAdaptor(
+  type=simplenet, dim=768, hidden=192, residual=True, init=identity, trainable=True, stats_fitted=False, preserve_norm=True, inverse_head=True, lambda_inv=1.0
+  (net): Sequential(
+    (0): Linear(in_features=768, out_features=192, bias=True)
+    (1): BatchNorm1d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): LeakyReLU(negative_slope=0.2)
+    (3): Linear(in_features=192, out_features=768, bias=True)
+  )
+  (inverse): FeatureAdaptor(
+    type=simplenet, dim=768, hidden=192, residual=True, init=identity, trainable=True, stats_fitted=False
+    (net): Sequential(
+      (0): Linear(in_features=768, out_features=192, bias=True)
+      (1): BatchNorm1d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): LeakyReLU(negative_slope=0.2)
+      (3): Linear(in_features=192, out_features=768, bias=True)
+    )
+  )
+) (592512 params)
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] decoder offloaded to CPU (loss=latent never decodes)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW with lr=0.0002, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + adaptor(592512 params) + discriminator(5315841 params)
+[iad/joint] step 50/200 loss_lat=0.0026 loss_inv=0.0001 loss_total=0.0027 loss_seg=0.0343 lr_dit=0.0002 (1.06s/step)
+[iad/joint] step 100/200 loss_lat=0.0007 loss_inv=0.0000 loss_total=0.0007 loss_seg=0.0297 lr_dit=0.0002 (1.05s/step)
+[iad/joint] step 150/200 loss_lat=0.0007 loss_inv=0.0000 loss_total=0.0007 loss_seg=0.0304 lr_dit=0.0002 (1.09s/step)
+[iad/joint] step 200/200 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0007 loss_seg=0.0295 lr_dit=0.0002 (1.08s/step)
+[iad/joint] step 200 val_lat=0.0070 val_total=0.0070 val_seg=0.0303
+[iad/joint] new best val_lat=0.0070 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
+[iad/joint] done at step 200; encoder_frozen=True; decoder_finetune=False; adaptor=simplenet; best_lat=0.006997507372871041
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": 0.006997507372871041,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt"
+    }
+  ]
+}
+=== eval exp=K seed=0 (mode=single t=trained sigma score=pixel) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.5237 P-AUROC=0.3452 AUPRO=0.0684 (0.046s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.4394 P-AUROC=0.5244 AUPRO=0.2040 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.8982 P-AUROC=0.7983 AUPRO=0.7874 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.6153 P-AUROC=0.8366 AUPRO=0.4883 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.3779 P-AUROC=0.3318 AUPRO=0.0690 (0.043s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/report.md
+=== eval exp=K seed=0 (mode=single t=trained sigma score=latent_cos) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4807 P-AUROC=0.8624 AUPRO=0.5732 (0.046s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.3776 P-AUROC=0.8799 AUPRO=0.6679 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.4400 P-AUROC=0.6081 AUPRO=0.3113 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.5569 P-AUROC=0.3779 AUPRO=0.0782 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.3954 P-AUROC=0.5094 AUPRO=0.1956 (0.043s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/report.md
+=== eval exp=K seed=0 (mode=single t=trained sigma score=disc) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4450 P-AUROC=0.6922 AUPRO=0.0956 (0.046s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5372 P-AUROC=0.4320 AUPRO=0.0842 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4207 P-AUROC=0.6333 AUPRO=0.0352 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4960 P-AUROC=0.3427 AUPRO=0.0537 (0.043s/img)
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5304 P-AUROC=0.3147 AUPRO=0.0628 (0.044s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/report.md
+Reports: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed*/**/report.md   CSVs: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed*/**/results.csv   Grids: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed*/**/viz/
+[gpu 3] done  K 19:28:26

@@ -1,0 +1,9 @@
+[gpu 3] start G 15:21:52
+/home/rakhimov/rae_industrial/rae_dit_iad/run_dit_iad.sh: line 123: PS1: unbound variable
+[gpu 3] FAILED G 15:21:52
+[gpu 3] start J 15:21:52
+/home/rakhimov/rae_industrial/rae_dit_iad/run_dit_iad.sh: line 123: PS1: unbound variable
+[gpu 3] FAILED J 15:21:52
+[gpu 3] start K 15:21:52
+/home/rakhimov/rae_industrial/rae_dit_iad/run_dit_iad.sh: line 123: PS1: unbound variable
+[gpu 3] FAILED K 15:21:52

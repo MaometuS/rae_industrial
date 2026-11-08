@@ -1,0 +1,9 @@
+[gpu 1] start C 15:21:52
+/home/rakhimov/rae_industrial/rae_dit_iad/run_dit_iad.sh: line 123: PS1: unbound variable
+[gpu 1] FAILED C 15:21:52
+[gpu 1] start D 15:21:52
+/home/rakhimov/rae_industrial/rae_dit_iad/run_dit_iad.sh: line 123: PS1: unbound variable
+[gpu 1] FAILED D 15:21:52
+[gpu 1] start noise_sigma02 15:21:52
+/home/rakhimov/rae_industrial/rae_dit_iad/run_dit_iad.sh: line 123: PS1: unbound variable
+[gpu 1] FAILED noise_sigma02 15:21:52

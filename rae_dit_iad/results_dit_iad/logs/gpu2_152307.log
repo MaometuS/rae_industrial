@@ -1,0 +1,198 @@
+[gpu 2] start E 15:24:36
+torch 2.8.0+cu128 NVIDIA RTX A6000
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=E seed=0 ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW(lr=0.0002, decoder_lr=2e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/joint] step 50/200 loss_img=nan loss_lat=nan loss_total=nan loss_seg=nan lr_dit=0.0002 lr_dec=0.0000 (1.65s/step)
+[iad/joint] step 100/200 loss_img=nan loss_lat=nan loss_total=nan loss_seg=nan lr_dit=0.0002 lr_dec=0.0000 (1.69s/step)
+[iad/joint] step 150/200 loss_img=nan loss_lat=nan loss_total=nan loss_seg=nan lr_dit=0.0002 lr_dec=0.0000 (1.67s/step)
+[iad/joint] step 200/200 loss_img=nan loss_lat=nan loss_total=nan loss_seg=nan lr_dit=0.0002 lr_dec=0.0000 (1.62s/step)
+[iad/joint] step 200 val_img=nan val_lat=nan val_total=nan val_seg=nan
+[iad/joint] done at step 200; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=n/a
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": null,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/E_image_l1_latent_decfinetune/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/E_image_l1_latent_decfinetune/joint_best.pt"
+    }
+  ]
+}
+=== eval exp=E seed=0 (mode=single t=trained sigma score=pixel) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py:358: RuntimeWarning: invalid value encountered in cast
+  recons_uint8.append((xhat.cpu().permute(0, 2, 3, 1).numpy() * 255).round().astype(np.uint8))
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+Traceback (most recent call last):
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 698, in <module>
+    main()
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 694, in main
+    cmd_eval(args)
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 368, in cmd_eval
+    row = _score_setting(maps_np, masks, labels, size, blur_sigma)
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 472, in _score_setting
+    px = evaluate_maps(blurred, masks, labels, do_pro=True)
+  File "/home/rakhimov/rae_industrial/latent_draem/latent_draem.py", line 408, in evaluate_maps
+    out = dict(img_auroc=roc_auc_score(labels, image_scores(maps, "max")) if two else float("nan"),
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/_param_validation.py", line 218, in wrapper
+    return func(*args, **kwargs)
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/metrics/_ranking.py", line 665, in roc_auc_score
+    y_score = check_array(y_score, ensure_2d=False)
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/validation.py", line 1105, in check_array
+    _assert_all_finite(
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/validation.py", line 120, in _assert_all_finite
+    _assert_all_finite_element_wise(
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/validation.py", line 169, in _assert_all_finite_element_wise
+    raise ValueError(msg_err)
+ValueError: Input contains NaN.
+[gpu 2] FAILED E 15:39:15
+[gpu 2] start F 15:39:15
+torch 2.8.0+cu128 NVIDIA RTX A6000
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=F seed=0 ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] feature adaptor: FeatureAdaptor(
+  type=simplenet, dim=768, hidden=192, residual=True, init=identity, trainable=True, stats_fitted=False
+  (net): Sequential(
+    (0): Linear(in_features=768, out_features=192, bias=True)
+    (1): BatchNorm1d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): LeakyReLU(negative_slope=0.2)
+    (3): Linear(in_features=192, out_features=768, bias=True)
+  )
+) (296256 params)
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW with lr=0.0002, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + adaptor(296256 params) + discriminator(5315841 params)
+[iad/joint] step 50/200 loss_img=0.1504 loss_total=0.1504 loss_seg=0.0338 lr_dit=0.0002 (1.48s/step)
+[iad/joint] step 100/200 loss_img=0.0888 loss_total=0.0888 loss_seg=0.0265 lr_dit=0.0002 (1.45s/step)
+[iad/joint] step 150/200 loss_img=0.0836 loss_total=0.0836 loss_seg=0.0316 lr_dit=0.0002 (1.50s/step)
+[iad/joint] step 200/200 loss_img=nan loss_total=nan loss_seg=nan lr_dit=0.0002 (1.51s/step)
+[iad/joint] step 200 val_img=nan val_total=nan val_seg=nan
+[iad/joint] done at step 200; encoder_frozen=True; decoder_finetune=False; adaptor=simplenet; best_img=n/a
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": null,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/F_image_l1_adaptor/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/F_image_l1_adaptor/joint_best.pt"
+    }
+  ]
+}
+=== eval exp=F seed=0 (mode=single t=trained sigma score=pixel) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py:358: RuntimeWarning: invalid value encountered in cast
+  recons_uint8.append((xhat.cpu().permute(0, 2, 3, 1).numpy() * 255).round().astype(np.uint8))
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+Traceback (most recent call last):
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 698, in <module>
+    main()
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 694, in main
+    cmd_eval(args)
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 368, in cmd_eval
+    row = _score_setting(maps_np, masks, labels, size, blur_sigma)
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 472, in _score_setting
+    px = evaluate_maps(blurred, masks, labels, do_pro=True)
+  File "/home/rakhimov/rae_industrial/latent_draem/latent_draem.py", line 408, in evaluate_maps
+    out = dict(img_auroc=roc_auc_score(labels, image_scores(maps, "max")) if two else float("nan"),
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/_param_validation.py", line 218, in wrapper
+    return func(*args, **kwargs)
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/metrics/_ranking.py", line 665, in roc_auc_score
+    y_score = check_array(y_score, ensure_2d=False)
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/validation.py", line 1105, in check_array
+    _assert_all_finite(
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/validation.py", line 120, in _assert_all_finite
+    _assert_all_finite_element_wise(
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/validation.py", line 169, in _assert_all_finite_element_wise
+    raise ValueError(msg_err)
+ValueError: Input contains NaN.
+[gpu 2] FAILED F 15:53:41
+[gpu 2] start noise_mask_all 15:53:41
+torch 2.8.0+cu128 NVIDIA RTX A6000
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=noise_mask_all seed=0 ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW with lr=0.0002, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + discriminator(5315841 params)
+[iad/joint] step 50/200 loss_img=nan loss_total=nan loss_seg=nan lr_dit=0.0002 (1.31s/step)
+[iad/joint] step 100/200 loss_img=nan loss_total=nan loss_seg=nan lr_dit=0.0002 (1.29s/step)
+[iad/joint] step 150/200 loss_img=nan loss_total=nan loss_seg=nan lr_dit=0.0002 (1.31s/step)
+[iad/joint] step 200/200 loss_img=nan loss_total=nan loss_seg=nan lr_dit=0.0002 (1.28s/step)
+[iad/joint] step 200 val_img=nan val_total=nan val_seg=nan
+[iad/joint] done at step 200; encoder_frozen=True; decoder_finetune=False; adaptor=None; best_img=n/a
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": null,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/ab_noise_mask_all/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/ab_noise_mask_all/joint_best.pt"
+    }
+  ]
+}
+=== eval exp=noise_mask_all seed=0 (mode=single t=trained sigma score=pixel) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py:358: RuntimeWarning: invalid value encountered in cast
+  recons_uint8.append((xhat.cpu().permute(0, 2, 3, 1).numpy() * 255).round().astype(np.uint8))
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+Traceback (most recent call last):
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 698, in <module>
+    main()
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 694, in main
+    cmd_eval(args)
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 368, in cmd_eval
+    row = _score_setting(maps_np, masks, labels, size, blur_sigma)
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 472, in _score_setting
+    px = evaluate_maps(blurred, masks, labels, do_pro=True)
+  File "/home/rakhimov/rae_industrial/latent_draem/latent_draem.py", line 408, in evaluate_maps
+    out = dict(img_auroc=roc_auc_score(labels, image_scores(maps, "max")) if two else float("nan"),
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/_param_validation.py", line 218, in wrapper
+    return func(*args, **kwargs)
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/metrics/_ranking.py", line 665, in roc_auc_score
+    y_score = check_array(y_score, ensure_2d=False)
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/validation.py", line 1105, in check_array
+    _assert_all_finite(
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/validation.py", line 120, in _assert_all_finite
+    _assert_all_finite_element_wise(
+  File "/home/rakhimov/anaconda3/envs/rae/lib/python3.10/site-packages/sklearn/utils/validation.py", line 169, in _assert_all_finite_element_wise
+    raise ValueError(msg_err)
+ValueError: Input contains NaN.
+[gpu 2] FAILED noise_mask_all 16:06:40

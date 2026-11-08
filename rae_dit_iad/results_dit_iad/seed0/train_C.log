@@ -1,0 +1,225 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW(lr=0.0002, decoder_lr=2e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/joint] step 50/200 loss_img=0.0734 loss_total=0.0734 loss_seg=0.0355 lr_dit=0.0002 lr_dec=0.0000 (1.82s/step)
+[iad/joint] step 100/200 loss_img=0.0471 loss_total=0.0471 loss_seg=0.0297 lr_dit=0.0002 lr_dec=0.0000 (1.85s/step)
+[iad/joint] step 150/200 loss_img=0.0457 loss_total=0.0457 loss_seg=0.0310 lr_dit=0.0002 lr_dec=0.0000 (1.82s/step)
+[iad/joint] step 200/200 loss_img=0.0442 loss_total=0.0442 loss_seg=0.0283 lr_dit=0.0002 lr_dec=0.0000 (1.83s/step)
+[iad/joint] step 200 val_img=0.0446 val_total=0.0446 val_seg=0.0301
+[iad/joint] new best val_img=0.0446 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt
+[iad/joint] done at step 200; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_img=0.04460287081077695
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": 0.04460287081077695,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt"
+    }
+  ]
+}
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW(lr=0.0002, decoder_lr=2e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/joint] step 50/200 loss_img=0.0734 loss_total=0.0734 loss_seg=0.0355 lr_dit=0.0002 lr_dec=0.0000 (1.83s/step)
+[iad/joint] step 100/200 loss_img=0.0471 loss_total=0.0471 loss_seg=0.0297 lr_dit=0.0002 lr_dec=0.0000 (1.87s/step)
+[iad/joint] step 150/200 loss_img=0.0457 loss_total=0.0457 loss_seg=0.0310 lr_dit=0.0002 lr_dec=0.0000 (1.85s/step)
+[iad/joint] step 200/200 loss_img=0.0442 loss_total=0.0442 loss_seg=0.0283 lr_dit=0.0002 lr_dec=0.0000 (1.84s/step)
+[iad/joint] step 200 val_img=0.0446 val_total=0.0446 val_seg=0.0301
+[iad/joint] new best val_img=0.0446 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt
+[iad/joint] done at step 200; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_img=0.04460287081077695
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": 0.04460287081077695,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt"
+    }
+  ]
+}
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW(lr=0.0002, decoder_lr=2e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/joint] step 50/200 loss_img=0.2064 loss_total=0.2064 loss_seg=0.0361 lr_dit=0.0002 lr_dec=0.0000 (1.84s/step)
+[iad/joint] step 100/200 loss_img=0.1774 loss_total=0.1774 loss_seg=0.0315 lr_dit=0.0002 lr_dec=0.0000 (1.83s/step)
+[iad/joint] step 150/200 loss_img=0.1082 loss_total=0.1082 loss_seg=0.0314 lr_dit=0.0002 lr_dec=0.0000 (1.76s/step)
+[iad/joint] step 200/200 loss_img=0.0917 loss_total=0.0917 loss_seg=0.0298 lr_dit=0.0002 lr_dec=0.0000 (1.79s/step)
+[iad/joint] step 200 val_img=0.0875 val_total=0.0875 val_seg=0.0356
+[iad/joint] new best val_img=0.0875 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt
+[iad/joint] done at step 200; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_img=0.08746040374040603
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": 0.08746040374040603,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt"
+    }
+  ]
+}
+[train] fresh run: moved 8 files of the previous run to /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/previous_20261107-060136
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW(lr=0.0002, decoder_lr=2e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/joint] step 50/4000 loss_img=0.2064 loss_total=0.2064 loss_seg=0.0361 lr_dit=0.0002 lr_dec=0.0000 (1.84s/step)
+[iad/joint] step 100/4000 loss_img=0.1774 loss_total=0.1774 loss_seg=0.0315 lr_dit=0.0002 lr_dec=0.0000 (1.85s/step)
+[iad/joint] step 150/4000 loss_img=0.1082 loss_total=0.1082 loss_seg=0.0314 lr_dit=0.0002 lr_dec=0.0000 (1.86s/step)
+[iad/joint] step 200/4000 loss_img=0.0917 loss_total=0.0917 loss_seg=0.0298 lr_dit=0.0002 lr_dec=0.0000 (1.92s/step)
+[iad/joint] step 250/4000 loss_img=0.0844 loss_total=0.0844 loss_seg=0.0277 lr_dit=0.0002 lr_dec=0.0000 (1.95s/step)
+[iad/joint] step 250 val_img=0.0825 val_total=0.0825 val_seg=0.0369
+[iad/joint] new best val_img=0.0825 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt
+[iad/joint] step 300/4000 loss_img=0.0797 loss_total=0.0797 loss_seg=0.0324 lr_dit=0.0002 lr_dec=0.0000 (14.13s/step)
+[iad/joint] step 350/4000 loss_img=0.0783 loss_total=0.0783 loss_seg=0.0286 lr_dit=0.0002 lr_dec=0.0000 (11.03s/step)
+[iad/joint] step 400/4000 loss_img=0.0749 loss_total=0.0749 loss_seg=0.0259 lr_dit=0.0002 lr_dec=0.0000 (10.68s/step)
+[iad/joint] step 450/4000 loss_img=0.0753 loss_total=0.0753 loss_seg=0.0311 lr_dit=0.0002 lr_dec=0.0000 (10.77s/step)
+[iad/joint] step 500/4000 loss_img=0.0701 loss_total=0.0701 loss_seg=0.0316 lr_dit=0.0002 lr_dec=0.0000 (11.01s/step)
+[iad/joint] step 500 val_img=0.1987 val_total=0.1987 val_seg=0.0348
+[iad/joint] step 550/4000 loss_img=0.0688 loss_total=0.0688 loss_seg=0.0293 lr_dit=0.0002 lr_dec=0.0000 (12.97s/step)
+[iad/joint] step 600/4000 loss_img=0.0704 loss_total=0.0704 loss_seg=0.0305 lr_dit=0.0002 lr_dec=0.0000 (10.78s/step)
+[iad/joint] step 650/4000 loss_img=0.0677 loss_total=0.0677 loss_seg=0.0256 lr_dit=0.0002 lr_dec=0.0000 (11.05s/step)
+[iad/joint] step 700/4000 loss_img=0.0635 loss_total=0.0635 loss_seg=0.0302 lr_dit=0.0002 lr_dec=0.0000 (10.97s/step)
+[iad/joint] step 750/4000 loss_img=0.0652 loss_total=0.0652 loss_seg=0.0234 lr_dit=0.0002 lr_dec=0.0000 (11.05s/step)
+[iad/joint] step 750 val_img=0.1957 val_total=0.1957 val_seg=0.0299
+[iad/joint] step 800/4000 loss_img=0.0649 loss_total=0.0649 loss_seg=0.0272 lr_dit=0.0002 lr_dec=0.0000 (11.11s/step)
+[iad/joint] step 850/4000 loss_img=0.0697 loss_total=0.0697 loss_seg=0.0276 lr_dit=0.0002 lr_dec=0.0000 (10.45s/step)
+[iad/joint] step 900/4000 loss_img=0.0639 loss_total=0.0639 loss_seg=0.0264 lr_dit=0.0002 lr_dec=0.0000 (10.98s/step)
+[iad/joint] step 950/4000 loss_img=0.0648 loss_total=0.0648 loss_seg=0.0282 lr_dit=0.0002 lr_dec=0.0000 (11.05s/step)
+[iad/joint] step 1000/4000 loss_img=0.0644 loss_total=0.0644 loss_seg=0.0243 lr_dit=0.0002 lr_dec=0.0000 (11.04s/step)
+[iad/joint] step 1000 val_img=0.2092 val_total=0.2092 val_seg=0.0312
+[iad/joint] step 1050/4000 loss_img=0.0646 loss_total=0.0646 loss_seg=0.0256 lr_dit=0.0002 lr_dec=0.0000 (11.49s/step)
+[iad/joint] step 1100/4000 loss_img=0.0639 loss_total=0.0639 loss_seg=0.0257 lr_dit=0.0002 lr_dec=0.0000 (11.03s/step)
+[iad/joint] step 1150/4000 loss_img=0.0599 loss_total=0.0599 loss_seg=0.0262 lr_dit=0.0002 lr_dec=0.0000 (11.26s/step)
+[iad/joint] step 1200/4000 loss_img=0.0614 loss_total=0.0614 loss_seg=0.0285 lr_dit=0.0002 lr_dec=0.0000 (11.15s/step)
+[iad/joint] step 1250/4000 loss_img=0.0643 loss_total=0.0643 loss_seg=0.0270 lr_dit=0.0002 lr_dec=0.0000 (10.59s/step)
+[iad/joint] step 1250 val_img=0.2997 val_total=0.2997 val_seg=0.0295
+[iad/joint] step 1300/4000 loss_img=0.0646 loss_total=0.0646 loss_seg=0.0257 lr_dit=0.0002 lr_dec=0.0000 (11.10s/step)
+[iad/joint] step 1350/4000 loss_img=0.0621 loss_total=0.0621 loss_seg=0.0282 lr_dit=0.0002 lr_dec=0.0000 (11.08s/step)
+[iad/joint] step 1400/4000 loss_img=0.0586 loss_total=0.0586 loss_seg=0.0269 lr_dit=0.0002 lr_dec=0.0000 (11.20s/step)
+[iad/joint] step 1450/4000 loss_img=0.0574 loss_total=0.0574 loss_seg=0.0297 lr_dit=0.0001 lr_dec=0.0000 (11.10s/step)
+[iad/joint] step 1500/4000 loss_img=0.0622 loss_total=0.0622 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (10.84s/step)
+[iad/joint] step 1500 val_img=0.2829 val_total=0.2829 val_seg=0.0284
+[iad/joint] step 1550/4000 loss_img=0.0623 loss_total=0.0623 loss_seg=0.0269 lr_dit=0.0001 lr_dec=0.0000 (11.55s/step)
+[iad/joint] step 1600/4000 loss_img=0.0554 loss_total=0.0554 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (11.23s/step)
+[iad/joint] step 1650/4000 loss_img=0.0618 loss_total=0.0618 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (11.16s/step)
+[iad/joint] step 1700/4000 loss_img=0.0578 loss_total=0.0578 loss_seg=0.0298 lr_dit=0.0001 lr_dec=0.0000 (10.86s/step)
+[iad/joint] step 1750/4000 loss_img=0.0561 loss_total=0.0561 loss_seg=0.0293 lr_dit=0.0001 lr_dec=0.0000 (11.21s/step)
+[iad/joint] step 1750 val_img=0.2274 val_total=0.2274 val_seg=0.0282
+[iad/joint] step 1800/4000 loss_img=0.0550 loss_total=0.0550 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (11.10s/step)
+[iad/joint] step 1850/4000 loss_img=0.0563 loss_total=0.0563 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (11.22s/step)
+[iad/joint] step 1900/4000 loss_img=0.0549 loss_total=0.0549 loss_seg=0.0249 lr_dit=0.0001 lr_dec=0.0000 (10.85s/step)
+[iad/joint] step 1950/4000 loss_img=0.0572 loss_total=0.0572 loss_seg=0.0244 lr_dit=0.0001 lr_dec=0.0000 (11.26s/step)
+[iad/joint] step 2000/4000 loss_img=0.0534 loss_total=0.0534 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (11.25s/step)
+[iad/joint] step 2000 val_img=0.1555 val_total=0.1555 val_seg=0.0283
+[iad/joint] step 2050/4000 loss_img=0.0553 loss_total=0.0553 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (10.89s/step)
+[iad/joint] step 2100/4000 loss_img=0.0543 loss_total=0.0543 loss_seg=0.0295 lr_dit=0.0001 lr_dec=0.0000 (11.03s/step)
+[iad/joint] step 2150/4000 loss_img=0.0542 loss_total=0.0542 loss_seg=0.0279 lr_dit=0.0001 lr_dec=0.0000 (10.63s/step)
+[iad/joint] step 2200/4000 loss_img=0.0550 loss_total=0.0550 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (11.08s/step)
+[iad/joint] step 2250/4000 loss_img=0.0514 loss_total=0.0514 loss_seg=0.0284 lr_dit=0.0001 lr_dec=0.0000 (11.09s/step)
+[iad/joint] step 2250 val_img=0.1186 val_total=0.1186 val_seg=0.0285
+[iad/joint] step 2300/4000 loss_img=0.0536 loss_total=0.0536 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (11.22s/step)
+[iad/joint] step 2350/4000 loss_img=0.0536 loss_total=0.0536 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (10.98s/step)
+[iad/joint] step 2400/4000 loss_img=0.0525 loss_total=0.0525 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (11.16s/step)
+[iad/joint] step 2450/4000 loss_img=0.0505 loss_total=0.0505 loss_seg=0.0305 lr_dit=0.0001 lr_dec=0.0000 (11.17s/step)
+[iad/joint] step 2500/4000 loss_img=0.0492 loss_total=0.0492 loss_seg=0.0295 lr_dit=0.0001 lr_dec=0.0000 (11.19s/step)
+[iad/joint] step 2500 val_img=0.1001 val_total=0.1001 val_seg=0.0286
+[iad/joint] step 2550/4000 loss_img=0.0503 loss_total=0.0503 loss_seg=0.0302 lr_dit=0.0001 lr_dec=0.0000 (9.97s/step)
+[iad/joint] step 2600/4000 loss_img=0.0489 loss_total=0.0489 loss_seg=0.0298 lr_dit=0.0001 lr_dec=0.0000 (8.03s/step)
+[iad/joint] step 2650/4000 loss_img=0.0520 loss_total=0.0520 loss_seg=0.0269 lr_dit=0.0001 lr_dec=0.0000 (11.16s/step)
+[iad/joint] step 2700/4000 loss_img=0.0484 loss_total=0.0484 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (11.14s/step)
+[iad/joint] step 2750/4000 loss_img=0.0465 loss_total=0.0465 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (11.15s/step)
+[iad/joint] step 2750 val_img=0.0891 val_total=0.0891 val_seg=0.0285
+[iad/joint] step 2800/4000 loss_img=0.0453 loss_total=0.0453 loss_seg=0.0279 lr_dit=0.0001 lr_dec=0.0000 (11.26s/step)
+[iad/joint] step 2850/4000 loss_img=0.0508 loss_total=0.0508 loss_seg=0.0306 lr_dit=0.0001 lr_dec=0.0000 (10.93s/step)
+[iad/joint] step 2900/4000 loss_img=0.0492 loss_total=0.0492 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (11.17s/step)
+[iad/joint] step 2950/4000 loss_img=0.0480 loss_total=0.0480 loss_seg=0.0290 lr_dit=0.0001 lr_dec=0.0000 (11.12s/step)
+[iad/joint] step 3000/4000 loss_img=0.0470 loss_total=0.0470 loss_seg=0.0296 lr_dit=0.0001 lr_dec=0.0000 (10.84s/step)
+[iad/joint] step 3000 val_img=0.0813 val_total=0.0813 val_seg=0.0284
+[iad/joint] new best val_img=0.0813 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt
+[iad/joint] step 3050/4000 loss_img=0.0447 loss_total=0.0447 loss_seg=0.0280 lr_dit=0.0001 lr_dec=0.0000 (14.32s/step)
+[iad/joint] step 3100/4000 loss_img=0.0501 loss_total=0.0501 loss_seg=0.0303 lr_dit=0.0001 lr_dec=0.0000 (10.68s/step)
+[iad/joint] step 3150/4000 loss_img=0.0485 loss_total=0.0485 loss_seg=0.0275 lr_dit=0.0001 lr_dec=0.0000 (11.16s/step)
+[iad/joint] step 3200/4000 loss_img=0.0457 loss_total=0.0457 loss_seg=0.0257 lr_dit=0.0001 lr_dec=0.0000 (10.96s/step)
+[iad/joint] step 3250/4000 loss_img=0.0437 loss_total=0.0437 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (11.08s/step)
+[iad/joint] step 3250 val_img=0.0761 val_total=0.0761 val_seg=0.0283
+[iad/joint] new best val_img=0.0761 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt
+[iad/joint] step 3300/4000 loss_img=0.0448 loss_total=0.0448 loss_seg=0.0299 lr_dit=0.0001 lr_dec=0.0000 (12.31s/step)
+[iad/joint] step 3350/4000 loss_img=0.0451 loss_total=0.0451 loss_seg=0.0280 lr_dit=0.0001 lr_dec=0.0000 (10.99s/step)
+[iad/joint] step 3400/4000 loss_img=0.0429 loss_total=0.0429 loss_seg=0.0275 lr_dit=0.0001 lr_dec=0.0000 (10.89s/step)
+[iad/joint] step 3450/4000 loss_img=0.0441 loss_total=0.0441 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (9.01s/step)
+[iad/joint] step 3500/4000 loss_img=0.0436 loss_total=0.0436 loss_seg=0.0245 lr_dit=0.0000 lr_dec=0.0000 (9.01s/step)
+[iad/joint] step 3500 val_img=0.0717 val_total=0.0717 val_seg=0.0282
+[iad/joint] new best val_img=0.0717 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt
+[iad/joint] step 3550/4000 loss_img=0.0430 loss_total=0.0430 loss_seg=0.0284 lr_dit=0.0000 lr_dec=0.0000 (12.34s/step)
+[iad/joint] step 3600/4000 loss_img=0.0432 loss_total=0.0432 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (10.81s/step)
+[iad/joint] step 3650/4000 loss_img=0.0423 loss_total=0.0423 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (11.19s/step)
+[iad/joint] step 3700/4000 loss_img=0.0442 loss_total=0.0442 loss_seg=0.0291 lr_dit=0.0000 lr_dec=0.0000 (10.92s/step)
+[iad/joint] step 3750/4000 loss_img=0.0421 loss_total=0.0421 loss_seg=0.0306 lr_dit=0.0000 lr_dec=0.0000 (10.93s/step)
+[iad/joint] step 3750 val_img=0.0683 val_total=0.0683 val_seg=0.0281
+[iad/joint] new best val_img=0.0683 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt
+[iad/joint] step 3800/4000 loss_img=0.0400 loss_total=0.0400 loss_seg=0.0297 lr_dit=0.0000 lr_dec=0.0000 (11.68s/step)
+[iad/joint] step 3850/4000 loss_img=0.0427 loss_total=0.0427 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (10.63s/step)
+[iad/joint] step 3900/4000 loss_img=0.0412 loss_total=0.0412 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (10.65s/step)
+[iad/joint] step 3950/4000 loss_img=0.0404 loss_total=0.0404 loss_seg=0.0254 lr_dit=0.0000 lr_dec=0.0000 (10.72s/step)
+[iad/joint] step 4000/4000 loss_img=0.0430 loss_total=0.0430 loss_seg=0.0270 lr_dit=0.0000 lr_dec=0.0000 (10.71s/step)
+[iad/joint] step 4000 val_img=0.0647 val_total=0.0647 val_seg=0.0281
+[iad/joint] new best val_img=0.0647 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt
+[iad/joint] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_img=0.06470785319805145
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 4000,
+      "best_val": 0.06470785319805145,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/C_image_l1_decfinetune/joint_best.pt"
+    }
+  ]
+}
