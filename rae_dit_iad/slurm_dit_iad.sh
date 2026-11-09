@@ -10,14 +10,15 @@
 #SBATCH --error=RAE_DIT_IAD_%j.err
 #SBATCH -v
 #
-# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=structured): J3 token swap, J4 DTD
-# texture paste, J5 mix, K5 mix + adaptor. PLAN=next: J2, K2, A@1, A@2.
+# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=all): every experiment so far, one
+# DiT per category. PLAN=structured: J3-J5, K5 (+ A, J2). PLAN=next: J2, K2, A@1, A@2.
 # PLAN=matrix: the 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
 # The pipeline is single-process (one model per GPU, no DDP), so instead of torchrun
 # each GPU gets its own queue of experiments and works through it with run_dit_iad.sh
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
-#   sbatch slurm_dit_iad.sh                           # PLAN=structured, per category: ~15 h
+#   sbatch slurm_dit_iad.sh                           # PLAN=all: 20 runs per category, ~2 days
+#   STEPS=2000 sbatch slurm_dit_iad.sh                # half the steps per category model
 #   SCOPE=joint PLAN=next sbatch slurm_dit_iad.sh     # the multi-class (joint) runs
 #   PLAN=next sbatch slurm_dit_iad.sh                 # J2 K2 A@1 A@2
 #   PLAN=matrix sbatch slurm_dit_iad.sh               # the full A-K matrix again
@@ -49,17 +50,23 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 # ---- one queue per GPU ----------------------------------------------------------
 # An entry is an experiment (letter or config basename), optionally with @SEED to
 # run that entry at one seed only (overrides SEEDS), e.g. "A@1".
-#   PLAN=structured (default) DRAEM-style synthetic anomalies instead of Gaussian
-#               noise: J3 token swap, J4 DTD texture paste, J5 mix, K5 mix + adaptor,
-#               plus A and J2 again -- all per category (SCOPE, default per_category)
+#   PLAN=all    (default) every experiment so far, one DiT per category (SCOPE,
+#               default per_category): A (seeds 0-2), B-G, J, K, the 3 noise
+#               ablations, J2, K2, J3-J5, K5 = 20 runs. Most informative first in
+#               each queue, so a job cut short still has the key arms.
+#   PLAN=structured J3 J4 J5 K5 (+ A, J2)
 #   PLAN=next   job 153649: J2, K2 (sigma ~ U(0.5, 1.5)) and A at seeds 1 and 2
 #   PLAN=matrix the full A-K matrix + noise ablations of job 152776
-PLAN=${PLAN:-structured}
+PLAN=${PLAN:-all}
 case "$PLAN" in
+  all)        QUEUES=("A J B C D"
+                      "A@1 K E F G"
+                      "A@2 J2 noise_sigma005 noise_sigma02 noise_mask_all"
+                      "J3 J4 J5 K5 K2") ;;
   structured) QUEUES=("J3 A" "J4 J2" "J5" "K5") ;;
   next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
   matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
-  *) echo "unknown PLAN '$PLAN' (structured | next | matrix)"; exit 1 ;;
+  *) echo "unknown PLAN '$PLAN' (all | structured | next | matrix)"; exit 1 ;;
 esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------

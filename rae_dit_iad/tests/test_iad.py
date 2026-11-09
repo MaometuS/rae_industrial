@@ -43,8 +43,8 @@ checkpoints are not needed.  What they cover:
     Q. structured anomalies — swap moves real tokens, dtd pastes a bank texture
                               in pixel space and re-encodes, mix assigns one kind
                               per sample, clean samples stay exact, J3-J5 run
-    R. per-category disk    — slimmed checkpoints keep the weights, drop the
-                              optimizer/scheduler and refuse to resume
+    R. per-category disk    — eval-only checkpoints hold the EMA weights and no
+                              optimizer; slimming keeps the weights
 
 Run:  pytest rae_dit_iad/tests/test_iad.py -v   (cluster env `rae` for torch)
 """
@@ -1285,3 +1285,26 @@ def test_r_slim_checkpoint(tmp_path):
     assert st["step"] == 7
     assert all(torch.equal(st["dit"][k], v) for k, v in net.state_dict().items())
     assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_r_eval_only_checkpoint(tmp_path):
+    """Per-category best checkpoints: EMA weights only, no optimizer/scheduler."""
+    import copy
+    from iad import train as T
+
+    dit = nn.Linear(4, 4)
+    ema = copy.deepcopy(dit)
+    with torch.no_grad():
+        ema.weight.add_(1.0)
+    opt = torch.optim.AdamW(dit.parameters())
+    path = tmp_path / "carpet_best.pt"
+    T.save_checkpoint(path, 3, dit, ema, TinyRAE(), opt, None,
+                      {"experiment": {}}, {}, eval_only=True)
+    st = T.load_checkpoint(path)
+    assert st["slim"] and st["model"] is None and st["optimizer"] is None
+    assert torch.equal(st["ema"]["weight"], ema.weight)
+    # without an EMA the raw weights are kept
+    T.save_checkpoint(path, 3, dit, None, TinyRAE(), opt, None,
+                      {"experiment": {}}, {}, eval_only=True)
+    st = T.load_checkpoint(path)
+    assert torch.equal(st["model"]["weight"], dit.weight) and st["optimizer"] is None

@@ -159,10 +159,14 @@ def save_checkpoint(
     ema_adaptor: Optional[nn.Module] = None,
     disc: Optional[nn.Module] = None,
     ema_disc: Optional[nn.Module] = None,
+    eval_only: bool = False,
 ) -> None:
+    """``eval_only``: what evaluation reads and nothing else -- the EMA weights
+    (raw DiT weights only if there is no EMA), no optimizer / scheduler state.
+    ~3.4 GB instead of ~13 GB for the 840M DiT; such a file cannot be resumed."""
     state = {
         "step": step,
-        "model": dit.state_dict(),
+        "model": None if (eval_only and ema is not None) else dit.state_dict(),
         "ema": ema.state_dict() if ema is not None else None,
         "decoder": rae.decoder.state_dict()
         if cfg.get("experiment", {}).get("decoder_finetune") else None,
@@ -170,11 +174,12 @@ def save_checkpoint(
         "ema_adaptor": ema_adaptor.state_dict() if ema_adaptor is not None else None,
         "disc": disc.state_dict() if disc is not None else None,
         "ema_disc": ema_disc.state_dict() if ema_disc is not None else None,
-        "optimizer": optimizer.state_dict(),
-        "scheduler": scheduler.state_dict() if scheduler is not None else None,
+        "optimizer": None if eval_only else optimizer.state_dict(),
+        "scheduler": None if (eval_only or scheduler is None) else scheduler.state_dict(),
         "config": cfg,
         "meta": meta,
         "rng": _rng_states(),
+        "slim": bool(eval_only),
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -522,6 +527,7 @@ def train(
             cache=cache, loss_type=loss_type, corruption=corruption,
             lambda_fm=lambda_fm, best_metric=best_metric, resume=resume,
             build_scheduler=build_scheduler, disc=disc,
+            # per category: eval-only best checkpoints, no periodic resume points
             slim=bool(tcfg.get("slim_checkpoints", scope == "per_category")),
         )
         summaries.append(s)
@@ -819,23 +825,26 @@ def _train_scope(
                 save_checkpoint(best_path, step, dit, ema, rae, optimizer,
                                 scheduler, cfg, meta,
                                 adaptor=adaptor, ema_adaptor=ema_ad,
-                    disc=disc, ema_disc=ema_ds)
+                                disc=disc, ema_disc=ema_ds, eval_only=slim)
                 print(f"[iad/{tag}] new best {key}={best_val:.4f} -> {best_path}", flush=True)
 
-        if save_every > 0 and step % save_every == 0:
+        if save_every > 0 and step % save_every == 0 and not slim:
+            # resume points only; eval-only (per-category) runs skip them: each
+            # full 840M checkpoint write stalls training for minutes
             save_checkpoint(last_path, step, dit, ema, rae, optimizer,
                             scheduler, cfg, meta,
                             adaptor=adaptor, ema_adaptor=ema_ad,
-                    disc=disc, ema_disc=ema_ds)
+                            disc=disc, ema_disc=ema_ds)
 
-    save_checkpoint(last_path, step, dit, ema, rae, optimizer, scheduler, cfg,
-                    meta, adaptor=adaptor, ema_adaptor=ema_ad,
-                    disc=disc, ema_disc=ema_ds)
-    if best_val == math.inf and val_paths:
+    if not slim:
+        save_checkpoint(last_path, step, dit, ema, rae, optimizer, scheduler, cfg,
+                        meta, adaptor=adaptor, ema_adaptor=ema_ad,
+                        disc=disc, ema_disc=ema_ds)
+    if best_val == math.inf and (val_paths or slim):
         save_checkpoint(best_path, step, dit, ema, rae, optimizer,
                         scheduler, cfg, meta,
                         adaptor=adaptor, ema_adaptor=ema_ad,
-                    disc=disc, ema_disc=ema_ds)
+                        disc=disc, ema_disc=ema_ds, eval_only=slim)
 
     # explicit post-conditions (spec §6 / §2.3)
     enc_frozen = M.encoder_status(rae)
@@ -844,15 +853,12 @@ def _train_scope(
           f"adaptor={getattr(adaptor, 'type', None)}; best_{best_metric}="
           f"{best_val if best_val is not math.inf else 'n/a'}", flush=True)
 
-    if slim:
-        # disk: one 840M DiT per category -> keep only the evaluated checkpoint,
-        # without optimizer state (~7 GB instead of ~2 x 13 GB per category)
-        if best_path.exists() and last_path.exists() and best_path != last_path:
-            last_path.unlink()
-        if best_path.exists():
-            gb0, gb1 = slim_checkpoint(best_path)
-            print(f"[iad/{tag}] slimmed {best_path.name}: {gb0:.1f} -> {gb1:.1f} GB "
-                  f"(last checkpoint removed; not resumable)", flush=True)
+    if slim and best_path.exists():
+        # per category: only the evaluated checkpoint, EMA weights only
+        if last_path.exists() and best_path != last_path:
+            last_path.unlink()   # a stale resume point from an older run
+        print(f"[iad/{tag}] eval-only checkpoint {best_path.name}: "
+              f"{best_path.stat().st_size / 1e9:.1f} GB (not resumable)", flush=True)
 
     if n_skip_dit or n_skip_head:
         print(f"[iad/{tag}] non-finite gradients: {n_skip_dit} DiT updates and "

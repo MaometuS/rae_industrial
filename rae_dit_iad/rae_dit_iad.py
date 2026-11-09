@@ -223,7 +223,10 @@ def _build_models_from_ckpt(ckpt_path: Path, rae_root: Path, device: torch.devic
     M.freeze_encoder(rae)
     M.freeze_decoder(rae)
     dit = M.build_dit(stage2_cfg, rae_root, device, require_ckpt=False)
-    dit.load_state_dict(state["model"], strict=True)
+    if state.get("model") is not None:
+        dit.load_state_dict(state["model"], strict=True)
+    elif state.get("ema") is None:
+        raise ValueError(f"{ckpt_path}: checkpoint holds neither raw nor EMA DiT weights")
 
     use_ema = bool(cfg.get("training", {}).get("use_ema", True)) and state.get("ema") is not None
     if use_ema:
