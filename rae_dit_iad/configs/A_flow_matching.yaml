@@ -25,7 +25,7 @@ noise:
 
 size: 256
 seed: 42
-scope: joint  # per spec: joint training baseline; per-category optional
+scope: per_category  # one DiT per category (standard one-class setting); joint = multi-class
 
 training:
   steps: 4000

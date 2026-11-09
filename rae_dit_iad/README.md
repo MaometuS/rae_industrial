@@ -493,7 +493,18 @@ but not enough: J2 latent_cos 0.815 (AUPRO 0.654), K2 0.835 (0.665); the DRAEM h
 learns (J2 disc 0.814, AUPRO 0.724; K2 0.818, 0.762). Both fail where defects are
 plausible features in the wrong place (screw ≈ 0.58, transistor ≈ 0.72).
 
-**Next (`PLAN=structured`, the SLURM default):** J3 token swap, J4 DTD texture paste,
-J5 mix, K5 mix + adaptor -- does a defect-like corruption teach the DiT "replace what
-does not belong" instead of "remove noise, copy the rest"? DTD is read from `DTD_ROOT`
-(default `../latent_draem/data/dtd`, downloaded once if empty).
+**Scope.** Jobs 152776 and 153649 trained **one joint model** for the five categories --
+the multi-class (unified) setting, a different problem from the standard one-class
+benchmark. Every config is now `scope: per_category` (one DiT per category, reset to
+the released weights each time), as are both references (kNN memory bank and
+latent_draem). The joint results stay under `results_dit_iad/seed*/`; per-category
+runs write to `results_dit_iad/per_category/seed*/`. Per-category checkpoints are
+slimmed after training (best only, no optimizer state: ~7 GB per category, not
+resumable). `SCOPE=joint` restores the old behaviour.
+
+**Next (`PLAN=structured`, the SLURM default, per category, ~15 h):** J3 token swap,
+J4 DTD texture paste, J5 mix, K5 mix + adaptor -- does a defect-like corruption teach
+the DiT "replace what does not belong" instead of "remove noise, copy the rest"? --
+plus A and J2 again per category, for like-for-like comparisons with kNN and
+latent_draem. DTD is read from `DTD_ROOT` (default `../latent_draem/data/dtd`,
+downloaded once if empty).

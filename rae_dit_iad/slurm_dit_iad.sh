@@ -17,7 +17,8 @@
 # each GPU gets its own queue of experiments and works through it with run_dit_iad.sh
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
-#   sbatch slurm_dit_iad.sh                           # PLAN=structured: J3 J4 J5 K5, ~2 h
+#   sbatch slurm_dit_iad.sh                           # PLAN=structured, per category: ~15 h
+#   SCOPE=joint PLAN=next sbatch slurm_dit_iad.sh     # the multi-class (joint) runs
 #   PLAN=next sbatch slurm_dit_iad.sh                 # J2 K2 A@1 A@2
 #   PLAN=matrix sbatch slurm_dit_iad.sh               # the full A-K matrix again
 #   SEEDS="0 1 2" PLAN=matrix sbatch slurm_dit_iad.sh # three seeds (~3x the time)
@@ -49,12 +50,13 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 # An entry is an experiment (letter or config basename), optionally with @SEED to
 # run that entry at one seed only (overrides SEEDS), e.g. "A@1".
 #   PLAN=structured (default) DRAEM-style synthetic anomalies instead of Gaussian
-#               noise: J3 token swap, J4 DTD texture paste, J5 mix, K5 mix + adaptor
+#               noise: J3 token swap, J4 DTD texture paste, J5 mix, K5 mix + adaptor,
+#               plus A and J2 again -- all per category (SCOPE, default per_category)
 #   PLAN=next   job 153649: J2, K2 (sigma ~ U(0.5, 1.5)) and A at seeds 1 and 2
 #   PLAN=matrix the full A-K matrix + noise ablations of job 152776
 PLAN=${PLAN:-structured}
 case "$PLAN" in
-  structured) QUEUES=("J3" "J4" "J5" "K5") ;;
+  structured) QUEUES=("J3 A" "J4 J2" "J5" "K5") ;;
   next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
   matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
   *) echo "unknown PLAN '$PLAN' (structured | next | matrix)"; exit 1 ;;
@@ -285,6 +287,6 @@ if [ "$STATUS" -ne 0 ]; then
     grep -B 8 "FAILED" "$f" | grep -v "^\[gpu .*\] \(start\|done\)" | head -40
   done
 fi
-echo "reports: $OUT/seed*/<exp_id>/report.md"
+echo "reports: $OUT/${SCOPE:-per_category}/seed*/<exp_id>/report.md (joint: $OUT/seed*/)"
 set +u; conda deactivate
 exit $STATUS

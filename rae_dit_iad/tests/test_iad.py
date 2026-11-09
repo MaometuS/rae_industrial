@@ -43,6 +43,8 @@ checkpoints are not needed.  What they cover:
     Q. structured anomalies — swap moves real tokens, dtd pastes a bank texture
                               in pixel space and re-encodes, mix assigns one kind
                               per sample, clean samples stay exact, J3-J5 run
+    R. per-category disk    — slimmed checkpoints keep the weights, drop the
+                              optimizer/scheduler and refuse to resume
 
 Run:  pytest rae_dit_iad/tests/test_iad.py -v   (cluster env `rae` for torch)
 """
@@ -1261,3 +1263,25 @@ def test_q_latent_loss_runs_with_structured_corruption(kind):
         assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in dit.parameters())
     finally:
         core.set_texture_bank(None)
+
+
+# ---------------------------------------------------------------------------
+# R. per-category checkpoints
+# ---------------------------------------------------------------------------
+
+def test_r_slim_checkpoint(tmp_path):
+    from iad import train as T
+
+    net = nn.Linear(4, 4)
+    opt = torch.optim.AdamW(net.parameters())
+    net(torch.randn(2, 4)).sum().backward()
+    opt.step()
+    path = tmp_path / "carpet_best.pt"
+    torch.save({"step": 7, "dit": net.state_dict(), "ema": net.state_dict(),
+                "optimizer": opt.state_dict(), "scheduler": {"x": 1}}, path)
+    T.slim_checkpoint(path)
+    st = T.load_checkpoint(path)
+    assert st["slim"] and "optimizer" not in st and "scheduler" not in st
+    assert st["step"] == 7
+    assert all(torch.equal(st["dit"][k], v) for k, v in net.state_dict().items())
+    assert not list(tmp_path.glob("*.tmp"))

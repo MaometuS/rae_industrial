@@ -29,6 +29,10 @@ OUT=${OUT:-$HERE/results_dit_iad}
 ENV_NAME=${ENV_NAME:-rae}
 CATS=${CATS:-"carpet grid hazelnut screw transistor"}
 SEEDS=${SEEDS:-"0"}
+# per_category (default): one DiT per category, the standard one-class MVTec setting;
+# joint: one model for all categories (multi-class setting; jobs 152776 / 153649).
+# per_category results go to $OUT/per_category/seed<S>/, joint ones to $OUT/seed<S>/.
+SCOPE=${SCOPE:-per_category}
 EXPT=${EXPT:-"A B C D E F G J K"}
 STAGE=${STAGE:-"train eval"}      # "train", "eval" or "train eval"
 STEPS=${STEPS:-""}                # empty = config default (4000)
@@ -97,6 +101,8 @@ if [ "$MEM" = "auto" ]; then
   fi
 fi
 case "$MEM" in full|low) ;; *) echo "MEM must be auto, full or low (got '$MEM')"; exit 1 ;; esac
+case "$SCOPE" in per_category|joint) ;; *) echo "SCOPE must be per_category or joint (got '$SCOPE')"; exit 1 ;; esac
+echo "scope: $SCOPE"
 echo "memory preset: MEM=$MEM (grad_checkpoint=$([ "$MEM" = low ] && echo on || echo off), ema_device=$([ "$MEM" = low ] && echo cpu || echo cuda))"
 mkdir -p "$OUT"
 
@@ -105,7 +111,8 @@ for exp in $EXPT; do
   [ -f "$CFG" ] || { echo "unknown experiment '$exp' (no $CFG)"; exit 1; }
   for SEED in $SEEDS; do
     # one directory per seed: checkpoints/config of different seeds never collide
-    RUN_DIR="$OUT/seed${SEED}"
+    if [ "$SCOPE" = joint ]; then RUN_DIR="$OUT/seed${SEED}"
+    else RUN_DIR="$OUT/$SCOPE/seed${SEED}"; fi
     mkdir -p "$RUN_DIR"
 
     if [[ " $STAGE " == *" train "* ]]; then
@@ -125,7 +132,7 @@ for exp in $EXPT; do
       python "$HERE/rae_dit_iad.py" train \
         --config "$CFG" --rae-root "$RAE_ROOT" --mvtec-root "$MVTEC_ROOT" \
         --out "$RUN_DIR" --categories $CATS --seed "$SEED" --batch-size "$BATCH" \
-        --grad-accum "$GRAD_ACCUM" $EXTRA \
+        --grad-accum "$GRAD_ACCUM" --scope "$SCOPE" $EXTRA \
         2>&1 | tee -a "$RUN_DIR/train_${exp}.log"
     fi
 
@@ -151,4 +158,5 @@ for exp in $EXPT; do
   done
 done
 
-echo "Reports: $OUT/seed*/**/report.md   CSVs: $OUT/seed*/**/results.csv   Grids: $OUT/seed*/**/viz/"
+R="$OUT"; [ "$SCOPE" = joint ] || R="$OUT/$SCOPE"
+echo "Reports: $R/seed*/**/report.md   CSVs: $R/seed*/**/results.csv   Grids: $R/seed*/**/viz/"

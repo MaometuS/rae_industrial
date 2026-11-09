@@ -182,6 +182,26 @@ def save_checkpoint(
     tmp.replace(path)
 
 
+def slim_checkpoint(path: Path) -> Tuple[float, float]:
+    """Drop the optimizer and scheduler state from a finished checkpoint.
+
+    Evaluation never reads them (and they are ~2/3 of an 840M-DiT file); a
+    slimmed checkpoint can no longer be resumed.  Returns sizes in GB
+    (before, after)."""
+    import os
+    path = Path(path)
+    before = path.stat().st_size / 1e9
+    state = load_checkpoint(path, mmap=True)
+    state.pop("optimizer", None)
+    state.pop("scheduler", None)
+    state["slim"] = True
+    tmp = path.with_suffix(".slim.tmp")
+    torch.save(state, tmp)
+    del state
+    os.replace(tmp, path)
+    return before, path.stat().st_size / 1e9
+
+
 def load_checkpoint(path: Path, map_location: str = "cpu", mmap: bool = False) -> Dict[str, Any]:
     # our own checkpoints (numpy/python RNG state, config dicts) are not
     # weights-only; torch>=2.6 defaults to weights_only=True, so opt out.
@@ -224,6 +244,9 @@ def apply_checkpoint(
         disc.load_state_dict(state["disc"])
     if ema_disc is not None and state.get("ema_disc") is not None:
         ema_disc.load_state_dict(state["ema_disc"])
+    if optimizer is not None and state.get("slim"):
+        raise ValueError("this checkpoint was slimmed after training (no optimizer "
+                         "state) and cannot be resumed; it is for evaluation only")
     if optimizer is not None and state.get("optimizer") is not None:
         optimizer.load_state_dict(state["optimizer"])
     if scheduler is not None and state.get("scheduler") is not None:
@@ -499,6 +522,7 @@ def train(
             cache=cache, loss_type=loss_type, corruption=corruption,
             lambda_fm=lambda_fm, best_metric=best_metric, resume=resume,
             build_scheduler=build_scheduler, disc=disc,
+            slim=bool(tcfg.get("slim_checkpoints", scope == "per_category")),
         )
         summaries.append(s)
     return {"runs": summaries}
@@ -509,7 +533,7 @@ def _train_scope(
     rae_root, mvtec_root, out_dir, device, misc, num_classes,
     n_steps, bs, precision, clip_grad, log_every, val_every, save_every,
     n_val, size, use_ema, ema_decay, cache, loss_type, corruption, lambda_fm,
-    best_metric, resume, build_scheduler, adaptor=None, disc=None,
+    best_metric, resume, build_scheduler, adaptor=None, disc=None, slim=False,
 ) -> Dict[str, Any]:
     exp = cfg["experiment"]
     tag = scope_name
@@ -819,6 +843,16 @@ def _train_scope(
           f"decoder_finetune={bool(exp.get('decoder_finetune'))}; "
           f"adaptor={getattr(adaptor, 'type', None)}; best_{best_metric}="
           f"{best_val if best_val is not math.inf else 'n/a'}", flush=True)
+
+    if slim:
+        # disk: one 840M DiT per category -> keep only the evaluated checkpoint,
+        # without optimizer state (~7 GB instead of ~2 x 13 GB per category)
+        if best_path.exists() and last_path.exists() and best_path != last_path:
+            last_path.unlink()
+        if best_path.exists():
+            gb0, gb1 = slim_checkpoint(best_path)
+            print(f"[iad/{tag}] slimmed {best_path.name}: {gb0:.1f} -> {gb1:.1f} GB "
+                  f"(last checkpoint removed; not resumable)", flush=True)
 
     if n_skip_dit or n_skip_head:
         print(f"[iad/{tag}] non-finite gradients: {n_skip_dit} DiT updates and "
