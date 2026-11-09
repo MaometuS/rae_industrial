@@ -510,6 +510,21 @@ training for minutes each. With `KEEP_CKPT=0` (default) each category is trained
 evaluated with every score and then deleted before the next one starts, so a run holds
 at most one checkpoint at a time; `KEEP_CKPT=1` keeps them (e.g. for later re-scoring).
 
+**Pipeline audit before the per-category rerun.** Two bugs found and fixed:
+(1) the EMA update copied parameters only (the official `update_ema` rule), so the EMA
+copy of the SimpleNet adaptor kept BatchNorm running statistics of (0, 1) while the live
+adaptor normalised with real batch statistics -- validation and evaluation used that EMA
+copy in eval mode, i.e. a different function from the trained one. **The joint F, G, K and
+K2 rows are affected**; `train.ema_step` now mirrors buffers (Test S). (2) `report.md`
+aggregated per checkpoint file, which for per-category runs is one category per row; it
+now aggregates by best/last. One design change: the adaptor and the DRAEM head start from
+scratch, and with decay 0.9995 over 4000 steps their EMA would still carry 13% initial
+weights at the end, so they use the bias-corrected decay `min(d, (1+n)/(10+n))`
+(`training.ema_warmup_aux`, default true); the DiT EMA is unchanged. Verified against the
+official code: the linear path is `z_t = (1-t) z_0 + t eps` with `u_t = eps - z_0`
+(t = 1 is noise), `rae.encode` adds no noise (`noise_tau: 0`), and the metrics are
+latent_draem's, so the kNN bar is computed the same way.
+
 **Next (`PLAN=all`, the SLURM default):** every experiment so far, per category --
 A (seeds 0–2), B–G, J, K, the three noise ablations, J2, K2, J3 token swap, J4 DTD
 texture paste, J5 mix, K5 mix + adaptor (20 runs × 5 category models). DTD is read

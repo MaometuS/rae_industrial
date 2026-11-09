@@ -605,9 +605,15 @@ def write_report(csv_path: Path, report_path: Path, exp_id: str) -> None:
     metrics = ["img_auroc_mean", "img_auroc_max", "img_auroc_top1",
                "img_ap_mean", "img_ap_max", "img_ap_top1",
                "px_auroc", "px_ap", "aupro"]
+    def ckpt_kind(name: Optional[str]) -> str:
+        # per-category runs have one checkpoint per category (carpet_best.pt,
+        # grid_best.pt, ...): aggregate over categories by best/last, not by file
+        name = str(name or "")
+        return name.rsplit("_", 1)[-1].replace(".pt", "") if "_" in name else name
+
     groups: Dict[tuple, List[Dict[str, str]]] = {}
     for r in rows:
-        groups.setdefault((r.get("mode"), r.get("t"), r.get("reps"), r.get("ckpt"),
+        groups.setdefault((r.get("mode"), r.get("t"), r.get("reps"), ckpt_kind(r.get("ckpt")),
                            r.get("score") or "pixel"), []).append(r)
 
     def mean(vals: List[float]) -> float:
@@ -630,8 +636,8 @@ def write_report(csv_path: Path, report_path: Path, exp_id: str) -> None:
         return [hdr, "|" + "---|" * (len(cols) + len(metrics))]
 
     lines = [f"# RAE-DiT IAD results ({exp_id})", "",
-             "Aggregate = mean over categories. Image AUROC/AP reported for all three",
-             "aggregations (mean / max / top-1% pixel scores).", "", "## Aggregate", ""]
+             "Aggregate = mean over categories (ckpt = best / last). Image AUROC/AP reported",
+             "for all three aggregations (mean / max / top-1% pixel scores).", "", "## Aggregate", ""]
     lines += table_header(config_cols)
     for key, rs in sorted(groups.items()):
         mode, t, reps, ckpt, sc = key

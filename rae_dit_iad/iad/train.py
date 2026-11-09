@@ -288,6 +288,28 @@ def _autocast(device: torch.device, precision: str):
 
 
 @torch.no_grad()
+def ema_step(em: nn.Module, mod: nn.Module, decay: float) -> None:
+    """One EMA update of ``em`` towards ``mod``: parameters by the official decay
+    rule (``ema = d*ema + (1-d)*param``), **buffers copied**.
+
+    The official ``update_ema`` touches parameters only.  BatchNorm's running
+    mean / var are buffers, so the EMA copy of the SimpleNet adaptor kept its
+    initial statistics (mean 0, var 1) for the whole run while the live adaptor
+    normalised with the real batch statistics -- and validation and evaluation
+    used that EMA copy in eval mode (jobs 152776 / 153649: F, G, K, K2).  The
+    EMA module must apply the same function as the trained one, so buffers are
+    mirrored from the live module after every parameter update.  Works for
+    CPU-resident EMAs too (same decay math, streamed from the GPU).
+    """
+    # parameters: the official update_ema rule (utils.train_utils), written out so
+    # it also serves a CPU-resident EMA; buffers: mirrored
+    for ep, p in zip(em.parameters(), mod.parameters()):
+        ep.mul_(decay).add_(p.detach().to(ep.device), alpha=1.0 - decay)
+    for eb, b in zip(em.buffers(), mod.buffers()):
+        eb.copy_(b.detach().to(eb.device))
+
+
+@torch.no_grad()
 def modules_to_move(modules: Sequence[nn.Module], device: torch.device) -> List[nn.Module]:
     """Modules validation must bring onto ``device`` and send back to the CPU.
 
@@ -660,6 +682,7 @@ def _train_scope(
         "batch_effective": effective_bs,
         "grad_checkpoint": bool(tcfg.get("grad_checkpoint", False)),
         "ema_device": str(tcfg.get("ema_device", "cuda")).lower(),
+        "ema_warmup_aux": bool(tcfg.get("ema_warmup_aux", True)),
         "adaptor": A.adaptor_meta(adaptor),
         "discriminator": DS.disc_meta(disc, cfg.get("discriminator")),
         "size": size,
@@ -683,6 +706,8 @@ def _train_scope(
     ad_model = ema_ad if ema_ad is not None else adaptor
     ds_model = ema_ds if ema_ds is not None else disc
 
+    n_ema = start_step                        # EMA updates so far (warm-up decay)
+    ema_warmup_aux = bool(tcfg.get("ema_warmup_aux", True))
     n_skip_dit = n_skip_head = 0              # non-finite-gradient guard
     max_skips = max(10, int(0.05 * n_steps))  # abort when it stops being rare
     step = start_step
@@ -768,19 +793,19 @@ def _train_scope(
         if scheduler is not None:
             scheduler.step()
         if dit_ok and (ema is not None or ema_ad is not None or ema_ds is not None):
-            from utils.train_utils import update_ema  # official
-            for em, mod in ((ema, dit), (ema_ad, adaptor), (ema_ds, disc)):
+            n_ema += 1
+            # The DiT starts from the released weights, so the plain official EMA
+            # is a fine anchor.  The adaptor and the DRAEM head start from
+            # scratch: with decay 0.9995 over 4000 steps their EMA would still be
+            # 13% initial weights and ~40% first-half weights at the end, so
+            # they get the bias-corrected (warm-up) decay min(d, (1+n)/(10+n)).
+            aux_decay = min(ema_decay, (1.0 + n_ema) / (10.0 + n_ema)) if ema_warmup_aux \
+                else ema_decay
+            for em, mod, d in ((ema, dit, ema_decay), (ema_ad, adaptor, aux_decay),
+                               (ema_ds, disc, aux_decay)):
                 if em is None:
                     continue
-                with torch.no_grad():
-                    if next(iter(em.parameters())).device != \
-                            next(iter(mod.parameters())).device:
-                        # CPU-resident EMA: same decay math, streamed from the GPU
-                        for ep, p in zip(em.parameters(), mod.parameters()):
-                            ep.mul_(ema_decay).add_(p.detach().to(ep.device),
-                                                    alpha=1.0 - ema_decay)
-                    else:
-                        update_ema(em, mod, decay=ema_decay)
+                ema_step(em, mod, d)
 
         for k, vals in micro_terms.items():
             running.setdefault(k, []).append(float(np.mean(vals)))

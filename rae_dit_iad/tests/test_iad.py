@@ -45,6 +45,9 @@ checkpoints are not needed.  What they cover:
                               per sample, clean samples stay exact, J3-J5 run
     R. per-category disk    — eval-only checkpoints hold the EMA weights and no
                               optimizer; slimming keeps the weights
+    S. EMA correctness      — the EMA copy mirrors BatchNorm running statistics
+                              (buffers), so it computes the trained function in
+                              eval mode; CPU-resident EMAs too
 
 Run:  pytest rae_dit_iad/tests/test_iad.py -v   (cluster env `rae` for torch)
 """
@@ -1308,3 +1311,59 @@ def test_r_eval_only_checkpoint(tmp_path):
                       {"experiment": {}}, {}, eval_only=True)
     st = T.load_checkpoint(path)
     assert torch.equal(st["model"]["weight"], dit.weight) and st["optimizer"] is None
+
+
+# ---------------------------------------------------------------------------
+# S. EMA mirrors buffers (BatchNorm running statistics)
+# ---------------------------------------------------------------------------
+
+def test_s_ema_step_mirrors_batchnorm_buffers():
+    """After training steps, EMA(adaptor).eval() must use the live running stats,
+    not the initial (0, 1) ones, or F/G/K evaluate a different function."""
+    import copy
+    from iad import train as T
+
+    seed_all(61)
+    ad = A.build_adaptor({"type": "simplenet", "rank": 4, "norm": "batch"}, dim=16)
+    ema = copy.deepcopy(ad)
+    ema.requires_grad_(False)
+    bn = ad.net[1]
+    assert isinstance(bn, nn.BatchNorm1d)
+    ad.train()
+    for _ in range(5):                      # live BN stats move away from (0, 1)
+        ad(torch.randn(2, 16, 4, 4) * 3 + 1)
+        T.ema_step(ema, ad, 0.5)
+    ema_bn = ema.net[1]
+    assert not torch.allclose(bn.running_mean, torch.zeros(bn.num_features))
+    assert torch.equal(ema_bn.running_mean, bn.running_mean)
+    assert torch.equal(ema_bn.running_var, bn.running_var)
+    assert torch.equal(ema_bn.num_batches_tracked, bn.num_batches_tracked)
+    # parameters follow the decay rule, not a copy
+    before = ema.net[0].weight.clone()
+    with torch.no_grad():
+        ad.net[0].weight.add_(1.0)
+    T.ema_step(ema, ad, 0.5)
+    assert torch.allclose(ema.net[0].weight, 0.5 * before + 0.5 * ad.net[0].weight)
+    # the EMA in eval mode now applies BN with the live statistics
+    ema.eval()
+    z = torch.randn(1, 16, 4, 4)
+    ref = ema.net[0](z.permute(0, 2, 3, 1).reshape(-1, 16))
+    expect = (ref - bn.running_mean) / torch.sqrt(bn.running_var + bn.eps) * ema_bn.weight + ema_bn.bias
+    assert torch.allclose(ema_bn(ref), expect, atol=1e-6)
+
+
+def test_s_ema_step_cpu_resident():
+    """CPU-resident EMA (ema_device: cpu): same decay math, buffers mirrored."""
+    import copy
+    from iad import train as T
+
+    net = nn.Sequential(nn.Linear(3, 3), nn.BatchNorm1d(3))
+    ema = copy.deepcopy(net)
+    net.train()
+    net(torch.randn(8, 3) + 2)
+    with torch.no_grad():
+        net[0].weight.fill_(1.0)
+        ema[0].weight.fill_(0.0)
+    T.ema_step(ema, net, 0.9)
+    assert torch.allclose(ema[0].weight, torch.full((3, 3), 0.1))
+    assert torch.equal(ema[1].running_mean, net[1].running_mean)
