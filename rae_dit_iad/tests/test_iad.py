@@ -40,6 +40,9 @@ checkpoints are not needed.  What they cover:
     P. noise range, EMA     — sigma ~ U(lo, hi) per sample (exact per-sample
                               noise, midpoint at test), validation never moves a
                               GPU-resident EMA to the CPU
+    Q. structured anomalies — swap moves real tokens, dtd pastes a bank texture
+                              in pixel space and re-encodes, mix assigns one kind
+                              per sample, clean samples stay exact, J3-J5 run
 
 Run:  pytest rae_dit_iad/tests/test_iad.py -v   (cluster env `rae` for torch)
 """
@@ -740,7 +743,9 @@ def test_l_simplenet_corruption_and_conversion():
 
     # (e) bad configs fail loudly
     for bad in ({"sigma": 0.0}, {"mask": "box"}, {"p_clean": 1.0}, {"w_anom": 0.5},
-                {"sigma": [1.5, 0.5]}, {"sigma": [0.0, 1.0]}, {"sigma": [0.5, 1.0, 1.5]}):
+                {"sigma": [1.5, 0.5]}, {"sigma": [0.0, 1.0]}, {"sigma": [0.5, 1.0, 1.5]},
+                {"kind": "cutpaste"}, {"kinds": ["gaussian", "box"]}, {"kinds": []},
+                {"beta": [0.8, 0.2]}, {"beta": [0.5, 1.5]}):
         with pytest.raises(ValueError):
             core.simplenet_cfg(bad)
 
@@ -1158,3 +1163,101 @@ def test_p_validation_keeps_gpu_ema_in_place():
     assert T.modules_to_move([cpu_mod, gpu_like], torch.device("cuda")) == [cpu_mod]
     assert T.modules_to_move([cpu_mod, gpu_like], torch.device("cuda", 0)) == [cpu_mod]
     assert T.modules_to_move([cpu_mod], torch.device("cpu")) == []
+
+
+# ---------------------------------------------------------------------------
+# Q. structured synthetic anomalies (swap / dtd / mix)
+# ---------------------------------------------------------------------------
+
+def _q_noise(kind, **kw):
+    cfg = {"sigma": [0.5, 1.5], "kind": kind, "mask": "perlin", "p_clean": 0.0,
+           "w_anom": 5.0, "beta": [0.5, 1.0]}
+    cfg.update(kw)
+    return cfg
+
+
+def test_q_swap_moves_real_tokens():
+    """beta = 1 on a full mask: every sample becomes a shifted/flipped batch member."""
+    seed_all(51)
+    z0 = torch.randn(4, 3, 8, 8)
+    m1, beta1 = torch.ones(4, 1, 8, 8), torch.ones(4)
+    zs = core.latent_swap(z0, m1, beta1)
+    for k in range(4):
+        vals = torch.sort(zs[k].flatten()).values
+        assert any(torch.allclose(vals, torch.sort(z0[j].flatten()).values) for j in range(4))
+    # empty mask -> exact identity; partial beta -> a convex blend
+    assert torch.equal(core.latent_swap(z0, torch.zeros(4, 1, 8, 8), beta1), z0)
+    half = core.latent_swap(z0, m1, torch.full((4,), 0.5))
+    assert torch.isfinite(half).all() and not torch.equal(half, z0)
+
+
+def test_q_texture_paste_uses_the_bank():
+    """beta = 1 on a full pixel mask gives a (possibly flipped) bank texture."""
+    bank = torch.rand(5, 3, 16, 16).half()
+    core.set_texture_bank(bank)
+    try:
+        seed_all(52)
+        x = torch.rand(3, 3, 16, 16)
+        out = core.texture_paste(x, torch.ones(3, 1, 16, 16), torch.ones(3))
+        flips = [lambda t: t, lambda t: t.flip(-1), lambda t: t.flip(-2),
+                 lambda t: t.flip(-1).flip(-2)]
+        for k in range(3):
+            assert any(torch.allclose(out[k], f(bank[i].float()), atol=1e-3)
+                       for i in range(5) for f in flips)
+        assert torch.equal(core.texture_paste(x, torch.zeros(3, 1, 16, 16), torch.ones(3)), x)
+    finally:
+        core.set_texture_bank(None)
+    with pytest.raises(RuntimeError):
+        core.texture_paste(x, torch.ones(3, 1, 16, 16), torch.ones(3))
+
+
+def test_q_structured_corrupt_mix():
+    """mix: one kind per sample, Gaussian samples carry their own sigma, the rest the
+    test-time midpoint; dtd samples are E(pasted image); clean samples stay exact."""
+    rae = TinyRAE()
+    core.set_texture_bank(torch.rand(8, 3, 32, 32).half())
+    try:
+        x = _batch(16, 32, seed=53)
+        z0 = rae.encode(x)
+        seed_all(54)
+        zin, m, t, kinds = core.structured_corrupt(
+            z0, x, rae, None, _q_noise("mix", p_clean=0.25), 32)
+        assert set(kinds) <= {"gaussian", "swap", "dtd"} and len(set(kinds)) >= 2
+        assert zin.shape == z0.shape and m.shape == (16, 1, 32, 32)
+        for k, kind in enumerate(kinds):
+            if float(m[k].sum()) == 0:
+                assert torch.equal(zin[k], z0[k])                    # p_clean
+            elif kind == "gaussian":
+                assert 0.5 <= float(t[k]) <= 1.5
+            else:
+                assert float(t[k]) == pytest.approx(1.0)
+                # outside the mask nothing moves (swap) / only the paste changes (dtd)
+                out = (m[k, 0] == 0)
+                assert torch.allclose(zin[k][:, out], z0[k][:, out], atol=1e-6)
+        assert core.needs_textures(_q_noise("mix")) and core.needs_textures(_q_noise("dtd"))
+        assert not core.needs_textures(_q_noise("swap"))
+        assert not core.needs_textures(_q_noise("mix", kinds=["gaussian", "swap"]))
+    finally:
+        core.set_texture_bank(None)
+
+
+@pytest.mark.parametrize("kind", ["swap", "dtd", "mix"])
+def test_q_latent_loss_runs_with_structured_corruption(kind):
+    """J3 / J4 / J5 objectives: finite, reproducible, and gradients reach the DiT."""
+    rae, dit = TinyRAE(), TinyDiT()
+    core.set_texture_bank(torch.rand(6, 3, 32, 32).half())
+    try:
+        x = _batch(2, 32, seed=55)
+        z0 = rae.encode(x).detach()
+        y = torch.full((2,), 1000, dtype=torch.long)
+        kw = dict(loss_type="latent", noise_cfg=_q_noise(kind), lambda_fm=0.0, y=y,
+                  corruption="simplenet", size=32)
+        seed_all(56)
+        t1, terms, zt, _ = core.compute_losses(rae, dit, None, x, z0, **kw)
+        seed_all(56)
+        t2, _, _, _ = core.compute_losses(rae, dit, None, x, z0, **kw)
+        assert math.isfinite(float(t1)) and "lat" in terms and torch.equal(t1, t2)
+        t1.backward()
+        assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in dit.parameters())
+    finally:
+        core.set_texture_bank(None)

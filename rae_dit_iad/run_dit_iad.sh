@@ -66,6 +66,10 @@ config_for() {
     K) echo "$HERE/configs/K_latent_simplenet_adaptor.yaml" ;;
     J2) echo "$HERE/configs/J2_latent_sigma05_15.yaml" ;;
     K2) echo "$HERE/configs/K2_latent_adaptor_sigma05_15.yaml" ;;
+    J3) echo "$HERE/configs/J3_latent_swap.yaml" ;;
+    J4) echo "$HERE/configs/J4_latent_dtd.yaml" ;;
+    J5) echo "$HERE/configs/J5_latent_mix.yaml" ;;
+    K5) echo "$HERE/configs/K5_latent_adaptor_mix.yaml" ;;
     *) echo "$HERE/configs/$1.yaml" ;;   # full basename, e.g. noise_sigma02
   esac
 }

@@ -10,13 +10,15 @@
 #SBATCH --error=RAE_DIT_IAD_%j.err
 #SBATCH -v
 #
-# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=next): J2, K2 (strong noise) and
-# A at seeds 1 and 2. PLAN=matrix: the 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
+# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=structured): J3 token swap, J4 DTD
+# texture paste, J5 mix, K5 mix + adaptor. PLAN=next: J2, K2, A@1, A@2.
+# PLAN=matrix: the 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
 # The pipeline is single-process (one model per GPU, no DDP), so instead of torchrun
 # each GPU gets its own queue of experiments and works through it with run_dit_iad.sh
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
-#   sbatch slurm_dit_iad.sh                           # PLAN=next: J2 K2 A@1 A@2, ~2 h
+#   sbatch slurm_dit_iad.sh                           # PLAN=structured: J3 J4 J5 K5, ~2 h
+#   PLAN=next sbatch slurm_dit_iad.sh                 # J2 K2 A@1 A@2
 #   PLAN=matrix sbatch slurm_dit_iad.sh               # the full A-K matrix again
 #   SEEDS="0 1 2" PLAN=matrix sbatch slurm_dit_iad.sh # three seeds (~3x the time)
 #   SKIP_TESTS=1 STEPS=200 sbatch slurm_dit_iad.sh    # quick smoke run of everything
@@ -46,14 +48,16 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 # ---- one queue per GPU ----------------------------------------------------------
 # An entry is an experiment (letter or config basename), optionally with @SEED to
 # run that entry at one seed only (overrides SEEDS), e.g. "A@1".
-#   PLAN=next   (default) follow-up to job 152776: J and K with strong noise
-#               (sigma ~ U(0.5, 1.5)) and two more seeds of A, the arm that worked
+#   PLAN=structured (default) DRAEM-style synthetic anomalies instead of Gaussian
+#               noise: J3 token swap, J4 DTD texture paste, J5 mix, K5 mix + adaptor
+#   PLAN=next   job 153649: J2, K2 (sigma ~ U(0.5, 1.5)) and A at seeds 1 and 2
 #   PLAN=matrix the full A-K matrix + noise ablations of job 152776
-PLAN=${PLAN:-next}
+PLAN=${PLAN:-structured}
 case "$PLAN" in
-  next)   QUEUES=("J2" "K2" "A@1" "A@2") ;;
-  matrix) QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
-  *) echo "unknown PLAN '$PLAN' (next | matrix)"; exit 1 ;;
+  structured) QUEUES=("J3" "J4" "J5" "K5") ;;
+  next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
+  matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
+  *) echo "unknown PLAN '$PLAN' (structured | next | matrix)"; exit 1 ;;
 esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------
@@ -200,6 +204,24 @@ source "$CONDA_SH" || { echo "cannot source conda from $CONDA_SH (set CONDA_SH)"
 set +u   # conda's activation scripts can reference unset variables
 ensure_env || { echo "environment setup failed; nothing was run"; exit 1; }
 with_lock ensure_weights || { echo "RAE weights setup failed; nothing was run"; exit 1; }
+
+# ---- DTD textures (noise.kind dtd / mix: J4, J5, K5) ------------------------------
+# latent_draem's download folder by default (already there if latent_draem ran).
+export DTD_ROOT=${DTD_ROOT:-$(cd "$HERE/.." && pwd)/latent_draem/data/dtd}
+ensure_dtd() {   # needs the env active (torchvision); downloads ~600 MB once
+  ( cd "$HERE/.." && python - "$DTD_ROOT" <<'PYDTD'
+import sys
+from pathlib import Path
+from latent_draem import get_dtd_images
+n = len(get_dtd_images(Path(sys.argv[1])))
+print(f"DTD ready under {sys.argv[1]}: {n} images")
+sys.exit(0 if n else 1)
+PYDTD
+  )
+}
+if [[ " ${QUEUES[*]} " =~ [[:space:]](J4|J5|K5)(@[0-9]+)?[[:space:]] ]]; then
+  with_lock ensure_dtd || { echo "DTD setup failed (set DTD_ROOT); nothing was run"; exit 1; }
+fi
 set -u
 if [ "${1:-}" = "--setup-env" ]; then
   echo "RAE code, weights and env '$ENV_NAME' are ready. Submit with:  sbatch slurm_dit_iad.sh"; exit 0

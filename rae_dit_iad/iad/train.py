@@ -351,6 +351,15 @@ def validate(
     return {f"val_{k}": float(np.mean(v)) for k, v in totals.items()}
 
 
+def resolve_dtd_root(noise_cfg: Dict[str, Any]) -> Path:
+    """noise.dtd_root, else $DTD_ROOT, else latent_draem's download folder."""
+    import os
+    root = noise_cfg.get("dtd_root") or os.environ.get("DTD_ROOT")
+    if root:
+        return Path(root)
+    return Path(__file__).resolve().parents[2] / "latent_draem" / "data" / "dtd"
+
+
 def train(
     cfg: Dict[str, Any],
     rae_root: Path,
@@ -418,6 +427,16 @@ def train(
     seed_all(seed)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    if corruption == "simplenet" and core.needs_textures(cfg["noise"]):
+        # DRAEM texture pastes (noise.kind dtd / mix): preload a crop bank once
+        dtd_root = resolve_dtd_root(cfg["noise"])
+        n_tex = core.simplenet_cfg(cfg["noise"])["dtd_bank"]
+        bank = core.build_texture_bank(dtd_root, n_tex, int(cfg.get("size", 256)), seed)
+        core.set_texture_bank(bank)
+        print(f"[iad] DTD texture bank: {bank.shape[0]} crops from {dtd_root}", flush=True)
+    else:
+        core.set_texture_bank(None)
 
     # ---- official components -------------------------------------------------
     sections = M.load_official_sections(cfg["rae_config"], rae_root,
@@ -508,8 +527,10 @@ def _train_scope(
     images = preload_images(sorted(set(train_paths) | set(val_paths)), size)
     latents = encode_cache(rae, sorted(set(train_paths) | set(val_paths)), size, device) \
         if cache else None
-    if cache and device.type == "cuda":
+    if cache and device.type == "cuda" and not (
+            corruption == "simplenet" and core.needs_textures(cfg["noise"])):
         # exact: with cached latents the frozen encoder is never called again
+        # (texture pastes re-encode every step, so the encoder stays then)
         M.offload_encoder(rae)
         print(f"[iad/{tag}] encoder offloaded to CPU (latents cached)", flush=True)
     if loss_type == "latent" and not exp.get("decoder_finetune") and device.type == "cuda":

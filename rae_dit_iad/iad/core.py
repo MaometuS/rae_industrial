@@ -181,11 +181,26 @@ SIMPLENET_DEFAULTS: Dict[str, Any] = {
     # on the midpoint.  The first full run showed 0.1 is far too weak: the
     # restorer learns a near-identity map and copies real defects through.
     "sigma": 0.1,
+    # What goes into the Perlin region (DRAEM-style synthetic anomaly):
+    #   gaussian  z0 + m*sigma*eps                       (SimpleNet noise; J, J2)
+    #   swap      z0 + beta*m*(roll(z_j) - z0)           (misplaced normal tokens:
+    #             another image of the batch, spatially shifted, maybe flipped)
+    #   dtd       E(x + beta*M*(texture - x))             (DRAEM: a DTD texture
+    #             pasted in pixel space, then encoded -- needs a texture bank)
+    #   mix       one of ``kinds`` per sample
+    # Same beta range and texture recipe as latent_draem (pixel / latent_self).
+    "kind": "gaussian",
+    "kinds": ["gaussian", "swap", "dtd"],
+    "beta": [0.5, 1.0],
+    "dtd_bank": 1000,   # random DTD crops preloaded once (fp16, CPU)
     "mask": "perlin",   # perlin (DRAEM-style token blobs) | all (SimpleNet: every token)
     "p_clean": 0.2,     # fraction of samples left uncorrupted (learn identity on normals)
     "w_anom": 5.0,      # latent-loss up-weight on corrupted tokens (lambda_latent > 0)
     "mask_thr": 0.5,    # Perlin threshold (latent_draem.perlin_mask convention)
 }
+
+
+CORRUPTION_KINDS = ("gaussian", "swap", "dtd")
 
 
 def simplenet_cfg(noise_cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -212,6 +227,24 @@ def simplenet_cfg(noise_cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     cfg["w_anom"] = float(cfg["w_anom"])
     cfg["mask_thr"] = float(cfg["mask_thr"])
     cfg["mask"] = str(cfg["mask"]).lower()
+    cfg["kind"] = str(cfg["kind"]).lower()
+    kinds = cfg["kinds"]
+    if isinstance(kinds, str):
+        kinds = kinds.replace(",", " ").split()
+    cfg["kinds"] = [str(k).lower() for k in kinds]
+    beta = cfg["beta"]
+    if not isinstance(beta, (list, tuple)):
+        beta = [beta, beta]
+    cfg["beta"] = (float(beta[0]), float(beta[1]))
+    cfg["dtd_bank"] = int(cfg["dtd_bank"])
+    if cfg["kind"] not in CORRUPTION_KINDS + ("mix",):
+        raise ValueError(f"noise.kind must be one of {CORRUPTION_KINDS + ('mix',)} "
+                         f"(got '{cfg['kind']}')")
+    if not cfg["kinds"] or any(k not in CORRUPTION_KINDS for k in cfg["kinds"]):
+        raise ValueError(f"noise.kinds must be a non-empty subset of {CORRUPTION_KINDS} "
+                         f"(got {cfg['kinds']})")
+    if len(cfg["beta"]) != 2 or not 0.0 <= cfg["beta"][0] <= cfg["beta"][1] <= 1.0:
+        raise ValueError(f"noise.beta must be [lo, hi] with 0 <= lo <= hi <= 1 (got {beta})")
     if not cfg["sigma_range"][0] > 0:
         raise ValueError(f"simplenet noise sigma must be > 0 (got {cfg['sigma_range']})")
     if cfg["mask"] not in ("perlin", "all"):
@@ -228,8 +261,12 @@ def sample_token_mask(
     noise_cfg: Optional[Dict[str, Any]],
     size: int,
     generator: Optional[torch.Generator] = None,
-) -> torch.Tensor:
+    return_pixel: bool = False,
+):
     """Per-token corruption weights ``m`` of shape ``(B, 1, h, w)`` in ``[0, 1]``.
+
+    With ``return_pixel`` also returns the pixel mask ``M`` (``(B, 1, size,
+    size)``, binary) that ``m`` was pooled from, for pixel-space corruptions.
 
     ``perlin``: a DRAEM-style Perlin blob drawn at ``size`` px (the image
     resolution) and average-pooled to the latent grid, so ``m`` is the fraction
@@ -247,13 +284,19 @@ def sample_token_mask(
     rng = np.random.default_rng(seed)
     if sn["mask"] == "all":
         m = torch.ones((b, 1, h, w))
+        px = torch.ones((b, 1, int(size), int(size))) if return_pixel else None
     else:
         from latent_draem import perlin_mask  # same Perlin blobs as latent_draem / DRAEM
         pm = np.stack([perlin_mask(int(size), rng, thr=sn["mask_thr"]) for _ in range(b)])
-        m = F.adaptive_avg_pool2d(torch.from_numpy(pm.astype(np.float32)).unsqueeze(1), (h, w))
+        px = torch.from_numpy(pm.astype(np.float32)).unsqueeze(1)
+        m = F.adaptive_avg_pool2d(px, (h, w))
     clean = torch.from_numpy(rng.random(b) < sn["p_clean"])
     m[clean] = 0.0
-    return m.to(device=z0.device, dtype=z0.dtype)
+    m = m.to(device=z0.device, dtype=z0.dtype)
+    if not return_pixel:
+        return m
+    px[clean] = 0.0
+    return m, px.to(device=z0.device)
 
 
 def sample_sigma(
@@ -285,6 +328,156 @@ def simplenet_corrupt(
     else:
         sigma = float(sigma)
     return z0 + mask * sigma * eps
+
+
+# ---------------------------------------------------------------------------
+# structured corruptions (swap / dtd / mix)
+
+_TEXTURES: Optional[torch.Tensor] = None   # (N, 3, S, S) fp16 CPU, set by train
+
+
+def needs_textures(noise_cfg: Optional[Dict[str, Any]]) -> bool:
+    """Whether this noise block pastes DTD textures (needs a bank and the encoder)."""
+    sn = simplenet_cfg(noise_cfg)
+    return sn["kind"] == "dtd" or (sn["kind"] == "mix" and "dtd" in sn["kinds"])
+
+
+def set_texture_bank(bank: Optional[torch.Tensor]) -> None:
+    global _TEXTURES
+    _TEXTURES = bank
+
+
+def build_texture_bank(dtd_root, n: int, size: int, seed: int = 0) -> torch.Tensor:
+    """``n`` random DTD crops at ``size`` px (latent_draem's crop + colour jitter).
+
+    Downloads DTD (~600 MB, torchvision) into ``dtd_root`` if it holds no images."""
+    import random
+    from pathlib import Path
+
+    from latent_draem import get_dtd_images, load_dtd_crop
+    paths = get_dtd_images(Path(dtd_root))
+    if not paths:
+        raise FileNotFoundError(f"no DTD images under {dtd_root}")
+    rng = random.Random(seed)
+    pick = [rng.choice(paths) for _ in range(int(n))]
+    return torch.stack([load_dtd_crop(p, int(size), rng) for p in pick]).half()
+
+
+def _rand(n: int, ref: torch.Tensor, generator: Optional[torch.Generator]) -> torch.Tensor:
+    if generator is None:
+        return torch.rand(n, device=ref.device)
+    return torch.rand(n, device=ref.device, generator=generator)
+
+
+def _randint(lo: int, hi: int, n: int, ref: torch.Tensor,
+             generator: Optional[torch.Generator]) -> torch.Tensor:
+    if generator is None:
+        return torch.randint(lo, hi, (n,), device=ref.device)
+    return torch.randint(lo, hi, (n,), device=ref.device, generator=generator)
+
+
+def latent_swap(
+    z0: torch.Tensor,
+    mask: torch.Tensor,
+    beta: torch.Tensor,
+    generator: Optional[torch.Generator] = None,
+) -> torch.Tensor:
+    """``z0 + beta*m*(src - z0)``: ``src`` is a batch member's latent, rolled by a
+    random spatial shift and flipped half the time -- plausible features in the
+    wrong place (latent_draem's ``latent_self``).  ``src`` is detached."""
+    b, _, h, w = z0.shape
+    j = _randint(0, b, b, z0, generator)
+    lo_h, lo_w = (2 if h > 4 else 1), (2 if w > 4 else 1)
+    sy = _randint(lo_h, max(h - lo_h + 1, lo_h + 1), b, z0, generator)
+    sx = _randint(lo_w, max(w - lo_w + 1, lo_w + 1), b, z0, generator)
+    flip = _rand(b, z0, generator) < 0.5
+    src = []
+    for k in range(b):
+        s = torch.roll(z0[int(j[k])].detach(), shifts=(int(sy[k]), int(sx[k])), dims=(1, 2))
+        src.append(s.flip(-1) if bool(flip[k]) else s)
+    src = torch.stack(src)
+    return z0 + beta.view(-1, 1, 1, 1).to(z0.dtype) * mask * (src - z0)
+
+
+def texture_paste(
+    images: torch.Tensor,
+    pixel_mask: torch.Tensor,
+    beta: torch.Tensor,
+    generator: Optional[torch.Generator] = None,
+) -> torch.Tensor:
+    """DRAEM: ``x + beta*M*(texture - x)`` with a random bank texture (random flips)."""
+    if _TEXTURES is None:
+        raise RuntimeError("noise.kind needs DTD textures but no bank is loaded "
+                           "(core.set_texture_bank; train() builds it from DTD_ROOT)")
+    n, _, hh, ww = images.shape
+    idx = _randint(0, _TEXTURES.shape[0], n, images, generator).cpu()
+    tex = _TEXTURES[idx].to(device=images.device, dtype=images.dtype)
+    if tex.shape[-2:] != (hh, ww):
+        tex = F.interpolate(tex, size=(hh, ww), mode="bilinear", align_corners=False)
+    fh = (_rand(n, images, generator) < 0.5).view(-1, 1, 1, 1)
+    fv = (_rand(n, images, generator) < 0.5).view(-1, 1, 1, 1)
+    tex = torch.where(fh, tex.flip(-1), tex)
+    tex = torch.where(fv, tex.flip(-2), tex)
+    pm = pixel_mask.to(images.dtype)
+    if pm.shape[-2:] != (hh, ww):
+        pm = F.interpolate(pm, size=(hh, ww), mode="nearest")
+    return images + beta.view(-1, 1, 1, 1).to(images.dtype) * pm * (tex - images)
+
+
+def structured_corrupt(
+    z0: torch.Tensor,
+    images: torch.Tensor,
+    rae: Optional[torch.nn.Module],
+    adaptor: Optional[torch.nn.Module],
+    noise_cfg: Optional[Dict[str, Any]],
+    size: int,
+    generator: Optional[torch.Generator] = None,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, list]:
+    """Synthetic anomaly for the SimpleNet path, by ``noise.kind``.
+
+    ``z0`` is the (adapted) clean latent.  Returns ``(z_in, m, t, kinds)``:
+    ``m`` the token mask (loss weights and the DRAEM head's target), ``t`` the
+    raw conditioning sigma per sample (its own sigma for Gaussian samples, the
+    test-time midpoint for structured ones), ``kinds`` the kind per sample.
+    Samples with an empty mask (``p_clean``) stay exactly ``z0``."""
+    sn = simplenet_cfg(noise_cfg)
+    b = z0.shape[0]
+    mask, pmask = sample_token_mask(z0, noise_cfg, size, generator, return_pixel=True)
+    if sn["kind"] == "mix":
+        pool = list(sn["kinds"])
+        kinds = [pool[int(i)] for i in _randint(0, len(pool), b, z0, generator)]
+    else:
+        kinds = [sn["kind"]] * b
+    lo, hi = sn["beta"]
+    beta = lo + (hi - lo) * _rand(b, z0, generator)
+    t = torch.full((b,), sn["sigma"], device=z0.device, dtype=z0.dtype)
+    zin = z0
+    sel = lambda k: torch.tensor([kk == k for kk in kinds], device=z0.device)  # noqa: E731
+    if "gaussian" in kinds:
+        eps = torch.randn_like(z0) if generator is None else torch.randn(
+            z0.shape, device=z0.device, dtype=z0.dtype, generator=generator)
+        sig = sample_sigma(z0, noise_cfg, generator)
+        g = sel("gaussian")
+        t = torch.where(g, sig, t)
+        zin = torch.where(g.view(-1, 1, 1, 1), simplenet_corrupt(z0, eps, sig, mask), zin)
+    if "swap" in kinds:
+        s = sel("swap").view(-1, 1, 1, 1)
+        zin = torch.where(s, latent_swap(z0, mask, beta, generator), zin)
+    if "dtd" in kinds:
+        if rae is None:
+            raise RuntimeError("noise.kind 'dtd' needs the RAE encoder")
+        ii = sel("dtd").nonzero().squeeze(1)
+        xa = texture_paste(images[ii], pmask[ii], beta[ii], generator)
+        with torch.no_grad():
+            za = rae.encode(xa).to(z0.dtype)
+        if adaptor is not None:
+            za = adaptor(za)
+        full = zin.clone()
+        full[ii] = za
+        zin = full
+    clean = (mask.flatten(1).sum(1) == 0).view(-1, 1, 1, 1)
+    zin = torch.where(clean, z0, zin)
+    return zin, mask, t, kinds
 
 
 def latent_restore_loss(
@@ -502,11 +695,16 @@ def compute_losses(
         # SimpleNet-style: small Gaussian on a Perlin subset of tokens, graded
         # against the clean latent; conditioning time sigma / (1 + sigma)
         sn = simplenet_cfg(noise_cfg)
-        mask = sample_token_mask(z0, noise_cfg, size, generator)
-        eps = torch.randn_like(z0) if generator is None else torch.randn(
-            z0.shape, device=z0.device, dtype=z0.dtype, generator=generator)
-        t = sample_sigma(z0, noise_cfg, generator)   # raw sigma per sample
-        zt = simplenet_corrupt(z0, eps, t, mask)
+        if sn["kind"] == "gaussian":
+            mask = sample_token_mask(z0, noise_cfg, size, generator)
+            eps = torch.randn_like(z0) if generator is None else torch.randn(
+                z0.shape, device=z0.device, dtype=z0.dtype, generator=generator)
+            t = sample_sigma(z0, noise_cfg, generator)   # raw sigma per sample
+            zt = simplenet_corrupt(z0, eps, t, mask)
+        else:
+            # structured synthetic anomalies (swap / dtd / mix), graded the same way
+            zt, mask, t, _ = structured_corrupt(z0, images, rae, adaptor, noise_cfg,
+                                                size, generator)
     else:
         # shared draw for image / hybrid
         t, eps = sample_time(noise_cfg, transport, z0, generator)

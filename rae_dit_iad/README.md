@@ -27,6 +27,10 @@ metrics come from `../latent_draem/latent_draem.py`.
 | **K** | `configs/K_latent_simplenet_adaptor.yaml` | SimpleNet | latent MSE + **anchored feature adaptor** | **dropped** | J (adaptor), F (adaptor with a decoder) |
 | **J2** | `configs/J2_latent_sigma05_15.yaml` | SimpleNet, **σ ~ U(0.5, 1.5)** | latent MSE | **dropped** | J (noise strength), A (flow path at the same test t_c = 0.5) |
 | **K2** | `configs/K2_latent_adaptor_sigma05_15.yaml` | SimpleNet, **σ ~ U(0.5, 1.5)** | latent MSE + anchored adaptor | **dropped** | K, J2 |
+| **J3** | `configs/J3_latent_swap.yaml` | **token swap**: shifted/flipped tokens of a batch member | latent MSE | **dropped** | J2 (Gaussian) |
+| **J4** | `configs/J4_latent_dtd.yaml` | **DTD texture** pasted in pixel space, re-encoded (DRAEM) | latent MSE | **dropped** | J2 |
+| **J5** | `configs/J5_latent_mix.yaml` | **mix**: Gaussian / swap / DTD per sample | latent MSE | **dropped** | J2, J3, J4 |
+| **K5** | `configs/K5_latent_adaptor_mix.yaml` | mix, as J5 | latent MSE + anchored adaptor | **dropped** | J5, K2 |
 
 Letters H and I were merged away: with SimpleNet as the default, "B with SimpleNet
 noise" is B, and "image L1 + latent term" is D. The old flow-path hybrid
@@ -483,4 +487,13 @@ carpet, grid, hazelnut, screw, transistor (image AUROC max / pixel AUROC / AUPRO
 - That run took ~11.5 h per arm because `validate()` moved the GPU EMA to the CPU after
   step 250 (`cuda:0` != `cuda`); fixed in `train.modules_to_move` (Test P).
 
-**Next (`PLAN=next`, the SLURM default):** J2, K2 and A at seeds 1 and 2.
+**Job 153649 (`PLAN=next`).** A is stable over seeds 0–2: image AUROC 0.963 ± 0.001,
+pixel AUROC 0.962 ± 0.001, AUPRO 0.878 ± 0.002 (kNN 0.861). Strong noise helped J and K
+but not enough: J2 latent_cos 0.815 (AUPRO 0.654), K2 0.835 (0.665); the DRAEM head now
+learns (J2 disc 0.814, AUPRO 0.724; K2 0.818, 0.762). Both fail where defects are
+plausible features in the wrong place (screw ≈ 0.58, transistor ≈ 0.72).
+
+**Next (`PLAN=structured`, the SLURM default):** J3 token swap, J4 DTD texture paste,
+J5 mix, K5 mix + adaptor -- does a defect-like corruption teach the DiT "replace what
+does not belong" instead of "remove noise, copy the rest"? DTD is read from `DTD_ROOT`
+(default `../latent_draem/data/dtd`, downloaded once if empty).
