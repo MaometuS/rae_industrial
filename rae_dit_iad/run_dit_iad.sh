@@ -33,6 +33,15 @@ SEEDS=${SEEDS:-"0"}
 # joint: one model for all categories (multi-class setting; jobs 152776 / 153649).
 # per_category results go to $OUT/per_category/seed<S>/, joint ones to $OUT/seed<S>/.
 SCOPE=${SCOPE:-per_category}
+# Heavy files (checkpoints) live outside the repo, mirroring the results layout:
+#   results:     $OUT/[per_category/]seed<S>/<exp_id>/   (CSVs, reports, logs, viz)
+#   checkpoints: $CKPT_ROOT/[per_category/]seed<S>/<exp_id>/
+CKPT_ROOT=${CKPT_ROOT:-/po1/rakhimov/training/rae_dit_iad}
+# KEEP_CKPT=0 (default): delete a checkpoint as soon as its evaluation succeeded
+# (only when this invocation trained it: STAGE="train eval"). With
+# SCOPE=per_category and STAGE="train eval" each category is then trained, evaluated
+# and deleted in turn, so a run holds at most one ~3.5 GB checkpoint at a time.
+KEEP_CKPT=${KEEP_CKPT:-0}
 EXPT=${EXPT:-"A B C D E F G J K"}
 STAGE=${STAGE:-"train eval"}      # "train", "eval" or "train eval"
 STEPS=${STEPS:-""}                # empty = config default (4000)
@@ -111,9 +120,21 @@ for exp in $EXPT; do
   [ -f "$CFG" ] || { echo "unknown experiment '$exp' (no $CFG)"; exit 1; }
   for SEED in $SEEDS; do
     # one directory per seed: checkpoints/config of different seeds never collide
-    if [ "$SCOPE" = joint ]; then RUN_DIR="$OUT/seed${SEED}"
-    else RUN_DIR="$OUT/$SCOPE/seed${SEED}"; fi
-    mkdir -p "$RUN_DIR"
+    if [ "$SCOPE" = joint ]; then REL="seed${SEED}"; else REL="$SCOPE/seed${SEED}"; fi
+    RUN_DIR="$OUT/$REL"
+    CK_DIR="$CKPT_ROOT/$REL"
+    ID=$(sed -n 's/^  id: *\([^ #]*\).*/\1/p' "$CFG" | head -1)
+    mkdir -p "$RUN_DIR" "$CK_DIR"
+    # one category at a time (train -> eval -> delete) when checkpoints are not kept
+    if [ "$SCOPE" = per_category ] && [ "$KEEP_CKPT" = 0 ] \
+       && [[ " $STAGE " == *" train "* && " $STAGE " == *" eval "* ]]; then
+      PASSES=$CATS
+    else
+      PASSES="__all__"
+    fi
+    FIRST=1
+    for PASS in $PASSES; do
+    if [ "$PASS" = "__all__" ]; then PCATS=$CATS; else PCATS=$PASS; fi
 
     if [[ " $STAGE " == *" train "* ]]; then
       # shellcheck disable=SC2086
@@ -127,12 +148,13 @@ for exp in $EXPT; do
         full) EXTRA="$EXTRA --no-grad-checkpoint --ema-device cuda" ;;
         low)  EXTRA="$EXTRA --grad-checkpoint --ema-device cpu" ;;
       esac
-      echo "=== train exp=$exp seed=$SEED ==="
+      KEEP_RES=""; [ "$FIRST" = 1 ] || KEEP_RES="--keep-results"
+      echo "=== train exp=$exp seed=$SEED cats=$PCATS ==="
       # shellcheck disable=SC2086
       python "$HERE/rae_dit_iad.py" train \
         --config "$CFG" --rae-root "$RAE_ROOT" --mvtec-root "$MVTEC_ROOT" \
-        --out "$RUN_DIR" --categories $CATS --seed "$SEED" --batch-size "$BATCH" \
-        --grad-accum "$GRAD_ACCUM" --scope "$SCOPE" $EXTRA \
+        --out "$RUN_DIR" --ckpt-dir "$CK_DIR" --categories $PCATS --seed "$SEED" \
+        --batch-size "$BATCH" --grad-accum "$GRAD_ACCUM" --scope "$SCOPE" $EXTRA $KEEP_RES \
         2>&1 | tee -a "$RUN_DIR/train_${exp}.log"
     fi
 
@@ -148,13 +170,27 @@ for exp in $EXPT; do
         # shellcheck disable=SC2086
         python "$HERE/rae_dit_iad.py" eval \
           --config "$CFG" --rae-root "$RAE_ROOT" --mvtec-root "$MVTEC_ROOT" \
-          --out "$RUN_DIR" --categories $CATS --seed "$SEED" \
+          --out "$RUN_DIR" --ckpt-dir "$CK_DIR" --categories $PCATS --seed "$SEED" \
           --mode "$MODES" $T_ARG --score "$SC" --repeats "$REPEATS" \
           --ode-steps "$ODE_STEPS" --batch-size "$EVAL_BATCH" --viz "$VIZ" \
           2>&1 | tee -a "$RUN_DIR/eval_${exp}.log"
       done
     fi
 
+    # every train/eval above ran under set -e + pipefail: reaching here means they
+    # all succeeded, so this pass's checkpoints are no longer needed
+    # (only checkpoints this invocation trained: an eval-only rerun never deletes)
+    if [ "$KEEP_CKPT" = 0 ] && [ -n "$ID" ] \
+       && [[ " $STAGE " == *" train "* && " $STAGE " == *" eval "* ]]; then
+      if [ "$PASS" = "__all__" ]; then
+        rm -f "$CK_DIR/$ID/"*_best.pt "$CK_DIR/$ID/"*_last.pt
+      else
+        rm -f "$CK_DIR/$ID/${PASS}_best.pt" "$CK_DIR/$ID/${PASS}_last.pt"
+      fi
+      echo "=== deleted checkpoints of exp=$exp seed=$SEED cats=$PCATS (KEEP_CKPT=0) ==="
+    fi
+    FIRST=0
+    done   # passes
   done
 done
 

@@ -498,10 +498,17 @@ the multi-class (unified) setting, a different problem from the standard one-cla
 benchmark. Every config is now `scope: per_category` (one DiT per category, reset to
 the released weights each time), as are both references (kNN memory bank and
 latent_draem). The joint results stay under `results_dit_iad/seed*/`; per-category
-runs write to `results_dit_iad/per_category/seed*/`. Per-category runs keep one
+runs write to `results_dit_iad/per_category/seed*/`. `SCOPE=joint` restores the old
+behaviour.
+
+**Heavy files.** Checkpoints go to `CKPT_ROOT` (default
+`/po1/rakhimov/training/rae_dit_iad/`, same `[per_category/]seed<S>/<exp_id>/` layout);
+only CSVs, reports, logs and grids stay in the repo. Per-category runs save one
 eval-only checkpoint per category (`<cat>_best.pt`: EMA weights, no optimizer state,
 ~3.5 GB, not resumable) and skip the periodic 13 GB resume points, whose writes stalled
-training for minutes each. `SCOPE=joint` restores the old behaviour.
+training for minutes each. With `KEEP_CKPT=0` (default) each category is trained,
+evaluated with every score and then deleted before the next one starts, so a run holds
+at most one checkpoint at a time; `KEEP_CKPT=1` keeps them (e.g. for later re-scoring).
 
 **Next (`PLAN=all`, the SLURM default):** every experiment so far, per category --
 A (seeds 0–2), B–G, J, K, the three noise ablations, J2, K2, J3 token swap, J4 DTD

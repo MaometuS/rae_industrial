@@ -397,6 +397,7 @@ def train(
     categories: Sequence[str],
     seed: int = 0,
     scope: str = "joint",
+    ckpt_dir: Optional[Path] = None,
     steps: Optional[int] = None,
     batch_size: Optional[int] = None,
     resume: Optional[Path] = None,
@@ -455,6 +456,8 @@ def train(
     seed_all(seed)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    ckpt_dir = Path(ckpt_dir) if ckpt_dir is not None else out_dir
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
 
     if corruption == "simplenet" and core.needs_textures(cfg["noise"]):
         # DRAEM texture pastes (noise.kind dtd / mix): preload a crop bank once
@@ -520,6 +523,7 @@ def train(
             cfg=cfg, tcfg=tcfg, cats=cats, scope_name=scope_name, seed=seed,
             rae=rae, dit=dit, transport=transport, adaptor=adaptor,
             rae_root=rae_root, mvtec_root=Path(mvtec_root), out_dir=out_dir,
+            ckpt_dir=ckpt_dir,
             device=device, misc=misc, num_classes=num_classes,
             n_steps=n_steps, bs=bs, precision=precision, clip_grad=clip_grad,
             log_every=log_every, val_every=val_every, save_every=save_every,
@@ -536,7 +540,7 @@ def train(
 
 def _train_scope(
     *, cfg, tcfg, cats, scope_name, seed, rae, dit, transport,
-    rae_root, mvtec_root, out_dir, device, misc, num_classes,
+    rae_root, mvtec_root, out_dir, device, misc, num_classes, ckpt_dir=None,
     n_steps, bs, precision, clip_grad, log_every, val_every, save_every,
     n_val, size, use_ema, ema_decay, cache, loss_type, corruption, lambda_fm,
     best_metric, resume, build_scheduler, adaptor=None, disc=None, slim=False,
@@ -666,7 +670,8 @@ def _train_scope(
 
     def ckpt_paths():
         prefix = tag if tag != "joint" else "joint"
-        return out_dir / f"{prefix}_last.pt", out_dir / f"{prefix}_best.pt"
+        d = Path(ckpt_dir) if ckpt_dir is not None else out_dir
+        return d / f"{prefix}_last.pt", d / f"{prefix}_best.pt"
 
     last_path, best_path = ckpt_paths()
     metrics_f = out_dir / "metrics.jsonl"

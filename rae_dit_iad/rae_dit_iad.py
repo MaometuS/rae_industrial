@@ -138,21 +138,27 @@ def cmd_train(args: argparse.Namespace) -> None:
     categories = _parse_categories(args.categories)
     out = Path(args.out) / cfg["experiment"]["id"]
     out.mkdir(parents=True, exist_ok=True)
-    if not args.resume:
+    # checkpoints (heavy) may live elsewhere: <ckpt-dir>/<exp_id>/
+    ck = Path(args.ckpt_dir) / cfg["experiment"]["id"] if args.ckpt_dir else out
+    ck.mkdir(parents=True, exist_ok=True)
+    if not args.resume and not args.keep_results:
         # A fresh training invalidates the previous run's results. Eval skips rows
         # it already has (same ckpt name / mode / t / score), so old rows would
         # silently shadow the new model's: move them (and old checkpoints, so a
         # crashed run can never be evaluated with a stale one) out of the way.
-        old = [p for p in sorted(out.iterdir())
-               if p.name in ("results.csv", "per_image.csv", "report.md", "metrics.jsonl",
-                             "viz", "summary.json") or p.suffix == ".pt"]
-        if old:
-            arch = out / f"previous_{time.strftime('%Y%m%d-%H%M%S')}"
-            arch.mkdir()
-            for p in old:
-                p.rename(arch / p.name)
-            print(f"[train] fresh run: moved {len(old)} files of the previous run to {arch}",
-                  flush=True)
+        # --keep-results: a later category of the same run (train/eval/delete
+        # one category at a time) -- keep the rows of the earlier categories.
+        stamp = time.strftime('%Y%m%d-%H%M%S')
+        for d, names in ((out, ("results.csv", "per_image.csv", "report.md",
+                                "metrics.jsonl", "viz", "summary.json")), (ck, ())):
+            old = [p for p in sorted(d.iterdir()) if p.name in names or p.suffix == ".pt"]
+            if old:
+                arch = d / f"previous_{stamp}"
+                arch.mkdir(exist_ok=True)
+                for p in old:
+                    p.rename(arch / p.name)
+                print(f"[train] fresh run: moved {len(old)} files of the previous run "
+                      f"to {arch}", flush=True)
 
     with (out / "args.json").open("w") as f:
         json.dump({k: str(v) if isinstance(v, Path) else v
@@ -165,6 +171,7 @@ def cmd_train(args: argparse.Namespace) -> None:
         rae_root=rae_root,
         mvtec_root=Path(args.mvtec_root),
         out_dir=out,
+        ckpt_dir=ck,
         device=device,
         categories=categories,
         seed=seed,
@@ -281,6 +288,8 @@ def cmd_eval(args: argparse.Namespace) -> None:
         base_cfg = None
         exp_id = args.exp_id or "unknown"
     out.mkdir(parents=True, exist_ok=True)
+    # where checkpoints are looked up: --ckpt-dir/<exp_id>/ if given, else --out
+    ck_dir = Path(args.ckpt_dir) / exp_id if args.ckpt_dir else out
     seed = int(args.seed if args.seed is not None
                else (base_cfg.get("seed", 0) if base_cfg else 0))
 
@@ -316,7 +325,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
     new_rows: List[Dict[str, Any]] = []
     model_cache: Dict[str, Any] = {}  # joint runs: one checkpoint for every category
     for cat in categories:
-        ckpt_path = _resolve_ckpt(out, args.ckpt, cat, args.ckpt_which)
+        ckpt_path = _resolve_ckpt(ck_dir, args.ckpt, cat, args.ckpt_which)
         if model_cache.get("path") != ckpt_path:  # build once, reuse across categories
             model_cache.clear()
             if device.type == "cuda":
@@ -660,6 +669,11 @@ def build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--categories", nargs="+", default=["pilot"],
                     help="'all' | 'pilot' | category names (space or comma separated)")
     tr.add_argument("--scope", choices=["joint", "per_category"], default=None)
+    tr.add_argument("--ckpt-dir", default=None,
+                    help="root for checkpoints (<ckpt-dir>/<exp_id>/); default: --out")
+    tr.add_argument("--keep-results", action="store_true",
+                    help="do not archive this experiment's earlier results (a later "
+                         "category of a run trained one category at a time)")
     tr.add_argument("--seed", type=int, default=None)
     tr.add_argument("--steps", type=int, default=None)
     tr.add_argument("--batch-size", type=int, default=None,
@@ -698,6 +712,9 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--ckpt", default=None,
                     help="checkpoint path (default: auto-resolve <cat>_best/joint_best in --out)")
     ev.add_argument("--ckpt-which", choices=["best", "last"], default="best")
+    ev.add_argument("--ckpt-dir", default=None,
+                    help="root the checkpoints were trained into (<ckpt-dir>/<exp_id>/); "
+                         "default: --out")
     ev.add_argument("--rae-root", default=str(HERE.parent / "rae_fidelity" / "RAE"))
     ev.add_argument("--mvtec-root",
                     default="/home/maometus/Documents/datasets/mvtec_anomaly_detection")

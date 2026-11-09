@@ -214,9 +214,23 @@ set +u   # conda's activation scripts can reference unset variables
 ensure_env || { echo "environment setup failed; nothing was run"; exit 1; }
 with_lock ensure_weights || { echo "RAE weights setup failed; nothing was run"; exit 1; }
 
+# ---- heavy files: checkpoints outside the repo, deleted after evaluation ---------
+export CKPT_ROOT=${CKPT_ROOT:-/po1/rakhimov/training/rae_dit_iad}
+export KEEP_CKPT=${KEEP_CKPT:-0}
+mkdir -p "$CKPT_ROOT" && [ -w "$CKPT_ROOT" ] \
+  || { echo "cannot write checkpoints to $CKPT_ROOT (set CKPT_ROOT)"; exit 1; }
+echo "checkpoints: $CKPT_ROOT (KEEP_CKPT=$KEEP_CKPT: $([ "$KEEP_CKPT" = 0 ] \
+  && echo 'deleted after each evaluation' || echo kept))"
+
 # ---- DTD textures (noise.kind dtd / mix: J4, J5, K5) ------------------------------
 # latent_draem's download folder by default (already there if latent_draem ran).
-export DTD_ROOT=${DTD_ROOT:-$(cd "$HERE/.." && pwd)/latent_draem/data/dtd}
+if [ -z "${DTD_ROOT:-}" ]; then
+  DTD_ROOT=$(cd "$HERE/.." && pwd)/latent_draem/data/dtd
+  # not there yet: download to the heavy-files area instead of the repo
+  [ -n "$(find "$DTD_ROOT" -type f -name '*.jpg' -print -quit 2>/dev/null)" ] \
+    || DTD_ROOT=/po1/rakhimov/training/dtd
+fi
+export DTD_ROOT
 ensure_dtd() {   # needs the env active (torchvision); downloads ~600 MB once
   ( cd "$HERE/.." && python - "$DTD_ROOT" <<'PYDTD'
 import sys
