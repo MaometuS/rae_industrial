@@ -470,3 +470,80 @@ target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/Im
 [iad/joint] step 3000 val_lat=0.0007 val_total=0.0007 val_seg=0.0278
 [iad/joint] new best val_lat=0.0007 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
 [iad/joint] step 3050/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0280 lr_dit=0.0001 (11.79s/step)
+[iad/joint] step 3100/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0267 lr_dit=0.0001 (10.56s/step)
+[iad/joint] step 3150/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0247 lr_dit=0.0001 (10.49s/step)
+[iad/joint] step 3200/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0278 lr_dit=0.0001 (9.89s/step)
+[iad/joint] step 3250/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0286 lr_dit=0.0001 (9.44s/step)
+[iad/joint] step 3250 val_lat=0.0006 val_total=0.0006 val_seg=0.0278
+[iad/joint] new best val_lat=0.0006 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
+[iad/joint] step 3300/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0281 lr_dit=0.0001 (11.27s/step)
+[iad/joint] step 3350/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0264 lr_dit=0.0001 (10.45s/step)
+[iad/joint] step 3400/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0267 lr_dit=0.0001 (10.41s/step)
+[iad/joint] step 3450/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0264 lr_dit=0.0000 (10.81s/step)
+[iad/joint] step 3500/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0292 lr_dit=0.0000 (10.32s/step)
+[iad/joint] step 3500 val_lat=0.0006 val_total=0.0006 val_seg=0.0278
+[iad/joint] new best val_lat=0.0006 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
+[iad/joint] step 3550/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0274 lr_dit=0.0000 (11.80s/step)
+[iad/joint] step 3600/4000 loss_lat=0.0007 loss_inv=0.0000 loss_total=0.0007 loss_seg=0.0330 lr_dit=0.0000 (9.05s/step)
+[iad/joint] step 3650/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0289 lr_dit=0.0000 (8.12s/step)
+[iad/joint] step 3700/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0266 lr_dit=0.0000 (7.87s/step)
+[iad/joint] step 3750/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0267 lr_dit=0.0000 (5.58s/step)
+[iad/joint] step 3750 val_lat=0.0006 val_total=0.0006 val_seg=0.0278
+[iad/joint] new best val_lat=0.0006 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
+[iad/joint] step 3800/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0252 lr_dit=0.0000 (9.07s/step)
+[iad/joint] step 3850/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0257 lr_dit=0.0000 (7.90s/step)
+[iad/joint] step 3900/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0266 lr_dit=0.0000 (7.84s/step)
+[iad/joint] step 3950/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0290 lr_dit=0.0000 (8.04s/step)
+[iad/joint] step 4000/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0291 lr_dit=0.0000 (7.40s/step)
+[iad/joint] step 4000 val_lat=0.0006 val_total=0.0006 val_seg=0.0278
+[iad/joint] new best val_lat=0.0006 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
+[iad/joint] done at step 4000; encoder_frozen=True; decoder_finetune=False; adaptor=simplenet; best_lat=0.0006176024188607698
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 4000,
+      "best_val": 0.0006176024188607698,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt"
+    }
+  ]
+}
+=== eval exp=K seed=0 (mode=single t=trained sigma score=pixel) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.5092 P-AUROC=0.3415 AUPRO=0.0693 (0.047s/img)
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.4302 P-AUROC=0.5263 AUPRO=0.2115 (0.044s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.8932 P-AUROC=0.8088 AUPRO=0.7858 (0.044s/img)
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.6368 P-AUROC=0.8513 AUPRO=0.5266 (0.044s/img)
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=pixel I-AUROC(max)=0.3725 P-AUROC=0.3269 AUPRO=0.0737 (0.044s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/report.md
+=== eval exp=K seed=0 (mode=single t=trained sigma score=latent_cos) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.8467 P-AUROC=0.5927 AUPRO=0.0992 (0.047s/img)
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.5322 P-AUROC=0.3976 AUPRO=0.0326 (0.044s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.7371 P-AUROC=0.8819 AUPRO=0.4700 (0.044s/img)
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.5661 P-AUROC=0.5685 AUPRO=0.1827 (0.044s/img)
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=latent_cos I-AUROC(max)=0.7854 P-AUROC=0.8763 AUPRO=0.4150 (0.044s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/report.md
+=== eval exp=K seed=0 (mode=single t=trained sigma score=disc) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.2877 P-AUROC=0.5917 AUPRO=0.0194 (0.049s/img)
+[eval/grid] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4737 P-AUROC=0.5303 AUPRO=0.0450 (0.044s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.5625 P-AUROC=0.9009 AUPRO=0.5818 (0.044s/img)
+[eval/screw] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.4497 P-AUROC=0.5782 AUPRO=0.0396 (0.044s/img)
+[eval/transistor] joint_best.pt mode=single t=0.1 reps=1 score=disc I-AUROC(max)=0.6967 P-AUROC=0.7760 AUPRO=0.3596 (0.045s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/report.md
+/home/rakhimov/rae_industrial/rae_dit_iad/run_dit_iad.sh: error reading input file: Stale file handle
+[gpu 3] FAILED K 16:23:13

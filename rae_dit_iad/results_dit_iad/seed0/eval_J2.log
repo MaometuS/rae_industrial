@@ -1,0 +1,30 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.5088 P-AUROC=0.3394 AUPRO=0.0668 (0.067s/img)
+[eval/grid] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.4302 P-AUROC=0.5284 AUPRO=0.2146 (0.050s/img)
+[eval/hazelnut] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.8904 P-AUROC=0.8072 AUPRO=0.7866 (0.052s/img)
+[eval/screw] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.6257 P-AUROC=0.8491 AUPRO=0.5191 (0.050s/img)
+[eval/transistor] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.3862 P-AUROC=0.3282 AUPRO=0.0767 (0.051s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.9559 P-AUROC=0.8972 AUPRO=0.5505 (0.069s/img)
+[eval/grid] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.9841 P-AUROC=0.9425 AUPRO=0.7583 (0.051s/img)
+[eval/hazelnut] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.8575 P-AUROC=0.9783 AUPRO=0.8477 (0.051s/img)
+[eval/screw] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.5702 P-AUROC=0.9439 AUPRO=0.5270 (0.050s/img)
+[eval/transistor] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.7050 P-AUROC=0.8688 AUPRO=0.5863 (0.052s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.7713 P-AUROC=0.7099 AUPRO=0.6516 (0.063s/img)
+[eval/grid] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.9591 P-AUROC=0.9139 AUPRO=0.8427 (0.052s/img)
+[eval/hazelnut] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.9632 P-AUROC=0.9440 AUPRO=0.9196 (0.051s/img)
+[eval/screw] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.7391 P-AUROC=0.8874 AUPRO=0.6914 (0.051s/img)
+[eval/transistor] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.6392 P-AUROC=0.6064 AUPRO=0.5140 (0.052s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/report.md

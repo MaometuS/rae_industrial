@@ -1,0 +1,178 @@
+[gpu 0] start J2 14:11:23
+torch 2.8.0+cu128 NVIDIA RTX A6000
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=J2 seed=0 ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/joint] 1368 train / 100 val normal images (cats: carpet,grid,hazelnut,screw,transistor)
+[iad/joint] batch 2 x 4 accumulation = effective 8
+[iad/joint] encoder offloaded to CPU (latents cached)
+[iad/joint] decoder offloaded to CPU (loss=latent never decodes)
+[iad/joint] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/joint] Optimizer: AdamW with lr=0.0002, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + discriminator(5315841 params)
+[iad/joint] step 50/4000 loss_lat=7.5823 loss_total=7.5823 loss_seg=0.0351 lr_dit=0.0002 (5.63s/step)
+[iad/joint] step 100/4000 loss_lat=0.0126 loss_total=0.0126 loss_seg=0.0295 lr_dit=0.0002 (5.53s/step)
+[iad/joint] step 150/4000 loss_lat=0.0114 loss_total=0.0114 loss_seg=0.0241 lr_dit=0.0002 (5.48s/step)
+[iad/joint] step 200/4000 loss_lat=0.0076 loss_total=0.0076 loss_seg=0.0171 lr_dit=0.0002 (5.66s/step)
+[iad/joint] step 250/4000 loss_lat=0.0080 loss_total=0.0080 loss_seg=0.0133 lr_dit=0.0002 (4.23s/step)
+[iad/joint] step 250 val_lat=0.0753 val_total=0.0753 val_seg=0.0297
+[iad/joint] new best val_lat=0.0753 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 300/4000 loss_lat=0.0304 loss_total=0.0304 loss_seg=0.0137 lr_dit=0.0002 (12.29s/step)
+[iad/joint] step 350/4000 loss_lat=0.0073 loss_total=0.0073 loss_seg=0.0127 lr_dit=0.0002 (5.72s/step)
+[iad/joint] step 400/4000 loss_lat=0.0062 loss_total=0.0062 loss_seg=0.0125 lr_dit=0.0002 (5.73s/step)
+[iad/joint] step 450/4000 loss_lat=0.0067 loss_total=0.0067 loss_seg=0.0124 lr_dit=0.0002 (4.93s/step)
+[iad/joint] step 500/4000 loss_lat=0.0069 loss_total=0.0069 loss_seg=0.0117 lr_dit=0.0002 (4.36s/step)
+[iad/joint] step 500 val_lat=0.0494 val_total=0.0494 val_seg=0.0266
+[iad/joint] new best val_lat=0.0494 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 550/4000 loss_lat=0.0065 loss_total=0.0065 loss_seg=0.0117 lr_dit=0.0002 (18.52s/step)
+[iad/joint] step 600/4000 loss_lat=0.0061 loss_total=0.0061 loss_seg=0.0115 lr_dit=0.0002 (5.10s/step)
+[iad/joint] step 650/4000 loss_lat=0.0055 loss_total=0.0055 loss_seg=0.0103 lr_dit=0.0002 (5.14s/step)
+[iad/joint] step 700/4000 loss_lat=0.0059 loss_total=0.0059 loss_seg=0.0112 lr_dit=0.0002 (5.53s/step)
+[iad/joint] step 750/4000 loss_lat=0.0051 loss_total=0.0051 loss_seg=0.0095 lr_dit=0.0002 (5.47s/step)
+[iad/joint] step 750 val_lat=0.0364 val_total=0.0364 val_seg=0.0224
+[iad/joint] new best val_lat=0.0364 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 800/4000 loss_lat=0.0052 loss_total=0.0052 loss_seg=0.0098 lr_dit=0.0002 (11.50s/step)
+[iad/joint] step 850/4000 loss_lat=0.0052 loss_total=0.0052 loss_seg=0.0105 lr_dit=0.0002 (4.06s/step)
+[iad/joint] step 900/4000 loss_lat=0.0051 loss_total=0.0051 loss_seg=0.0106 lr_dit=0.0002 (5.08s/step)
+[iad/joint] step 950/4000 loss_lat=0.0051 loss_total=0.0051 loss_seg=0.0092 lr_dit=0.0002 (5.58s/step)
+[iad/joint] step 1000/4000 loss_lat=0.0048 loss_total=0.0048 loss_seg=0.0096 lr_dit=0.0002 (5.30s/step)
+[iad/joint] step 1000 val_lat=0.0277 val_total=0.0277 val_seg=0.0177
+[iad/joint] new best val_lat=0.0277 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 1050/4000 loss_lat=0.0048 loss_total=0.0048 loss_seg=0.0097 lr_dit=0.0002 (19.86s/step)
+[iad/joint] step 1100/4000 loss_lat=0.0048 loss_total=0.0048 loss_seg=0.0101 lr_dit=0.0002 (5.50s/step)
+[iad/joint] step 1150/4000 loss_lat=0.0048 loss_total=0.0048 loss_seg=0.0094 lr_dit=0.0002 (5.45s/step)
+[iad/joint] step 1200/4000 loss_lat=0.0049 loss_total=0.0049 loss_seg=0.0100 lr_dit=0.0002 (5.47s/step)
+[iad/joint] step 1250/4000 loss_lat=0.0046 loss_total=0.0046 loss_seg=0.0093 lr_dit=0.0002 (4.65s/step)
+[iad/joint] step 1250 val_lat=0.0211 val_total=0.0211 val_seg=0.0139
+[iad/joint] new best val_lat=0.0211 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 1300/4000 loss_lat=0.0046 loss_total=0.0046 loss_seg=0.0095 lr_dit=0.0002 (16.26s/step)
+[iad/joint] step 1350/4000 loss_lat=0.0049 loss_total=0.0049 loss_seg=0.0092 lr_dit=0.0002 (5.48s/step)
+[iad/joint] step 1400/4000 loss_lat=0.0046 loss_total=0.0046 loss_seg=0.0087 lr_dit=0.0002 (5.44s/step)
+[iad/joint] step 1450/4000 loss_lat=0.0050 loss_total=0.0050 loss_seg=0.0098 lr_dit=0.0001 (5.12s/step)
+[iad/joint] step 1500/4000 loss_lat=0.0046 loss_total=0.0046 loss_seg=0.0094 lr_dit=0.0001 (5.22s/step)
+[iad/joint] step 1500 val_lat=0.0158 val_total=0.0158 val_seg=0.0113
+[iad/joint] new best val_lat=0.0158 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 1550/4000 loss_lat=0.0044 loss_total=0.0044 loss_seg=0.0094 lr_dit=0.0001 (17.24s/step)
+[iad/joint] step 1600/4000 loss_lat=0.0044 loss_total=0.0044 loss_seg=0.0086 lr_dit=0.0001 (4.77s/step)
+[iad/joint] step 1650/4000 loss_lat=0.0046 loss_total=0.0046 loss_seg=0.0092 lr_dit=0.0001 (4.97s/step)
+[iad/joint] step 1700/4000 loss_lat=0.0046 loss_total=0.0046 loss_seg=0.0093 lr_dit=0.0001 (5.21s/step)
+[iad/joint] step 1750/4000 loss_lat=0.0045 loss_total=0.0045 loss_seg=0.0091 lr_dit=0.0001 (5.52s/step)
+[iad/joint] step 1750 val_lat=0.0118 val_total=0.0118 val_seg=0.0100
+[iad/joint] new best val_lat=0.0118 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 1800/4000 loss_lat=0.0043 loss_total=0.0043 loss_seg=0.0097 lr_dit=0.0001 (11.36s/step)
+[iad/joint] step 1850/4000 loss_lat=0.0044 loss_total=0.0044 loss_seg=0.0092 lr_dit=0.0001 (5.07s/step)
+[iad/joint] step 1900/4000 loss_lat=0.0041 loss_total=0.0041 loss_seg=0.0090 lr_dit=0.0001 (5.31s/step)
+[iad/joint] step 1950/4000 loss_lat=0.0039 loss_total=0.0039 loss_seg=0.0090 lr_dit=0.0001 (5.53s/step)
+[iad/joint] step 2000/4000 loss_lat=0.0043 loss_total=0.0043 loss_seg=0.0095 lr_dit=0.0001 (5.23s/step)
+[iad/joint] step 2000 val_lat=0.0090 val_total=0.0090 val_seg=0.0093
+[iad/joint] new best val_lat=0.0090 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 2050/4000 loss_lat=0.0042 loss_total=0.0042 loss_seg=0.0084 lr_dit=0.0001 (24.42s/step)
+[iad/joint] step 2100/4000 loss_lat=0.0043 loss_total=0.0043 loss_seg=0.0090 lr_dit=0.0001 (5.55s/step)
+[iad/joint] step 2150/4000 loss_lat=0.0042 loss_total=0.0042 loss_seg=0.0088 lr_dit=0.0001 (5.35s/step)
+[iad/joint] step 2200/4000 loss_lat=0.0043 loss_total=0.0043 loss_seg=0.0091 lr_dit=0.0001 (5.25s/step)
+[iad/joint] step 2250/4000 loss_lat=0.0042 loss_total=0.0042 loss_seg=0.0093 lr_dit=0.0001 (4.56s/step)
+[iad/joint] step 2250 val_lat=0.0071 val_total=0.0071 val_seg=0.0091
+[iad/joint] new best val_lat=0.0071 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 2300/4000 loss_lat=0.0040 loss_total=0.0040 loss_seg=0.0086 lr_dit=0.0001 (11.21s/step)
+[iad/joint] step 2350/4000 loss_lat=0.0039 loss_total=0.0039 loss_seg=0.0083 lr_dit=0.0001 (5.08s/step)
+[iad/joint] step 2400/4000 loss_lat=0.0041 loss_total=0.0041 loss_seg=0.0089 lr_dit=0.0001 (4.94s/step)
+[iad/joint] step 2450/4000 loss_lat=0.0042 loss_total=0.0042 loss_seg=0.0088 lr_dit=0.0001 (5.29s/step)
+[iad/joint] step 2500/4000 loss_lat=0.0042 loss_total=0.0042 loss_seg=0.0092 lr_dit=0.0001 (4.22s/step)
+[iad/joint] step 2500 val_lat=0.0058 val_total=0.0058 val_seg=0.0089
+[iad/joint] new best val_lat=0.0058 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 2550/4000 loss_lat=0.0040 loss_total=0.0040 loss_seg=0.0088 lr_dit=0.0001 (18.39s/step)
+[iad/joint] step 2600/4000 loss_lat=0.0043 loss_total=0.0043 loss_seg=0.0089 lr_dit=0.0001 (5.51s/step)
+[iad/joint] step 2650/4000 loss_lat=0.0039 loss_total=0.0039 loss_seg=0.0084 lr_dit=0.0001 (5.20s/step)
+[iad/joint] step 2700/4000 loss_lat=0.0039 loss_total=0.0039 loss_seg=0.0088 lr_dit=0.0001 (5.26s/step)
+[iad/joint] step 2750/4000 loss_lat=0.0041 loss_total=0.0041 loss_seg=0.0092 lr_dit=0.0001 (4.51s/step)
+[iad/joint] step 2750 val_lat=0.0051 val_total=0.0051 val_seg=0.0088
+[iad/joint] new best val_lat=0.0051 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 2800/4000 loss_lat=0.0039 loss_total=0.0039 loss_seg=0.0083 lr_dit=0.0001 (12.57s/step)
+[iad/joint] step 2850/4000 loss_lat=0.0040 loss_total=0.0040 loss_seg=0.0088 lr_dit=0.0001 (4.94s/step)
+[iad/joint] step 2900/4000 loss_lat=0.0038 loss_total=0.0038 loss_seg=0.0087 lr_dit=0.0001 (5.33s/step)
+[iad/joint] step 2950/4000 loss_lat=0.0039 loss_total=0.0039 loss_seg=0.0087 lr_dit=0.0001 (5.12s/step)
+[iad/joint] step 3000/4000 loss_lat=0.0039 loss_total=0.0039 loss_seg=0.0087 lr_dit=0.0001 (4.32s/step)
+[iad/joint] step 3000 val_lat=0.0046 val_total=0.0046 val_seg=0.0088
+[iad/joint] new best val_lat=0.0046 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 3050/4000 loss_lat=0.0038 loss_total=0.0038 loss_seg=0.0082 lr_dit=0.0001 (17.17s/step)
+[iad/joint] step 3100/4000 loss_lat=0.0040 loss_total=0.0040 loss_seg=0.0088 lr_dit=0.0001 (5.33s/step)
+[iad/joint] step 3150/4000 loss_lat=0.0037 loss_total=0.0037 loss_seg=0.0088 lr_dit=0.0001 (4.90s/step)
+[iad/joint] step 3200/4000 loss_lat=0.0035 loss_total=0.0035 loss_seg=0.0079 lr_dit=0.0001 (4.47s/step)
+[iad/joint] step 3250/4000 loss_lat=0.0037 loss_total=0.0037 loss_seg=0.0087 lr_dit=0.0001 (4.06s/step)
+[iad/joint] step 3250 val_lat=0.0043 val_total=0.0043 val_seg=0.0087
+[iad/joint] new best val_lat=0.0043 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 3300/4000 loss_lat=0.0037 loss_total=0.0037 loss_seg=0.0086 lr_dit=0.0001 (11.12s/step)
+[iad/joint] step 3350/4000 loss_lat=0.0036 loss_total=0.0036 loss_seg=0.0086 lr_dit=0.0001 (4.51s/step)
+[iad/joint] step 3400/4000 loss_lat=0.0035 loss_total=0.0035 loss_seg=0.0083 lr_dit=0.0001 (4.36s/step)
+[iad/joint] step 3450/4000 loss_lat=0.0036 loss_total=0.0036 loss_seg=0.0091 lr_dit=0.0000 (4.00s/step)
+[iad/joint] step 3500/4000 loss_lat=0.0033 loss_total=0.0033 loss_seg=0.0082 lr_dit=0.0000 (4.29s/step)
+[iad/joint] step 3500 val_lat=0.0040 val_total=0.0040 val_seg=0.0086
+[iad/joint] new best val_lat=0.0040 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 3550/4000 loss_lat=0.0037 loss_total=0.0037 loss_seg=0.0087 lr_dit=0.0000 (13.89s/step)
+[iad/joint] step 3600/4000 loss_lat=0.0034 loss_total=0.0034 loss_seg=0.0080 lr_dit=0.0000 (4.64s/step)
+[iad/joint] step 3650/4000 loss_lat=0.0035 loss_total=0.0035 loss_seg=0.0085 lr_dit=0.0000 (4.34s/step)
+[iad/joint] step 3700/4000 loss_lat=0.0036 loss_total=0.0036 loss_seg=0.0089 lr_dit=0.0000 (4.20s/step)
+[iad/joint] step 3750/4000 loss_lat=0.0037 loss_total=0.0037 loss_seg=0.0091 lr_dit=0.0000 (3.97s/step)
+[iad/joint] step 3750 val_lat=0.0039 val_total=0.0039 val_seg=0.0086
+[iad/joint] new best val_lat=0.0039 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] step 3800/4000 loss_lat=0.0037 loss_total=0.0037 loss_seg=0.0091 lr_dit=0.0000 (8.06s/step)
+[iad/joint] step 3850/4000 loss_lat=0.0035 loss_total=0.0035 loss_seg=0.0091 lr_dit=0.0000 (3.73s/step)
+[iad/joint] step 3900/4000 loss_lat=0.0035 loss_total=0.0035 loss_seg=0.0088 lr_dit=0.0000 (3.54s/step)
+[iad/joint] step 3950/4000 loss_lat=0.0032 loss_total=0.0032 loss_seg=0.0084 lr_dit=0.0000 (3.30s/step)
+[iad/joint] step 4000/4000 loss_lat=0.0032 loss_total=0.0032 loss_seg=0.0082 lr_dit=0.0000 (3.20s/step)
+[iad/joint] step 4000 val_lat=0.0037 val_total=0.0037 val_seg=0.0086
+[iad/joint] new best val_lat=0.0037 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt
+[iad/joint] done at step 4000; encoder_frozen=True; decoder_finetune=False; adaptor=None; best_lat=0.003722687757690437
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 4000,
+      "best_val": 0.003722687757690437,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/joint_best.pt"
+    }
+  ]
+}
+=== eval exp=J2 seed=0 (mode=single t=trained sigma score=pixel) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.5088 P-AUROC=0.3394 AUPRO=0.0668 (0.067s/img)
+[eval/grid] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.4302 P-AUROC=0.5284 AUPRO=0.2146 (0.050s/img)
+[eval/hazelnut] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.8904 P-AUROC=0.8072 AUPRO=0.7866 (0.052s/img)
+[eval/screw] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.6257 P-AUROC=0.8491 AUPRO=0.5191 (0.050s/img)
+[eval/transistor] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.3862 P-AUROC=0.3282 AUPRO=0.0767 (0.051s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/report.md
+=== eval exp=J2 seed=0 (mode=single t=trained sigma score=latent_cos) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.9559 P-AUROC=0.8972 AUPRO=0.5505 (0.069s/img)
+[eval/grid] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.9841 P-AUROC=0.9425 AUPRO=0.7583 (0.051s/img)
+[eval/hazelnut] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.8575 P-AUROC=0.9783 AUPRO=0.8477 (0.051s/img)
+[eval/screw] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.5702 P-AUROC=0.9439 AUPRO=0.5270 (0.050s/img)
+[eval/transistor] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.7050 P-AUROC=0.8688 AUPRO=0.5863 (0.052s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/report.md
+=== eval exp=J2 seed=0 (mode=single t=trained sigma score=disc) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.7713 P-AUROC=0.7099 AUPRO=0.6516 (0.063s/img)
+[eval/grid] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.9591 P-AUROC=0.9139 AUPRO=0.8427 (0.052s/img)
+[eval/hazelnut] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.9632 P-AUROC=0.9440 AUPRO=0.9196 (0.051s/img)
+[eval/screw] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.7391 P-AUROC=0.8874 AUPRO=0.6914 (0.051s/img)
+[eval/transistor] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.6392 P-AUROC=0.6064 AUPRO=0.5140 (0.052s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/J2_latent_sigma05_15/report.md
+Reports: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed*/**/report.md   CSVs: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed*/**/results.csv   Grids: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed*/**/viz/
+[gpu 0] done  J2 23:01:58

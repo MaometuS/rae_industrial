@@ -205,3 +205,31 @@ target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/Im
 [iad/joint] step 3500 val_img=0.0444 val_total=0.0444 val_seg=0.0278
 [iad/joint] new best val_img=0.0444 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/ab_noise_sigma005/joint_best.pt
 [iad/joint] step 3550/4000 loss_img=0.0326 loss_total=0.0326 loss_seg=0.0282 lr_dit=0.0000 (12.63s/step)
+[iad/joint] step 3600/4000 loss_img=0.0320 loss_total=0.0320 loss_seg=0.0271 lr_dit=0.0000 (10.66s/step)
+[iad/joint] step 3650/4000 loss_img=0.0319 loss_total=0.0319 loss_seg=0.0272 lr_dit=0.0000 (10.87s/step)
+[iad/joint] step 3700/4000 loss_img=0.0333 loss_total=0.0333 loss_seg=0.0290 lr_dit=0.0000 (9.24s/step)
+[iad/joint] step 3750/4000 loss_img=0.0314 loss_total=0.0314 loss_seg=0.0304 lr_dit=0.0000 (10.54s/step)
+[iad/joint] step 3750 val_img=0.0436 val_total=0.0436 val_seg=0.0278
+[iad/joint] new best val_img=0.0436 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/ab_noise_sigma005/joint_best.pt
+[iad/joint] step 3800/4000 loss_img=0.0291 loss_total=0.0291 loss_seg=0.0296 lr_dit=0.0000 (12.30s/step)
+[iad/joint] step 3850/4000 loss_img=0.0333 loss_total=0.0333 loss_seg=0.0263 lr_dit=0.0000 (11.16s/step)
+[iad/joint] step 3900/4000 loss_img=0.0313 loss_total=0.0313 loss_seg=0.0292 lr_dit=0.0000 (11.24s/step)
+[iad/joint] step 3950/4000 loss_img=0.0303 loss_total=0.0303 loss_seg=0.0252 lr_dit=0.0000 (10.39s/step)
+[iad/joint] step 4000/4000 loss_img=0.0337 loss_total=0.0337 loss_seg=0.0267 lr_dit=0.0000 (10.56s/step)
+[iad/joint] step 4000 val_img=0.0430 val_total=0.0430 val_seg=0.0278
+[iad/joint] new best val_img=0.0430 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/ab_noise_sigma005/joint_best.pt
+[iad/joint] done at step 4000; encoder_frozen=True; decoder_finetune=False; adaptor=None; best_img=0.04299191487953067
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 4000,
+      "best_val": 0.04299191487953067,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/ab_noise_sigma005/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/ab_noise_sigma005/joint_best.pt"
+    }
+  ]
+}

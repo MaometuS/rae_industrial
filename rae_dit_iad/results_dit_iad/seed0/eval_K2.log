@@ -1,0 +1,30 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.5205 P-AUROC=0.3437 AUPRO=0.0693 (0.075s/img)
+[eval/grid] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.4336 P-AUROC=0.5243 AUPRO=0.2099 (0.051s/img)
+[eval/hazelnut] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.8954 P-AUROC=0.8023 AUPRO=0.7822 (0.052s/img)
+[eval/screw] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.6231 P-AUROC=0.8506 AUPRO=0.5231 (0.051s/img)
+[eval/transistor] joint_best.pt mode=single t=1.0 reps=1 score=pixel I-AUROC(max)=0.3962 P-AUROC=0.3337 AUPRO=0.0859 (0.051s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K2_latent_adaptor_sigma05_15/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K2_latent_adaptor_sigma05_15/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.9807 P-AUROC=0.9066 AUPRO=0.5892 (0.069s/img)
+[eval/grid] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.9883 P-AUROC=0.9424 AUPRO=0.7821 (0.051s/img)
+[eval/hazelnut] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.8843 P-AUROC=0.9770 AUPRO=0.8489 (0.051s/img)
+[eval/screw] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.5845 P-AUROC=0.9449 AUPRO=0.5301 (0.050s/img)
+[eval/transistor] joint_best.pt mode=single t=1.0 reps=1 score=latent_cos I-AUROC(max)=0.7392 P-AUROC=0.8763 AUPRO=0.5730 (0.051s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K2_latent_adaptor_sigma05_15/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K2_latent_adaptor_sigma05_15/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.7717 P-AUROC=0.7828 AUPRO=0.7444 (0.071s/img)
+[eval/grid] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.9833 P-AUROC=0.9341 AUPRO=0.8637 (0.052s/img)
+[eval/hazelnut] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.9668 P-AUROC=0.9554 AUPRO=0.9306 (0.051s/img)
+[eval/screw] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.7549 P-AUROC=0.8938 AUPRO=0.7301 (0.052s/img)
+[eval/transistor] joint_best.pt mode=single t=1.0 reps=1 score=disc I-AUROC(max)=0.6142 P-AUROC=0.6241 AUPRO=0.5401 (0.054s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K2_latent_adaptor_sigma05_15/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K2_latent_adaptor_sigma05_15/report.md

@@ -265,3 +265,45 @@ target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/Im
 [iad/joint] step 3000 val_lat=0.0007 val_total=0.0007 val_seg=0.0278
 [iad/joint] new best val_lat=0.0007 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
 [iad/joint] step 3050/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0280 lr_dit=0.0001 (11.79s/step)
+[iad/joint] step 3100/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0267 lr_dit=0.0001 (10.56s/step)
+[iad/joint] step 3150/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0247 lr_dit=0.0001 (10.49s/step)
+[iad/joint] step 3200/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0278 lr_dit=0.0001 (9.89s/step)
+[iad/joint] step 3250/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0286 lr_dit=0.0001 (9.44s/step)
+[iad/joint] step 3250 val_lat=0.0006 val_total=0.0006 val_seg=0.0278
+[iad/joint] new best val_lat=0.0006 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
+[iad/joint] step 3300/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0281 lr_dit=0.0001 (11.27s/step)
+[iad/joint] step 3350/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0264 lr_dit=0.0001 (10.45s/step)
+[iad/joint] step 3400/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0267 lr_dit=0.0001 (10.41s/step)
+[iad/joint] step 3450/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0264 lr_dit=0.0000 (10.81s/step)
+[iad/joint] step 3500/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0292 lr_dit=0.0000 (10.32s/step)
+[iad/joint] step 3500 val_lat=0.0006 val_total=0.0006 val_seg=0.0278
+[iad/joint] new best val_lat=0.0006 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
+[iad/joint] step 3550/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0274 lr_dit=0.0000 (11.80s/step)
+[iad/joint] step 3600/4000 loss_lat=0.0007 loss_inv=0.0000 loss_total=0.0007 loss_seg=0.0330 lr_dit=0.0000 (9.05s/step)
+[iad/joint] step 3650/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0289 lr_dit=0.0000 (8.12s/step)
+[iad/joint] step 3700/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0266 lr_dit=0.0000 (7.87s/step)
+[iad/joint] step 3750/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0267 lr_dit=0.0000 (5.58s/step)
+[iad/joint] step 3750 val_lat=0.0006 val_total=0.0006 val_seg=0.0278
+[iad/joint] new best val_lat=0.0006 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
+[iad/joint] step 3800/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0252 lr_dit=0.0000 (9.07s/step)
+[iad/joint] step 3850/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0257 lr_dit=0.0000 (7.90s/step)
+[iad/joint] step 3900/4000 loss_lat=0.0005 loss_inv=0.0000 loss_total=0.0005 loss_seg=0.0266 lr_dit=0.0000 (7.84s/step)
+[iad/joint] step 3950/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0290 lr_dit=0.0000 (8.04s/step)
+[iad/joint] step 4000/4000 loss_lat=0.0006 loss_inv=0.0000 loss_total=0.0006 loss_seg=0.0291 lr_dit=0.0000 (7.40s/step)
+[iad/joint] step 4000 val_lat=0.0006 val_total=0.0006 val_seg=0.0278
+[iad/joint] new best val_lat=0.0006 -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt
+[iad/joint] done at step 4000; encoder_frozen=True; decoder_finetune=False; adaptor=simplenet; best_lat=0.0006176024188607698
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 4000,
+      "best_val": 0.0006176024188607698,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt"
+    }
+  ]
+}

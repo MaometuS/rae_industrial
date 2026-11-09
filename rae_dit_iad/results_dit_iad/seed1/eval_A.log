@@ -1,0 +1,30 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.5 reps=1 score=pixel I-AUROC(max)=0.5265 P-AUROC=0.3647 AUPRO=0.1014 (0.101s/img)
+[eval/grid] joint_best.pt mode=single t=0.5 reps=1 score=pixel I-AUROC(max)=0.4962 P-AUROC=0.6002 AUPRO=0.3145 (0.070s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.5 reps=1 score=pixel I-AUROC(max)=0.9254 P-AUROC=0.8321 AUPRO=0.8240 (0.067s/img)
+[eval/screw] joint_best.pt mode=single t=0.5 reps=1 score=pixel I-AUROC(max)=0.6737 P-AUROC=0.9019 AUPRO=0.6579 (0.065s/img)
+[eval/transistor] joint_best.pt mode=single t=0.5 reps=1 score=pixel I-AUROC(max)=0.4371 P-AUROC=0.3708 AUPRO=0.1517 (0.076s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed1/A_flow_matching/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed1/A_flow_matching/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] joint_best.pt mode=single t=0.5 reps=1 score=latent_cos I-AUROC(max)=0.9900 P-AUROC=0.9790 AUPRO=0.9102 (0.078s/img)
+[eval/grid] joint_best.pt mode=single t=0.5 reps=1 score=latent_cos I-AUROC(max)=0.9967 P-AUROC=0.9814 AUPRO=0.9383 (0.070s/img)
+[eval/hazelnut] joint_best.pt mode=single t=0.5 reps=1 score=latent_cos I-AUROC(max)=0.9604 P-AUROC=0.9936 AUPRO=0.9563 (0.074s/img)
+[eval/screw] joint_best.pt mode=single t=0.5 reps=1 score=latent_cos I-AUROC(max)=0.9389 P-AUROC=0.9661 AUPRO=0.8771 (0.070s/img)
+[eval/transistor] joint_best.pt mode=single t=0.5 reps=1 score=latent_cos I-AUROC(max)=0.9213 P-AUROC=0.8859 AUPRO=0.7144 (0.071s/img)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed1/A_flow_matching/results.csv (5 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed1/A_flow_matching/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/carpet] score=disc skipped: joint_best.pt has no discriminator (flow-path arm A, or discriminator disabled)
+[eval/grid] score=disc skipped: joint_best.pt has no discriminator (flow-path arm A, or discriminator disabled)
+[eval/hazelnut] score=disc skipped: joint_best.pt has no discriminator (flow-path arm A, or discriminator disabled)
+[eval/screw] score=disc skipped: joint_best.pt has no discriminator (flow-path arm A, or discriminator disabled)
+[eval/transistor] score=disc skipped: joint_best.pt has no discriminator (flow-path arm A, or discriminator disabled)
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed1/A_flow_matching/results.csv (0 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed1/A_flow_matching/report.md

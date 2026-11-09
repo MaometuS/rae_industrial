@@ -1,0 +1,30 @@
+{
+  "cmd": "train",
+  "config": "/home/rakhimov/rae_industrial/rae_dit_iad/configs/J2_latent_sigma05_15.yaml",
+  "rae_root": "/home/rakhimov/rae_industrial/rae_dit_iad/../rae_fidelity/RAE",
+  "mvtec_root": "/po1/rakhimov/datasets/mvtec_anomaly_detection",
+  "out": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0",
+  "categories": [
+    "carpet",
+    "grid",
+    "hazelnut",
+    "screw",
+    "transistor"
+  ],
+  "scope": null,
+  "seed": 0,
+  "steps": null,
+  "batch_size": 2,
+  "grad_accum": 4,
+  "lambda_fm": null,
+  "noise_sigma": null,
+  "sdpa": null,
+  "lambda_latent": null,
+  "resume": null,
+  "no_ema": false,
+  "grad_checkpoint": false,
+  "ema_device": "cuda",
+  "adaptor": null,
+  "adaptor_rank": null,
+  "device": null
+}
