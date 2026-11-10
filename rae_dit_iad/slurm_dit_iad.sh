@@ -232,12 +232,20 @@ if [ -z "${DTD_ROOT:-}" ]; then
 fi
 export DTD_ROOT
 ensure_dtd() {   # needs the env active (torchvision); downloads ~600 MB once
-  ( cd "$HERE/.." && python - "$DTD_ROOT" <<'PYDTD'
+  # run inside latent_draem/: from the repo root `latent_draem` is the folder (a
+  # namespace package), not latent_draem.py, and the import fails
+  mkdir -p "$DTD_ROOT"
+  ( cd "$HERE/../latent_draem" && python - "$DTD_ROOT" <<'PYDTD'
 import sys
 from pathlib import Path
 from latent_draem import get_dtd_images
-n = len(get_dtd_images(Path(sys.argv[1])))
-print(f"DTD ready under {sys.argv[1]}: {n} images")
+root = Path(sys.argv[1])
+try:
+    n = len(get_dtd_images(root))
+except Exception as exc:  # e.g. no network on the node: say so, not just "failed"
+    print(f"DTD download/check under {root} failed: {type(exc).__name__}: {exc}")
+    sys.exit(1)
+print(f"DTD ready under {root}: {n} images")
 sys.exit(0 if n else 1)
 PYDTD
   )
