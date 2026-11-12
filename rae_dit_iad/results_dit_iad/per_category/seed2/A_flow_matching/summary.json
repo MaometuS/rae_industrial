@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "grid",
+      "steps": 4000,
+      "best_val": 0.1312059558928013,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed2/A_flow_matching/grid_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed2/A_flow_matching/grid_best.pt"
+    }
+  ]
+}

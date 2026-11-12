@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": 0.006997507372871041,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/K_latent_simplenet_adaptor/joint_best.pt"
+    }
+  ]
+}

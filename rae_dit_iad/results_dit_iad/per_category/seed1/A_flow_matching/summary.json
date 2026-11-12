@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "carpet",
+      "steps": 4000,
+      "best_val": 0.17432849407196044,
+      "skipped_dit_steps": 4,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed1/A_flow_matching/carpet_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed1/A_flow_matching/carpet_best.pt"
+    }
+  ]
+}

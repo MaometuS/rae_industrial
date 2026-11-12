@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "joint",
+      "steps": 200,
+      "best_val": 0.0969036278501153,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/ab_noise_sigma02/joint_last.pt",
+      "best_ckpt": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/seed0/ab_noise_sigma02/joint_best.pt"
+    }
+  ]
+}

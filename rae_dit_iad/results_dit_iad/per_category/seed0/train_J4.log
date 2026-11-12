@@ -1,0 +1,41 @@
+[iad] DTD texture bank: 1000 crops from /po1/rakhimov/training/dtd
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/carpet] 260 train / 20 val normal images (cats: carpet)
+[iad/carpet] batch 2 x 4 accumulation = effective 8
+[iad/carpet] decoder offloaded to CPU (loss=latent never decodes)
+[iad/carpet] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-05, base_lr=0.0002, warmup_from_zero=False
+[iad/carpet] Optimizer: AdamW with lr=0.0002, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + discriminator(5315841 params)
+[iad/carpet] step 50/4000 loss_lat=0.1892 loss_total=0.1892 loss_seg=0.0200 lr_dit=0.0002 (1.46s/step)
+[iad/carpet] step 51: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=inf, head_norm=0.1354); loss terms this step={'lat': [0.089585, 2173.947266, 139233.71875, 339158.03125], 'total': [0.089585, 2173.947266, 139233.71875, 339158.03125], 'seg': [0.008428, 0.06869, 0.071279, 0.062626]}; update skipped
+[iad/carpet] step 52: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.1882); loss terms this step={'lat': [2042429.875, 665802.8125, 0.108397, 1357301.375], 'total': [2042429.875, 665802.8125, 0.108397, 1357301.375], 'seg': [0.105498, 0.051248, 0.006487, 0.06784]}; update skipped
+[iad/carpet] step 53: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.2645); loss terms this step={'lat': [577690.875, 735143.4375, 2302114.5, 112.893166], 'total': [577690.875, 735143.4375, 2302114.5, 112.893166], 'seg': [0.045682, 0.142443, 0.072616, 0.067036]}; update skipped
+[iad/carpet] step 54: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=inf, head_norm=0.5468); loss terms this step={'lat': [25230.5, 0.178747, 265843.78125, 28166.904297], 'total': [25230.5, 0.178747, 265843.78125, 28166.904297], 'seg': [0.090801, 0.016356, 0.198182, 0.075121]}; update skipped
+[iad/carpet] step 55: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.1196); loss terms this step={'lat': [0.018649, 1571690.125, 14935.641602, 129602.046875], 'total': [0.018649, 1571690.125, 14935.641602, 129602.046875], 'seg': [2.2e-05, 0.067148, 0.083247, 0.06158]}; update skipped
+[iad/carpet] step 57: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.4507); loss terms this step={'lat': [3152707.25, 2617233.25, 1953994.125, 497014.625], 'total': [3152707.25, 2617233.25, 1953994.125, 497014.625], 'seg': [0.125057, 0.110351, 0.047026, 0.199535]}; update skipped
+[iad/carpet] step 58: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.1955); loss terms this step={'lat': [2711919.75, 1299350.125, 448151.40625, 16882.699219], 'total': [2711919.75, 1299350.125, 448151.40625, 16882.699219], 'seg': [0.050467, 0.047874, 0.133318, 0.076915]}; update skipped
+[iad/carpet] step 59: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.2669); loss terms this step={'lat': [3594563.75, 1982901.75, 2208607.5, 37.163158], 'total': [3594563.75, 1982901.75, 2208607.5, 37.163158], 'seg': [0.121837, 0.122959, 0.114811, 0.044575]}; update skipped
+[iad/carpet] step 60: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.4982); loss terms this step={'lat': [3872301.75, 124384.734375, 5749.214355, 0.022689], 'total': [3872301.75, 124384.734375, 5749.214355, 0.022689], 'seg': [0.195454, 0.151024, 0.085919, 3.9e-05]}; update skipped
+[iad/carpet] step 61: NON-FINITE gradient in the DiT/adaptor/decoder (dit_norm=nan, head_norm=0.2628); loss terms this step={'lat': [68668.28125, 4483723.0, 510489.75, 945626.3125], 'total': [68668.28125, 4483723.0, 510489.75, 945626.3125], 'seg': [0.076613, 0.106486, 0.062224, 0.057488]}; update skipped
+[iad/carpet] step 100/4000 loss_lat=1481093.8066 loss_total=1481093.8066 loss_seg=0.0941 lr_dit=0.0002 (1.38s/step)
+[iad/carpet] step 150/4000 loss_lat=1727483.1829 loss_total=1727483.1829 loss_seg=0.1041 lr_dit=0.0002 (1.36s/step)
+[iad/carpet] step 200/4000 loss_lat=1642100.1355 loss_total=1642100.1355 loss_seg=0.0898 lr_dit=0.0002 (1.40s/step)
+[iad/carpet] step 250/4000 loss_lat=2567687.8736 loss_total=2567687.8736 loss_seg=0.0888 lr_dit=0.0002 (1.40s/step)
+[iad/carpet] step 250 val_lat=0.7036 val_total=0.7036 val_seg=0.0165
+[iad/carpet] new best val_lat=0.7036 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/J4_latent_dtd/carpet_best.pt
+Traceback (most recent call last):
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 757, in <module>
+    main()
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 751, in main
+    cmd_train(args)
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 169, in cmd_train
+    summary = T.train(
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/iad/train.py", line 544, in train
+    s = _train_scope(
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/iad/train.py", line 790, in _train_scope
+    raise RuntimeError(
+RuntimeError: 201 of 253 steps had non-finite DiT gradients (limit 200): not a rare event any more, stopping

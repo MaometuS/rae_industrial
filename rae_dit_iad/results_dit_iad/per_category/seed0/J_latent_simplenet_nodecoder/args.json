@@ -1,0 +1,28 @@
+{
+  "cmd": "train",
+  "config": "/home/rakhimov/rae_industrial/rae_dit_iad/configs/J_latent_simplenet_nodecoder.yaml",
+  "rae_root": "/home/rakhimov/rae_industrial/rae_dit_iad/../rae_fidelity/RAE",
+  "mvtec_root": "/po1/rakhimov/datasets/mvtec_anomaly_detection",
+  "out": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/per_category/seed0",
+  "categories": [
+    "transistor"
+  ],
+  "scope": "per_category",
+  "ckpt_dir": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0",
+  "keep_results": true,
+  "seed": 0,
+  "steps": null,
+  "batch_size": 2,
+  "grad_accum": 4,
+  "lambda_fm": null,
+  "noise_sigma": null,
+  "sdpa": null,
+  "lambda_latent": null,
+  "resume": null,
+  "no_ema": false,
+  "grad_checkpoint": false,
+  "ema_device": "cuda",
+  "adaptor": null,
+  "adaptor_rank": null,
+  "device": null
+}
