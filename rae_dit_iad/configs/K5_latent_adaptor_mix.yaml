@@ -78,17 +78,17 @@ training:
   cache_latents: true
   decoder_lr_ratio: 0.1  # unused while decoder_finetune=false
   optimizer:
-    lr: 2.0e-4
+    lr: 1.0e-4         # official 2e-4 is for batch 1024; we fine-tune at batch 8
     betas: [0.9, 0.95]
     weight_decay: 0.0
     eps: 1.0e-8
   scheduler:
     type: linear
-    base_lr: 2.0e-4
-    final_lr: 2.0e-5
-    warmup_steps: 400
+    base_lr: 1.0e-4
+    final_lr: 1.0e-5
+    warmup_steps: 400  # linear ramp from 0 to base_lr (10% of steps)
     decay_end_steps: 4000
-    warmup_from_zero: false
+    warmup_from_zero: true   # false = official "warmup" holds the full lr from step 1
 
 inference:
   mode: single      # deterministic: no test-time noise

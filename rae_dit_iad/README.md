@@ -525,6 +525,16 @@ official code: the linear path is `z_t = (1-t) z_0 + t eps` with `u_t = eps - z_
 (t = 1 is noise), `rae.encode` adds no noise (`noise_tau: 0`), and the metrics are
 latent_draem's, so the kNN bar is computed the same way.
 
+**Job 154445 (first per-category run): learning-rate instability.** 8 of 20 arms stopped
+on the non-finite guard (A at all three seeds, J, J2, J4, J5, K2). The guard's loss
+printout showed finite but exploding losses (10^5-10^7 in some micro-batches next to
+normal ~0.2 ones), i.e. training divergence, not bad inputs. Cause: the official
+scheduler's `warmup_from_zero: false` holds the full lr from step 1 (no ramp), and the
+official lr 2e-4 is for batch 1024 while we fine-tune at batch 8. Every arm on the latent
+or flow-matching loss spiked (including the ones that finished: E, J3, K, K5); the
+image-L1 arms never did. All configs now use lr 1e-4 (final 1e-5, decoder 1e-5) with a
+400-step linear warmup from zero; the job's partial results are superseded by the rerun.
+
 **Next (`PLAN=all`, the SLURM default):** every experiment so far, per category --
 A (seeds 0–2), B–G, J, K, the three noise ablations, J2, K2, J3 token swap, J4 DTD
 texture paste, J5 mix, K5 mix + adaptor (20 runs × 5 category models). DTD is read
