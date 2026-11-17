@@ -8,7 +8,7 @@
 #   bash run_dit_iad_efficient.sh    # all memory optimizations (24 GB VRAM)
 # This script is the shared engine; MEM picks the memory preset (auto/full/low).
 #
-#   bash run_dit_iad.sh                                                   # train+eval A–G, pilot cats, seed 0
+#   bash run_dit_iad.sh                                                   # train+eval A–G, carpet + screw, seed 0
 #   EXPT="A B C" CATS="carpet screw" SEEDS="0 1" bash run_dit_iad.sh       # subset / more seeds
 #   STAGE=eval EXPT="A" T_VALUES="0.1,0.3,0.5,0.7,0.9" bash run_dit_iad.sh # eval-only noise sweep (flow path: A)
 #   STAGE=train STEPS=500 EXPT="A" bash run_dit_iad.sh                     # quick smoke run
@@ -27,7 +27,7 @@ MVTEC_ROOT=${MVTEC_ROOT:-/po1/rakhimov/datasets/mvtec_anomaly_detection}
 RAE_ROOT=${RAE_ROOT:-$HERE/../rae_fidelity/RAE}
 OUT=${OUT:-$HERE/results_dit_iad}
 ENV_NAME=${ENV_NAME:-rae}
-CATS=${CATS:-"carpet grid hazelnut screw transistor"}
+CATS=${CATS:-"carpet screw"}  # one texture + one object
 SEEDS=${SEEDS:-"0"}
 # per_category (default): one DiT per category, the standard one-class MVTec setting;
 # joint: one model for all categories (multi-class setting; jobs 152776 / 153649).

@@ -535,7 +535,29 @@ or flow-matching loss spiked (including the ones that finished: E, J3, K, K5); t
 image-L1 arms never did. All configs now use lr 1e-4 (final 1e-5, decoder 1e-5) with a
 400-step linear warmup from zero; the job's partial results are superseded by the rerun.
 
+**Job 156032 (rerun at lr 1e-4 with warmup): still unstable.** 7 of 20 arms stopped on the
+guard again (A seeds 0-1, J2, J4, J5, K, K2), all on the latent or flow-matching loss; A@2,
+J, J3, K5 finished but skipped 1-63 updates in some categories. The image-L1 arms (B, C, F,
+G, noise ablations) were clean again; D and E finished. J2 hit the limit by step 406 (lr
+still in warmup, ~5e-5). The failure is persistent: once some inputs give 10^5-10^6 losses,
+every later step is skipped and the weights never change again, so the run cannot recover
+on its own. The DiT-DH config has `use_qknorm: false`. Fine-tuning an attention model
+without QK-norm at a large Adam lr and batch 8 grows the attention logits until some
+inputs blow up. The quadratic latent/FM losses feed those outliers back far more strongly
+than the image L1. sqrt-scaling the official 2e-4 @ 1024 to batch 8 gives ~1.8e-5. All
+arms that failed (A, J2, J4, J5, K, K2) now use lr 2e-5, final 2e-6.
+
+**Job 156032 results are kept for the arms that finished** (B-G, J, J3, K5, A@2, the three
+noise ablations; 5 categories, lr 1e-4). Their configs stay at lr 1e-4 so they match those
+results. `PLAN=retry` (the SLURM default) reruns only the 7 runs the guard stopped (A at
+seeds 0-1, J2, J4, J5, K, K2) at lr 2e-5 on carpet + screw. Each arm writes only to its own
+`<exp_id>/`, so the finished arms' results are untouched. Caveats when comparing: the
+retried arms use a 5x lower lr, and their means cover 2 categories instead of 5. Compare
+them on the carpet and screw rows. A@2 finished at 1e-4, so the three A seeds no longer
+share an lr. J, J3, K5 and A@2 also skipped 1-63 updates in some categories.
+
 **Next (`PLAN=all`, the SLURM default):** every experiment so far, per category --
 A (seeds 0–2), B–G, J, K, the three noise ablations, J2, K2, J3 token swap, J4 DTD
-texture paste, J5 mix, K5 mix + adaptor (20 runs × 5 category models). DTD is read
+texture paste, J5 mix, K5 mix + adaptor (20 runs × 2 category models: carpet as
+the texture, screw as the object; `CATS="..."` restores the 5 pilot categories). DTD is read
 from `DTD_ROOT` (default `../latent_draem/data/dtd`, downloaded once if empty).
