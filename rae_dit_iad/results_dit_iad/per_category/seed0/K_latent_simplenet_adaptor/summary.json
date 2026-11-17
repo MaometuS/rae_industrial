@@ -1,14 +1,14 @@
 {
   "runs": [
     {
-      "scope": "carpet",
+      "scope": "screw",
       "steps": 4000,
-      "best_val": 0.0006365642359014601,
+      "best_val": 0.0006753407054929994,
       "skipped_dit_steps": 0,
       "skipped_head_steps": 0,
       "encoder_frozen": true,
-      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/K_latent_simplenet_adaptor/carpet_last.pt",
-      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/K_latent_simplenet_adaptor/carpet_best.pt"
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/K_latent_simplenet_adaptor/screw_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/K_latent_simplenet_adaptor/screw_best.pt"
     }
   ]
 }

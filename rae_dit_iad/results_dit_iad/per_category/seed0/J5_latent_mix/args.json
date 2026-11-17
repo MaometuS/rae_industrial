@@ -5,11 +5,11 @@
   "mvtec_root": "/po1/rakhimov/datasets/mvtec_anomaly_detection",
   "out": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/per_category/seed0",
   "categories": [
-    "carpet"
+    "screw"
   ],
   "scope": "per_category",
   "ckpt_dir": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0",
-  "keep_results": false,
+  "keep_results": true,
   "seed": 0,
   "steps": null,
   "batch_size": 2,

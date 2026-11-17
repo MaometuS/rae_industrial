@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "grid",
+      "steps": 4000,
+      "best_val": 0.0034424760262481867,
+      "skipped_dit_steps": 3,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/K2_latent_adaptor_sigma05_15/grid_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/K2_latent_adaptor_sigma05_15/grid_best.pt"
+    }
+  ]
+}
