@@ -3,7 +3,7 @@
     {
       "scope": "transistor",
       "steps": 4000,
-      "best_val": 0.033426572754979136,
+      "best_val": 0.01925247013568878,
       "skipped_dit_steps": 0,
       "skipped_head_steps": 0,
       "encoder_frozen": true,

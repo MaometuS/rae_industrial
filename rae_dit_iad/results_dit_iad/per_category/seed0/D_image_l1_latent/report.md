@@ -7,26 +7,26 @@ for all three aggregations (mean / max / top-1% pixel scores).
 
 | mode | t | reps | ckpt | score | img_auroc_mean | img_auroc_max | img_auroc_top1 | img_ap_mean | img_ap_max | img_ap_top1 | px_auroc | px_ap | aupro |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| single | 0.1 | 1 | best | disc | 0.6486 | 0.7629 | 0.7632 | 0.7633 | 0.8315 | 0.8331 | 0.7863 | 0.1574 | 0.4704 |
-| single | 0.1 | 1 | best | latent_cos | 0.3652 | 0.4053 | 0.4079 | 0.5940 | 0.6310 | 0.6397 | 0.6918 | 0.0288 | 0.3767 |
-| single | 0.1 | 1 | best | pixel | 0.5294 | 0.6725 | 0.6651 | 0.7174 | 0.7999 | 0.7964 | 0.7184 | 0.1425 | 0.4976 |
+| single | 0.1 | 1 | best | disc | 0.6650 | 0.7481 | 0.7441 | 0.7733 | 0.8220 | 0.8209 | 0.7722 | 0.1461 | 0.4303 |
+| single | 0.1 | 1 | best | latent_cos | 0.4068 | 0.4493 | 0.3965 | 0.6105 | 0.6627 | 0.6302 | 0.7722 | 0.0445 | 0.4842 |
+| single | 0.1 | 1 | best | pixel | 0.5602 | 0.6699 | 0.6761 | 0.7456 | 0.7963 | 0.8093 | 0.7383 | 0.1472 | 0.5222 |
 
 ## Per-category
 
 | cat | mode | t | reps | ckpt | score | img_auroc_mean | img_auroc_max | img_auroc_top1 | img_ap_mean | img_ap_max | img_ap_top1 | px_auroc | px_ap | aupro |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| carpet | single | 0.1 | 1 | carpet_best.pt | pixel | 0.5237 | 0.5730 | 0.5618 | 0.7831 | 0.8014 | 0.7927 | 0.3676 | 0.0132 | 0.1052 |
-| carpet | single | 0.1 | 1 | carpet_best.pt | latent_cos | 0.3098 | 0.2099 | 0.2135 | 0.6826 | 0.6311 | 0.6274 | 0.7329 | 0.0317 | 0.4614 |
-| carpet | single | 0.1 | 1 | carpet_best.pt | disc | 0.9021 | 0.9406 | 0.9458 | 0.9688 | 0.9828 | 0.9852 | 0.7777 | 0.0691 | 0.5596 |
-| grid | single | 0.1 | 1 | grid_best.pt | pixel | 0.5865 | 0.7009 | 0.7569 | 0.7806 | 0.8674 | 0.8837 | 0.8130 | 0.0473 | 0.6173 |
-| grid | single | 0.1 | 1 | grid_best.pt | latent_cos | 0.3960 | 0.4570 | 0.5322 | 0.6648 | 0.6905 | 0.7459 | 0.5780 | 0.0077 | 0.1317 |
-| grid | single | 0.1 | 1 | grid_best.pt | disc | 0.5246 | 0.8881 | 0.8864 | 0.7227 | 0.9598 | 0.9586 | 0.8075 | 0.1060 | 0.5831 |
-| hazelnut | single | 0.1 | 1 | hazelnut_best.pt | pixel | 0.7350 | 0.9246 | 0.8882 | 0.8409 | 0.9618 | 0.9417 | 0.9637 | 0.5371 | 0.8979 |
-| hazelnut | single | 0.1 | 1 | hazelnut_best.pt | latent_cos | 0.4004 | 0.6007 | 0.5854 | 0.5736 | 0.7842 | 0.7671 | 0.7800 | 0.0474 | 0.4493 |
-| hazelnut | single | 0.1 | 1 | hazelnut_best.pt | disc | 0.7289 | 0.7818 | 0.7657 | 0.8329 | 0.8816 | 0.8688 | 0.9575 | 0.4232 | 0.7400 |
-| screw | single | 0.1 | 1 | screw_best.pt | pixel | 0.1638 | 0.6374 | 0.5860 | 0.5877 | 0.8442 | 0.8050 | 0.8290 | 0.0208 | 0.4745 |
-| screw | single | 0.1 | 1 | screw_best.pt | latent_cos | 0.5897 | 0.4837 | 0.4944 | 0.7933 | 0.7414 | 0.7473 | 0.9311 | 0.0182 | 0.7718 |
-| screw | single | 0.1 | 1 | screw_best.pt | disc | 0.5444 | 0.5626 | 0.5795 | 0.7595 | 0.7676 | 0.7776 | 0.6342 | 0.0032 | 0.1533 |
-| transistor | single | 0.1 | 1 | transistor_best.pt | pixel | 0.6383 | 0.5263 | 0.5325 | 0.5948 | 0.5247 | 0.5587 | 0.6185 | 0.0939 | 0.3931 |
-| transistor | single | 0.1 | 1 | transistor_best.pt | latent_cos | 0.1300 | 0.2754 | 0.2142 | 0.2559 | 0.3078 | 0.3109 | 0.4369 | 0.0389 | 0.0691 |
-| transistor | single | 0.1 | 1 | transistor_best.pt | disc | 0.5429 | 0.6417 | 0.6388 | 0.5327 | 0.5658 | 0.5755 | 0.7546 | 0.1854 | 0.3159 |
+| carpet | single | 0.1 | 1 | carpet_best.pt | pixel | 0.5128 | 0.5229 | 0.5461 | 0.7942 | 0.8023 | 0.8117 | 0.4202 | 0.0242 | 0.1318 |
+| carpet | single | 0.1 | 1 | carpet_best.pt | latent_cos | 0.5815 | 0.4908 | 0.3752 | 0.8163 | 0.7949 | 0.7293 | 0.9180 | 0.0955 | 0.7660 |
+| carpet | single | 0.1 | 1 | carpet_best.pt | disc | 0.9109 | 0.9430 | 0.9394 | 0.9712 | 0.9844 | 0.9835 | 0.7261 | 0.0420 | 0.4276 |
+| grid | single | 0.1 | 1 | grid_best.pt | pixel | 0.7076 | 0.7118 | 0.8212 | 0.8722 | 0.8792 | 0.9234 | 0.8478 | 0.0649 | 0.6777 |
+| grid | single | 0.1 | 1 | grid_best.pt | latent_cos | 0.3434 | 0.3317 | 0.3467 | 0.6403 | 0.6639 | 0.6705 | 0.7074 | 0.0113 | 0.2417 |
+| grid | single | 0.1 | 1 | grid_best.pt | disc | 0.5664 | 0.8563 | 0.8505 | 0.7600 | 0.9448 | 0.9411 | 0.7872 | 0.0838 | 0.5393 |
+| hazelnut | single | 0.1 | 1 | hazelnut_best.pt | pixel | 0.7536 | 0.9368 | 0.9021 | 0.8564 | 0.9674 | 0.9477 | 0.9656 | 0.5277 | 0.9073 |
+| hazelnut | single | 0.1 | 1 | hazelnut_best.pt | latent_cos | 0.3996 | 0.5671 | 0.4786 | 0.5697 | 0.7534 | 0.6520 | 0.8123 | 0.0530 | 0.4861 |
+| hazelnut | single | 0.1 | 1 | hazelnut_best.pt | disc | 0.7536 | 0.7779 | 0.7721 | 0.8568 | 0.8744 | 0.8693 | 0.9553 | 0.4124 | 0.7282 |
+| screw | single | 0.1 | 1 | screw_best.pt | pixel | 0.1931 | 0.6641 | 0.6104 | 0.6097 | 0.8648 | 0.8318 | 0.8361 | 0.0238 | 0.4983 |
+| screw | single | 0.1 | 1 | screw_best.pt | latent_cos | 0.5331 | 0.5880 | 0.5573 | 0.7549 | 0.7984 | 0.7871 | 0.9341 | 0.0191 | 0.7835 |
+| screw | single | 0.1 | 1 | screw_best.pt | disc | 0.5602 | 0.5462 | 0.5462 | 0.7656 | 0.7657 | 0.7699 | 0.6413 | 0.0033 | 0.1654 |
+| transistor | single | 0.1 | 1 | transistor_best.pt | pixel | 0.6338 | 0.5138 | 0.5008 | 0.5955 | 0.4679 | 0.5318 | 0.6218 | 0.0953 | 0.3959 |
+| transistor | single | 0.1 | 1 | transistor_best.pt | latent_cos | 0.1763 | 0.2687 | 0.2246 | 0.2714 | 0.3028 | 0.3122 | 0.4894 | 0.0436 | 0.1435 |
+| transistor | single | 0.1 | 1 | transistor_best.pt | disc | 0.5342 | 0.6171 | 0.6121 | 0.5132 | 0.5408 | 0.5405 | 0.7511 | 0.1892 | 0.2910 |

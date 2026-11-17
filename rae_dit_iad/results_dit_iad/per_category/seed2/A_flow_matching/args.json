@@ -5,7 +5,7 @@
   "mvtec_root": "/po1/rakhimov/datasets/mvtec_anomaly_detection",
   "out": "/home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/per_category/seed2",
   "categories": [
-    "hazelnut"
+    "transistor"
   ],
   "scope": "per_category",
   "ckpt_dir": "/po1/rakhimov/training/rae_dit_iad/per_category/seed2",

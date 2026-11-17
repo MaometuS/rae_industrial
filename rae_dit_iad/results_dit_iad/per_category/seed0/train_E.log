@@ -654,3 +654,1345 @@ target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/Im
     }
   ]
 }
+[train] fresh run: moved 6 files of the previous run to /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/previous_20261113-021744
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/carpet] 260 train / 20 val normal images (cats: carpet)
+[iad/carpet] batch 2 x 4 accumulation = effective 8
+[iad/carpet] encoder offloaded to CPU (latents cached)
+[iad/carpet] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/carpet] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/carpet] step 50/4000 loss_img=0.1400 loss_lat=0.0042 loss_total=0.1442 loss_seg=0.0385 lr_dit=0.0000 lr_dec=0.0000 (1.64s/step)
+[iad/carpet] step 100/4000 loss_img=0.1014 loss_lat=0.0014 loss_total=0.1027 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 150/4000 loss_img=0.0995 loss_lat=0.0007 loss_total=0.1002 loss_seg=0.0314 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 200/4000 loss_img=0.0991 loss_lat=0.0006 loss_total=0.0997 loss_seg=0.0284 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 250/4000 loss_img=0.0989 loss_lat=0.0006 loss_total=0.0995 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 250 val_img=0.0986 val_lat=0.0085 val_total=0.1072 val_seg=0.0300
+[iad/carpet] new best val_total=0.1072 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 300/4000 loss_img=0.0956 loss_lat=0.0007 loss_total=0.0963 loss_seg=0.0320 lr_dit=0.0001 lr_dec=0.0000 (3.22s/step)
+[iad/carpet] step 350/4000 loss_img=0.0907 loss_lat=0.0008 loss_total=0.0915 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 400/4000 loss_img=0.0887 loss_lat=0.0006 loss_total=0.0893 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 450/4000 loss_img=0.0871 loss_lat=0.0007 loss_total=0.0878 loss_seg=0.0305 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 500/4000 loss_img=0.0853 loss_lat=0.0008 loss_total=0.0861 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/carpet] step 500 val_img=0.0940 val_lat=0.0056 val_total=0.0996 val_seg=0.0296
+[iad/carpet] new best val_total=0.0996 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 550/4000 loss_img=0.0818 loss_lat=0.0007 loss_total=0.0825 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (2.91s/step)
+[iad/carpet] step 600/4000 loss_img=0.0782 loss_lat=0.0007 loss_total=0.0790 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.67s/step)
+[iad/carpet] step 650/4000 loss_img=0.0758 loss_lat=0.0006 loss_total=0.0764 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.92s/step)
+[iad/carpet] step 700/4000 loss_img=0.0744 loss_lat=0.0007 loss_total=0.0752 loss_seg=0.0300 lr_dit=0.0001 lr_dec=0.0000 (1.85s/step)
+[iad/carpet] step 750/4000 loss_img=0.0730 loss_lat=0.0006 loss_total=0.0735 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 750 val_img=0.0913 val_lat=0.0030 val_total=0.0943 val_seg=0.0297
+[iad/carpet] new best val_total=0.0943 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 800/4000 loss_img=0.0718 loss_lat=0.0007 loss_total=0.0725 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (2.75s/step)
+[iad/carpet] step 850/4000 loss_img=0.0712 loss_lat=0.0007 loss_total=0.0719 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 900/4000 loss_img=0.0701 loss_lat=0.0006 loss_total=0.0707 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 950/4000 loss_img=0.0695 loss_lat=0.0007 loss_total=0.0702 loss_seg=0.0280 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 1000/4000 loss_img=0.0697 loss_lat=0.0005 loss_total=0.0703 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 1000 val_img=0.0909 val_lat=0.0016 val_total=0.0924 val_seg=0.0299
+[iad/carpet] new best val_total=0.0924 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 1050/4000 loss_img=0.0692 loss_lat=0.0006 loss_total=0.0698 loss_seg=0.0253 lr_dit=0.0001 lr_dec=0.0000 (2.80s/step)
+[iad/carpet] step 1100/4000 loss_img=0.0688 loss_lat=0.0006 loss_total=0.0694 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/carpet] step 1150/4000 loss_img=0.0687 loss_lat=0.0006 loss_total=0.0693 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.66s/step)
+[iad/carpet] step 1200/4000 loss_img=0.0681 loss_lat=0.0006 loss_total=0.0687 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 1250/4000 loss_img=0.0675 loss_lat=0.0006 loss_total=0.0681 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 1250 val_img=0.0909 val_lat=0.0010 val_total=0.0919 val_seg=0.0298
+[iad/carpet] new best val_total=0.0919 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 1300/4000 loss_img=0.0672 loss_lat=0.0006 loss_total=0.0678 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.74s/step)
+[iad/carpet] step 1350/4000 loss_img=0.0670 loss_lat=0.0007 loss_total=0.0676 loss_seg=0.0284 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 1400/4000 loss_img=0.0663 loss_lat=0.0006 loss_total=0.0670 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.65s/step)
+[iad/carpet] step 1450/4000 loss_img=0.0659 loss_lat=0.0007 loss_total=0.0666 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 1500/4000 loss_img=0.0659 loss_lat=0.0007 loss_total=0.0666 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.80s/step)
+[iad/carpet] step 1500 val_img=0.0906 val_lat=0.0008 val_total=0.0914 val_seg=0.0297
+[iad/carpet] new best val_total=0.0914 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 1550/4000 loss_img=0.0656 loss_lat=0.0006 loss_total=0.0662 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (3.34s/step)
+[iad/carpet] step 1600/4000 loss_img=0.0651 loss_lat=0.0006 loss_total=0.0657 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 1650/4000 loss_img=0.0648 loss_lat=0.0006 loss_total=0.0654 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.66s/step)
+[iad/carpet] step 1700/4000 loss_img=0.0646 loss_lat=0.0007 loss_total=0.0653 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.80s/step)
+[iad/carpet] step 1750/4000 loss_img=0.0639 loss_lat=0.0007 loss_total=0.0646 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 1750 val_img=0.0923 val_lat=0.0008 val_total=0.0931 val_seg=0.0297
+[iad/carpet] step 1800/4000 loss_img=0.0638 loss_lat=0.0006 loss_total=0.0644 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (1.82s/step)
+[iad/carpet] step 1850/4000 loss_img=0.0637 loss_lat=0.0007 loss_total=0.0644 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.80s/step)
+[iad/carpet] step 1900/4000 loss_img=0.0629 loss_lat=0.0006 loss_total=0.0635 loss_seg=0.0248 lr_dit=0.0001 lr_dec=0.0000 (1.62s/step)
+[iad/carpet] step 1950/4000 loss_img=0.0629 loss_lat=0.0006 loss_total=0.0635 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/carpet] step 2000/4000 loss_img=0.0623 loss_lat=0.0007 loss_total=0.0629 loss_seg=0.0272 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 2000 val_img=0.0919 val_lat=0.0007 val_total=0.0926 val_seg=0.0297
+[iad/carpet] step 2050/4000 loss_img=0.0621 loss_lat=0.0006 loss_total=0.0628 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.81s/step)
+[iad/carpet] step 2100/4000 loss_img=0.0619 loss_lat=0.0007 loss_total=0.0626 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 2150/4000 loss_img=0.0612 loss_lat=0.0007 loss_total=0.0619 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.70s/step)
+[iad/carpet] step 2200/4000 loss_img=0.0612 loss_lat=0.0007 loss_total=0.0618 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/carpet] step 2250/4000 loss_img=0.0610 loss_lat=0.0007 loss_total=0.0617 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 2250 val_img=0.0927 val_lat=0.0007 val_total=0.0934 val_seg=0.0297
+[iad/carpet] step 2300/4000 loss_img=0.0604 loss_lat=0.0007 loss_total=0.0611 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (1.83s/step)
+[iad/carpet] step 2350/4000 loss_img=0.0604 loss_lat=0.0007 loss_total=0.0611 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 2400/4000 loss_img=0.0601 loss_lat=0.0007 loss_total=0.0608 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 2450/4000 loss_img=0.0599 loss_lat=0.0008 loss_total=0.0606 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/carpet] step 2500/4000 loss_img=0.0596 loss_lat=0.0007 loss_total=0.0603 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 2500 val_img=0.0935 val_lat=0.0007 val_total=0.0942 val_seg=0.0297
+[iad/carpet] step 2550/4000 loss_img=0.0593 loss_lat=0.0008 loss_total=0.0601 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.83s/step)
+[iad/carpet] step 2600/4000 loss_img=0.0592 loss_lat=0.0008 loss_total=0.0600 loss_seg=0.0295 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 2650/4000 loss_img=0.0588 loss_lat=0.0007 loss_total=0.0595 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 2700/4000 loss_img=0.0584 loss_lat=0.0007 loss_total=0.0591 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.69s/step)
+[iad/carpet] step 2750/4000 loss_img=0.0582 loss_lat=0.0008 loss_total=0.0590 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 2750 val_img=0.0942 val_lat=0.0007 val_total=0.0949 val_seg=0.0297
+[iad/carpet] step 2800/4000 loss_img=0.0583 loss_lat=0.0007 loss_total=0.0590 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.83s/step)
+[iad/carpet] step 2850/4000 loss_img=0.0581 loss_lat=0.0008 loss_total=0.0589 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 2900/4000 loss_img=0.0577 loss_lat=0.0007 loss_total=0.0584 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 2950/4000 loss_img=0.0575 loss_lat=0.0008 loss_total=0.0583 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.69s/step)
+[iad/carpet] step 3000/4000 loss_img=0.0572 loss_lat=0.0008 loss_total=0.0580 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3000 val_img=0.0943 val_lat=0.0007 val_total=0.0950 val_seg=0.0297
+[iad/carpet] step 3050/4000 loss_img=0.0572 loss_lat=0.0008 loss_total=0.0579 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (1.82s/step)
+[iad/carpet] step 3100/4000 loss_img=0.0569 loss_lat=0.0008 loss_total=0.0577 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3150/4000 loss_img=0.0566 loss_lat=0.0008 loss_total=0.0574 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 3200/4000 loss_img=0.0567 loss_lat=0.0007 loss_total=0.0574 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/carpet] step 3250/4000 loss_img=0.0563 loss_lat=0.0007 loss_total=0.0570 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 3250 val_img=0.0948 val_lat=0.0007 val_total=0.0955 val_seg=0.0297
+[iad/carpet] step 3300/4000 loss_img=0.0562 loss_lat=0.0008 loss_total=0.0571 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.84s/step)
+[iad/carpet] step 3350/4000 loss_img=0.0562 loss_lat=0.0008 loss_total=0.0570 loss_seg=0.0278 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3400/4000 loss_img=0.0558 loss_lat=0.0008 loss_total=0.0566 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 3450/4000 loss_img=0.0558 loss_lat=0.0007 loss_total=0.0565 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 3500/4000 loss_img=0.0555 loss_lat=0.0007 loss_total=0.0562 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/carpet] step 3500 val_img=0.0949 val_lat=0.0007 val_total=0.0956 val_seg=0.0297
+[iad/carpet] step 3550/4000 loss_img=0.0553 loss_lat=0.0008 loss_total=0.0561 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (1.85s/step)
+[iad/carpet] step 3600/4000 loss_img=0.0554 loss_lat=0.0008 loss_total=0.0562 loss_seg=0.0271 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 3650/4000 loss_img=0.0553 loss_lat=0.0008 loss_total=0.0561 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 3700/4000 loss_img=0.0552 loss_lat=0.0008 loss_total=0.0560 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/carpet] step 3750/4000 loss_img=0.0554 loss_lat=0.0009 loss_total=0.0563 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3750 val_img=0.0955 val_lat=0.0007 val_total=0.0962 val_seg=0.0297
+[iad/carpet] step 3800/4000 loss_img=0.0549 loss_lat=0.0009 loss_total=0.0558 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (1.82s/step)
+[iad/carpet] step 3850/4000 loss_img=0.0548 loss_lat=0.0008 loss_total=0.0555 loss_seg=0.0262 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 3900/4000 loss_img=0.0546 loss_lat=0.0008 loss_total=0.0555 loss_seg=0.0292 lr_dit=0.0000 lr_dec=0.0000 (1.80s/step)
+[iad/carpet] step 3950/4000 loss_img=0.0548 loss_lat=0.0008 loss_total=0.0556 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/carpet] step 4000/4000 loss_img=0.0544 loss_lat=0.0008 loss_total=0.0552 loss_seg=0.0266 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 4000 val_img=0.0959 val_lat=0.0007 val_total=0.0966 val_seg=0.0297
+[iad/carpet] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.09144483208656311
+[iad/carpet] eval-only checkpoint carpet_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "carpet",
+      "steps": 4000,
+      "best_val": 0.09144483208656311,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt"
+    }
+  ]
+}
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/grid] 244 train / 20 val normal images (cats: grid)
+[iad/grid] batch 2 x 4 accumulation = effective 8
+[iad/grid] encoder offloaded to CPU (latents cached)
+[iad/grid] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/grid] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/grid] step 50/4000 loss_img=0.0899 loss_lat=0.0042 loss_total=0.0941 loss_seg=0.0379 lr_dit=0.0000 lr_dec=0.0000 (1.70s/step)
+[iad/grid] step 100/4000 loss_img=0.0641 loss_lat=0.0016 loss_total=0.0657 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.67s/step)
+[iad/grid] step 150/4000 loss_img=0.0579 loss_lat=0.0011 loss_total=0.0590 loss_seg=0.0312 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 200/4000 loss_img=0.0516 loss_lat=0.0008 loss_total=0.0525 loss_seg=0.0286 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 250/4000 loss_img=0.0507 loss_lat=0.0007 loss_total=0.0514 loss_seg=0.0269 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 250 val_img=0.0509 val_lat=0.0089 val_total=0.0597 val_seg=0.0300
+[iad/grid] new best val_total=0.0597 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 300/4000 loss_img=0.0459 loss_lat=0.0008 loss_total=0.0467 loss_seg=0.0319 lr_dit=0.0001 lr_dec=0.0000 (3.15s/step)
+[iad/grid] step 350/4000 loss_img=0.0439 loss_lat=0.0093 loss_total=0.0532 loss_seg=0.0277 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 400/4000 loss_img=0.0437 loss_lat=0.0006 loss_total=0.0443 loss_seg=0.0259 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 450/4000 loss_img=0.0413 loss_lat=0.0007 loss_total=0.0420 loss_seg=0.0306 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 500/4000 loss_img=0.0384 loss_lat=0.0007 loss_total=0.0391 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 500 val_img=0.0429 val_lat=0.0046 val_total=0.0475 val_seg=0.0296
+[iad/grid] new best val_total=0.0475 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 550/4000 loss_img=0.0383 loss_lat=0.0008 loss_total=0.0390 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (2.86s/step)
+[iad/grid] step 600/4000 loss_img=0.0365 loss_lat=0.0007 loss_total=0.0372 loss_seg=0.0302 lr_dit=0.0001 lr_dec=0.0000 (1.67s/step)
+[iad/grid] step 650/4000 loss_img=0.0347 loss_lat=0.0006 loss_total=0.0352 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.92s/step)
+[iad/grid] step 700/4000 loss_img=0.0340 loss_lat=0.0007 loss_total=0.0346 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.92s/step)
+[iad/grid] step 750/4000 loss_img=0.0335 loss_lat=0.0005 loss_total=0.0340 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 750 val_img=0.0400 val_lat=0.0017 val_total=0.0417 val_seg=0.0297
+[iad/grid] new best val_total=0.0417 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 800/4000 loss_img=0.0323 loss_lat=0.0006 loss_total=0.0329 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (3.27s/step)
+[iad/grid] step 850/4000 loss_img=0.0316 loss_lat=0.0006 loss_total=0.0322 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 900/4000 loss_img=0.0314 loss_lat=0.0006 loss_total=0.0320 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/grid] step 950/4000 loss_img=0.0310 loss_lat=0.0006 loss_total=0.0316 loss_seg=0.0280 lr_dit=0.0001 lr_dec=0.0000 (1.80s/step)
+[iad/grid] step 1000/4000 loss_img=0.0296 loss_lat=0.0005 loss_total=0.0301 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/grid] step 1000 val_img=0.0374 val_lat=0.0010 val_total=0.0384 val_seg=0.0298
+[iad/grid] new best val_total=0.0384 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 1050/4000 loss_img=0.0297 loss_lat=0.0006 loss_total=0.0302 loss_seg=0.0253 lr_dit=0.0001 lr_dec=0.0000 (3.38s/step)
+[iad/grid] step 1100/4000 loss_img=0.0286 loss_lat=0.0006 loss_total=0.0292 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/grid] step 1150/4000 loss_img=0.0290 loss_lat=0.0006 loss_total=0.0296 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 1200/4000 loss_img=0.0278 loss_lat=0.0006 loss_total=0.0284 loss_seg=0.0282 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 1250/4000 loss_img=0.0273 loss_lat=0.0006 loss_total=0.0279 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 1250 val_img=0.0366 val_lat=0.0008 val_total=0.0375 val_seg=0.0297
+[iad/grid] new best val_total=0.0375 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 1300/4000 loss_img=0.0269 loss_lat=0.0006 loss_total=0.0275 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.78s/step)
+[iad/grid] step 1350/4000 loss_img=0.0265 loss_lat=0.0007 loss_total=0.0271 loss_seg=0.0284 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/grid] step 1400/4000 loss_img=0.0262 loss_lat=0.0006 loss_total=0.0268 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.80s/step)
+[iad/grid] step 1450/4000 loss_img=0.0259 loss_lat=0.0007 loss_total=0.0265 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 1500/4000 loss_img=0.0258 loss_lat=0.0007 loss_total=0.0265 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 1500 val_img=0.0350 val_lat=0.0008 val_total=0.0357 val_seg=0.0296
+[iad/grid] new best val_total=0.0357 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 1550/4000 loss_img=0.0253 loss_lat=0.0006 loss_total=0.0259 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (2.72s/step)
+[iad/grid] step 1600/4000 loss_img=0.0248 loss_lat=0.0006 loss_total=0.0254 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 1650/4000 loss_img=0.0244 loss_lat=0.0006 loss_total=0.0250 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/grid] step 1700/4000 loss_img=0.0245 loss_lat=0.0007 loss_total=0.0252 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 1750/4000 loss_img=0.0244 loss_lat=0.0007 loss_total=0.0251 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 1750 val_img=0.0337 val_lat=0.0007 val_total=0.0344 val_seg=0.0296
+[iad/grid] new best val_total=0.0344 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 1800/4000 loss_img=0.0242 loss_lat=0.0006 loss_total=0.0248 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (2.73s/step)
+[iad/grid] step 1850/4000 loss_img=0.0237 loss_lat=0.0106 loss_total=0.0343 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 1900/4000 loss_img=0.0237 loss_lat=0.0006 loss_total=0.0243 loss_seg=0.0248 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 1950/4000 loss_img=0.0234 loss_lat=0.0006 loss_total=0.0239 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/grid] step 2000/4000 loss_img=0.0231 loss_lat=0.0006 loss_total=0.0237 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 2000 val_img=0.0333 val_lat=0.0007 val_total=0.0340 val_seg=0.0297
+[iad/grid] new best val_total=0.0340 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 2050/4000 loss_img=0.0229 loss_lat=0.0006 loss_total=0.0235 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (3.28s/step)
+[iad/grid] step 2100/4000 loss_img=0.0227 loss_lat=0.0007 loss_total=0.0234 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 2150/4000 loss_img=0.0230 loss_lat=0.0007 loss_total=0.0236 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 2200/4000 loss_img=0.0224 loss_lat=0.0006 loss_total=0.0230 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 2250/4000 loss_img=0.0224 loss_lat=0.0007 loss_total=0.0231 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 2250 val_img=0.0344 val_lat=0.0007 val_total=0.0351 val_seg=0.0297
+[iad/grid] step 2300/4000 loss_img=0.0226 loss_lat=0.0007 loss_total=0.0233 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2350/4000 loss_img=0.0223 loss_lat=0.0006 loss_total=0.0230 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/grid] step 2400/4000 loss_img=0.0222 loss_lat=0.0006 loss_total=0.0228 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 2450/4000 loss_img=0.0218 loss_lat=0.0007 loss_total=0.0226 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 2500/4000 loss_img=0.0218 loss_lat=0.0007 loss_total=0.0225 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 2500 val_img=0.0328 val_lat=0.0007 val_total=0.0335 val_seg=0.0296
+[iad/grid] new best val_total=0.0335 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 2550/4000 loss_img=0.0215 loss_lat=0.0007 loss_total=0.0222 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (3.78s/step)
+[iad/grid] step 2600/4000 loss_img=0.0213 loss_lat=0.0007 loss_total=0.0220 loss_seg=0.0295 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 2650/4000 loss_img=0.0215 loss_lat=0.0006 loss_total=0.0221 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2700/4000 loss_img=0.0212 loss_lat=0.0007 loss_total=0.0218 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/grid] step 2750/4000 loss_img=0.0211 loss_lat=0.0007 loss_total=0.0218 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/grid] step 2750 val_img=0.0326 val_lat=0.0007 val_total=0.0333 val_seg=0.0297
+[iad/grid] new best val_total=0.0333 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 2800/4000 loss_img=0.0210 loss_lat=0.0007 loss_total=0.0217 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (3.15s/step)
+[iad/grid] step 2850/4000 loss_img=0.0207 loss_lat=0.0007 loss_total=0.0214 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 2900/4000 loss_img=0.0208 loss_lat=0.0006 loss_total=0.0214 loss_seg=0.0265 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2950/4000 loss_img=0.0208 loss_lat=0.0007 loss_total=0.0215 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 3000/4000 loss_img=0.0207 loss_lat=0.0007 loss_total=0.0214 loss_seg=0.0294 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 3000 val_img=0.0327 val_lat=0.0007 val_total=0.0334 val_seg=0.0297
+[iad/grid] step 3050/4000 loss_img=0.0204 loss_lat=0.0007 loss_total=0.0211 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (1.83s/step)
+[iad/grid] step 3100/4000 loss_img=0.0204 loss_lat=0.0007 loss_total=0.0211 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 3150/4000 loss_img=0.0203 loss_lat=0.0007 loss_total=0.0209 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 3200/4000 loss_img=0.0200 loss_lat=0.0006 loss_total=0.0206 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 3250/4000 loss_img=0.0200 loss_lat=0.0006 loss_total=0.0206 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 3250 val_img=0.0325 val_lat=0.0007 val_total=0.0332 val_seg=0.0297
+[iad/grid] new best val_total=0.0332 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 3300/4000 loss_img=0.0200 loss_lat=0.0007 loss_total=0.0207 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (2.79s/step)
+[iad/grid] step 3350/4000 loss_img=0.0200 loss_lat=0.0007 loss_total=0.0207 loss_seg=0.0278 lr_dit=0.0000 lr_dec=0.0000 (1.71s/step)
+[iad/grid] step 3400/4000 loss_img=0.0200 loss_lat=0.0007 loss_total=0.0206 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 3450/4000 loss_img=0.0199 loss_lat=0.0006 loss_total=0.0206 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 3500/4000 loss_img=0.0197 loss_lat=0.0006 loss_total=0.0203 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 3500 val_img=0.0322 val_lat=0.0007 val_total=0.0328 val_seg=0.0296
+[iad/grid] new best val_total=0.0328 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 3550/4000 loss_img=0.0196 loss_lat=0.0007 loss_total=0.0203 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (2.80s/step)
+[iad/grid] step 3600/4000 loss_img=0.0196 loss_lat=0.0007 loss_total=0.0203 loss_seg=0.0270 lr_dit=0.0000 lr_dec=0.0000 (1.68s/step)
+[iad/grid] step 3650/4000 loss_img=0.0194 loss_lat=0.0007 loss_total=0.0201 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.69s/step)
+[iad/grid] step 3700/4000 loss_img=0.0195 loss_lat=0.0007 loss_total=0.0202 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.70s/step)
+[iad/grid] step 3750/4000 loss_img=0.0194 loss_lat=0.0007 loss_total=0.0201 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 3750 val_img=0.0321 val_lat=0.0007 val_total=0.0328 val_seg=0.0296
+[iad/grid] new best val_total=0.0328 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 3800/4000 loss_img=0.0195 loss_lat=0.0007 loss_total=0.0202 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (2.72s/step)
+[iad/grid] step 3850/4000 loss_img=0.0193 loss_lat=0.0006 loss_total=0.0199 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 3900/4000 loss_img=0.0193 loss_lat=0.0007 loss_total=0.0200 loss_seg=0.0292 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 3950/4000 loss_img=0.0193 loss_lat=0.0006 loss_total=0.0199 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.70s/step)
+[iad/grid] step 4000/4000 loss_img=0.0192 loss_lat=0.0007 loss_total=0.0198 loss_seg=0.0266 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 4000 val_img=0.0319 val_lat=0.0007 val_total=0.0326 val_seg=0.0296
+[iad/grid] new best val_total=0.0326 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.032553397864103314
+[iad/grid] eval-only checkpoint grid_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "grid",
+      "steps": 4000,
+      "best_val": 0.032553397864103314,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt"
+    }
+  ]
+}
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/hazelnut] 371 train / 20 val normal images (cats: hazelnut)
+[iad/hazelnut] batch 2 x 4 accumulation = effective 8
+[iad/hazelnut] encoder offloaded to CPU (latents cached)
+[iad/hazelnut] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/hazelnut] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/hazelnut] step 50/4000 loss_img=0.0626 loss_lat=0.0050 loss_total=0.0677 loss_seg=0.0372 lr_dit=0.0000 lr_dec=0.0000 (1.71s/step)
+[iad/hazelnut] step 100/4000 loss_img=0.0186 loss_lat=0.0014 loss_total=0.0200 loss_seg=0.0300 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 150/4000 loss_img=0.0155 loss_lat=0.0010 loss_total=0.0165 loss_seg=0.0314 lr_dit=0.0000 lr_dec=0.0000 (1.66s/step)
+[iad/hazelnut] step 200/4000 loss_img=0.0144 loss_lat=0.0007 loss_total=0.0152 loss_seg=0.0286 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 250/4000 loss_img=0.0124 loss_lat=0.0006 loss_total=0.0131 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (1.82s/step)
+[iad/hazelnut] step 250 val_img=0.0129 val_lat=0.0087 val_total=0.0216 val_seg=0.0304
+[iad/hazelnut] new best val_total=0.0216 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 300/4000 loss_img=0.0127 loss_lat=0.0007 loss_total=0.0134 loss_seg=0.0320 lr_dit=0.0001 lr_dec=0.0000 (3.37s/step)
+[iad/hazelnut] step 350/4000 loss_img=0.0116 loss_lat=0.0006 loss_total=0.0123 loss_seg=0.0277 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 400/4000 loss_img=0.0113 loss_lat=0.0006 loss_total=0.0119 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 450/4000 loss_img=0.0111 loss_lat=0.0007 loss_total=0.0118 loss_seg=0.0305 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 500/4000 loss_img=0.0106 loss_lat=0.0007 loss_total=0.0113 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 500 val_img=0.0118 val_lat=0.0051 val_total=0.0170 val_seg=0.0297
+[iad/hazelnut] new best val_total=0.0170 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 550/4000 loss_img=0.0103 loss_lat=0.0006 loss_total=0.0109 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (3.37s/step)
+[iad/hazelnut] step 600/4000 loss_img=0.0101 loss_lat=0.0007 loss_total=0.0107 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 650/4000 loss_img=0.0097 loss_lat=0.0005 loss_total=0.0102 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 700/4000 loss_img=0.0096 loss_lat=0.0007 loss_total=0.0103 loss_seg=0.0300 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 750/4000 loss_img=0.0094 loss_lat=0.0005 loss_total=0.0099 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 750 val_img=0.0116 val_lat=0.0025 val_total=0.0141 val_seg=0.0298
+[iad/hazelnut] new best val_total=0.0141 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 800/4000 loss_img=0.0093 loss_lat=0.0006 loss_total=0.0099 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (2.80s/step)
+[iad/hazelnut] step 850/4000 loss_img=0.0093 loss_lat=0.0006 loss_total=0.0099 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 900/4000 loss_img=0.0090 loss_lat=0.0006 loss_total=0.0096 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 950/4000 loss_img=0.0089 loss_lat=0.0006 loss_total=0.0095 loss_seg=0.0279 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 1000/4000 loss_img=0.0088 loss_lat=0.0005 loss_total=0.0093 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 1000 val_img=0.0113 val_lat=0.0014 val_total=0.0127 val_seg=0.0299
+[iad/hazelnut] new best val_total=0.0127 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 1050/4000 loss_img=0.0087 loss_lat=0.0006 loss_total=0.0092 loss_seg=0.0253 lr_dit=0.0001 lr_dec=0.0000 (2.74s/step)
+[iad/hazelnut] step 1100/4000 loss_img=0.0088 loss_lat=0.0014 loss_total=0.0103 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 1150/4000 loss_img=0.0085 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 1200/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 1250/4000 loss_img=0.0086 loss_lat=0.0006 loss_total=0.0092 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 1250 val_img=0.0112 val_lat=0.0010 val_total=0.0122 val_seg=0.0298
+[iad/hazelnut] new best val_total=0.0122 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 1300/4000 loss_img=0.0085 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.80s/step)
+[iad/hazelnut] step 1350/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 1400/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 1450/4000 loss_img=0.0082 loss_lat=0.0007 loss_total=0.0089 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 1500/4000 loss_img=0.0081 loss_lat=0.0007 loss_total=0.0088 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 1500 val_img=0.0112 val_lat=0.0008 val_total=0.0120 val_seg=0.0297
+[iad/hazelnut] new best val_total=0.0120 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 1550/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (2.77s/step)
+[iad/hazelnut] step 1600/4000 loss_img=0.0081 loss_lat=0.0006 loss_total=0.0087 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 1650/4000 loss_img=0.0080 loss_lat=0.0006 loss_total=0.0086 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 1700/4000 loss_img=0.0080 loss_lat=0.0007 loss_total=0.0087 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 1750/4000 loss_img=0.0079 loss_lat=0.0007 loss_total=0.0086 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.80s/step)
+[iad/hazelnut] step 1750 val_img=0.0112 val_lat=0.0007 val_total=0.0120 val_seg=0.0297
+[iad/hazelnut] new best val_total=0.0120 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 1800/4000 loss_img=0.0078 loss_lat=0.0006 loss_total=0.0084 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (2.76s/step)
+[iad/hazelnut] step 1850/4000 loss_img=0.0079 loss_lat=0.0007 loss_total=0.0086 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 1900/4000 loss_img=0.0079 loss_lat=0.0006 loss_total=0.0085 loss_seg=0.0249 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 1950/4000 loss_img=0.0079 loss_lat=0.0006 loss_total=0.0085 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 2000/4000 loss_img=0.0079 loss_lat=0.0006 loss_total=0.0085 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 2000 val_img=0.0119 val_lat=0.0007 val_total=0.0126 val_seg=0.0297
+[iad/hazelnut] step 2050/4000 loss_img=0.0078 loss_lat=0.0006 loss_total=0.0084 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 2100/4000 loss_img=0.0077 loss_lat=0.0007 loss_total=0.0084 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 2150/4000 loss_img=0.0076 loss_lat=0.0006 loss_total=0.0083 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 2200/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 2250/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 2250 val_img=0.0112 val_lat=0.0007 val_total=0.0119 val_seg=0.0298
+[iad/hazelnut] new best val_total=0.0119 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 2300/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (3.21s/step)
+[iad/hazelnut] step 2350/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 2400/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 2450/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 2500/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0081 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 2500 val_img=0.0115 val_lat=0.0007 val_total=0.0121 val_seg=0.0297
+[iad/hazelnut] step 2550/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 2600/4000 loss_img=0.0073 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0294 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 2650/4000 loss_img=0.0074 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 2700/4000 loss_img=0.0074 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 2750/4000 loss_img=0.0072 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.81s/step)
+[iad/hazelnut] step 2750 val_img=0.0113 val_lat=0.0007 val_total=0.0120 val_seg=0.0298
+[iad/hazelnut] step 2800/4000 loss_img=0.0073 loss_lat=0.0006 loss_total=0.0080 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 2850/4000 loss_img=0.0073 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 2900/4000 loss_img=0.0072 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0265 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 2950/4000 loss_img=0.0072 loss_lat=0.0007 loss_total=0.0078 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.71s/step)
+[iad/hazelnut] step 3000/4000 loss_img=0.0073 loss_lat=0.0063 loss_total=0.0136 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 3000 val_img=0.0113 val_lat=0.0007 val_total=0.0120 val_seg=0.0297
+[iad/hazelnut] step 3050/4000 loss_img=0.0072 loss_lat=0.1926 loss_total=0.1998 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 3100/4000 loss_img=0.0072 loss_lat=0.0007 loss_total=0.0079 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 3150/4000 loss_img=0.0072 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 3200/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 3250/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 3250 val_img=0.0114 val_lat=0.0007 val_total=0.0121 val_seg=0.0297
+[iad/hazelnut] step 3300/4000 loss_img=0.0071 loss_lat=0.0007 loss_total=0.0078 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 3350/4000 loss_img=0.0071 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0278 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 3400/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 3450/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 3500/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 3500 val_img=0.0114 val_lat=0.0007 val_total=0.0120 val_seg=0.0297
+[iad/hazelnut] step 3550/4000 loss_img=0.0071 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 3600/4000 loss_img=0.0070 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0271 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 3650/4000 loss_img=0.0070 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 3700/4000 loss_img=0.0069 loss_lat=0.0007 loss_total=0.0076 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 3750/4000 loss_img=0.0070 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 3750 val_img=0.0114 val_lat=0.0007 val_total=0.0121 val_seg=0.0297
+[iad/hazelnut] step 3800/4000 loss_img=0.0069 loss_lat=0.0007 loss_total=0.0076 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/hazelnut] step 3850/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 3900/4000 loss_img=0.0070 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0292 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 3950/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.80s/step)
+[iad/hazelnut] step 4000/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 4000 val_img=0.0114 val_lat=0.0007 val_total=0.0121 val_seg=0.0297
+[iad/hazelnut] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.011873399652540684
+[iad/hazelnut] eval-only checkpoint hazelnut_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "hazelnut",
+      "steps": 4000,
+      "best_val": 0.011873399652540684,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt"
+    }
+  ]
+}
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/screw] 300 train / 20 val normal images (cats: screw)
+[iad/screw] batch 2 x 4 accumulation = effective 8
+[iad/screw] encoder offloaded to CPU (latents cached)
+[iad/screw] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/screw] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/screw] step 50/4000 loss_img=0.1430 loss_lat=0.0046 loss_total=0.1476 loss_seg=0.0380 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 100/4000 loss_img=0.0244 loss_lat=0.0013 loss_total=0.0257 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.97s/step)
+[iad/screw] step 150/4000 loss_img=0.0218 loss_lat=0.0009 loss_total=0.0227 loss_seg=0.0314 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/screw] step 200/4000 loss_img=0.0213 loss_lat=0.0008 loss_total=0.0221 loss_seg=0.0286 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/screw] step 250/4000 loss_img=0.0186 loss_lat=0.0007 loss_total=0.0193 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/screw] step 250 val_img=0.0269 val_lat=0.0089 val_total=0.0358 val_seg=0.0300
+[iad/screw] new best val_total=0.0358 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 300/4000 loss_img=0.0162 loss_lat=0.0008 loss_total=0.0170 loss_seg=0.0320 lr_dit=0.0001 lr_dec=0.0000 (2.83s/step)
+[iad/screw] step 350/4000 loss_img=0.0152 loss_lat=0.0007 loss_total=0.0158 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 400/4000 loss_img=0.0152 loss_lat=0.0006 loss_total=0.0158 loss_seg=0.0259 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/screw] step 450/4000 loss_img=0.0148 loss_lat=0.0007 loss_total=0.0155 loss_seg=0.0305 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 500/4000 loss_img=0.0136 loss_lat=0.0007 loss_total=0.0143 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 500 val_img=0.0191 val_lat=0.0052 val_total=0.0243 val_seg=0.0296
+[iad/screw] new best val_total=0.0243 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 550/4000 loss_img=0.0127 loss_lat=0.0006 loss_total=0.0134 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (2.77s/step)
+[iad/screw] step 600/4000 loss_img=0.0113 loss_lat=0.0007 loss_total=0.0120 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/screw] step 650/4000 loss_img=0.0115 loss_lat=0.0005 loss_total=0.0121 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 700/4000 loss_img=0.0116 loss_lat=0.0007 loss_total=0.0123 loss_seg=0.0300 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/screw] step 750/4000 loss_img=0.0109 loss_lat=0.0005 loss_total=0.0114 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 750 val_img=0.0189 val_lat=0.0029 val_total=0.0218 val_seg=0.0298
+[iad/screw] new best val_total=0.0218 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 800/4000 loss_img=0.0103 loss_lat=0.0006 loss_total=0.0109 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (3.64s/step)
+[iad/screw] step 850/4000 loss_img=0.0102 loss_lat=0.0006 loss_total=0.0108 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 900/4000 loss_img=0.0098 loss_lat=0.0006 loss_total=0.0104 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 950/4000 loss_img=0.0102 loss_lat=0.0006 loss_total=0.0108 loss_seg=0.0279 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 1000/4000 loss_img=0.0099 loss_lat=0.0005 loss_total=0.0104 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 1000 val_img=0.0192 val_lat=0.0019 val_total=0.0211 val_seg=0.0299
+[iad/screw] new best val_total=0.0211 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 1050/4000 loss_img=0.0095 loss_lat=0.0005 loss_total=0.0101 loss_seg=0.0253 lr_dit=0.0001 lr_dec=0.0000 (3.15s/step)
+[iad/screw] step 1100/4000 loss_img=0.0093 loss_lat=0.0005 loss_total=0.0099 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 1150/4000 loss_img=0.0090 loss_lat=0.0006 loss_total=0.0096 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 1200/4000 loss_img=0.0092 loss_lat=0.0006 loss_total=0.0098 loss_seg=0.0282 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 1250/4000 loss_img=0.0094 loss_lat=0.0006 loss_total=0.0100 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 1250 val_img=0.0184 val_lat=0.0014 val_total=0.0198 val_seg=0.0298
+[iad/screw] new best val_total=0.0198 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 1300/4000 loss_img=0.0090 loss_lat=0.0005 loss_total=0.0095 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.77s/step)
+[iad/screw] step 1350/4000 loss_img=0.0088 loss_lat=0.0006 loss_total=0.0094 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/screw] step 1400/4000 loss_img=0.0088 loss_lat=0.0006 loss_total=0.0093 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.83s/step)
+[iad/screw] step 1450/4000 loss_img=0.0087 loss_lat=0.1125 loss_total=0.1213 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.91s/step)
+[iad/screw] step 1500/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0090 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.83s/step)
+[iad/screw] step 1500 val_img=0.0176 val_lat=0.0011 val_total=0.0187 val_seg=0.0297
+[iad/screw] new best val_total=0.0187 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 1550/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0090 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (2.80s/step)
+[iad/screw] step 1600/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 1650/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/screw] step 1700/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 1750/4000 loss_img=0.0080 loss_lat=0.0007 loss_total=0.0087 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 1750 val_img=0.0166 val_lat=0.0009 val_total=0.0175 val_seg=0.0297
+[iad/screw] new best val_total=0.0175 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 1800/4000 loss_img=0.0080 loss_lat=0.0005 loss_total=0.0085 loss_seg=0.0257 lr_dit=0.0001 lr_dec=0.0000 (2.88s/step)
+[iad/screw] step 1850/4000 loss_img=0.0081 loss_lat=0.0006 loss_total=0.0087 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 1900/4000 loss_img=0.0082 loss_lat=0.0467 loss_total=0.0549 loss_seg=0.0248 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 1950/4000 loss_img=0.0081 loss_lat=0.0005 loss_total=0.0086 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 2000/4000 loss_img=0.0081 loss_lat=0.0006 loss_total=0.0087 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 2000 val_img=0.0174 val_lat=0.0008 val_total=0.0182 val_seg=0.0298
+[iad/screw] step 2050/4000 loss_img=0.0078 loss_lat=0.0006 loss_total=0.0083 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.81s/step)
+[iad/screw] step 2100/4000 loss_img=0.0077 loss_lat=0.0006 loss_total=0.0083 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 2150/4000 loss_img=0.0077 loss_lat=0.0006 loss_total=0.0083 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 2200/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.69s/step)
+[iad/screw] step 2250/4000 loss_img=0.0076 loss_lat=0.0006 loss_total=0.0082 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/screw] step 2250 val_img=0.0170 val_lat=0.0008 val_total=0.0178 val_seg=0.0298
+[iad/screw] step 2300/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (1.81s/step)
+[iad/screw] step 2350/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/screw] step 2400/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0080 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.70s/step)
+[iad/screw] step 2450/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.68s/step)
+[iad/screw] step 2500/4000 loss_img=0.0074 loss_lat=0.0006 loss_total=0.0080 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.71s/step)
+[iad/screw] step 2500 val_img=0.0168 val_lat=0.0007 val_total=0.0176 val_seg=0.0297
+[iad/screw] step 2550/4000 loss_img=0.0074 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/screw] step 2600/4000 loss_img=0.0073 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0295 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 2650/4000 loss_img=0.0073 loss_lat=0.0006 loss_total=0.0079 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 2700/4000 loss_img=0.0072 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.68s/step)
+[iad/screw] step 2750/4000 loss_img=0.0073 loss_lat=0.0007 loss_total=0.0079 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/screw] step 2750 val_img=0.0170 val_lat=0.0007 val_total=0.0177 val_seg=0.0298
+[iad/screw] step 2800/4000 loss_img=0.0072 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.83s/step)
+[iad/screw] step 2850/4000 loss_img=0.0072 loss_lat=0.0007 loss_total=0.0078 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 2900/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/screw] step 2950/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.65s/step)
+[iad/screw] step 3000/4000 loss_img=0.0071 loss_lat=0.0007 loss_total=0.0078 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/screw] step 3000 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/screw] new best val_total=0.0173 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 3050/4000 loss_img=0.0070 loss_lat=0.0006 loss_total=0.0076 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (2.77s/step)
+[iad/screw] step 3100/4000 loss_img=0.0070 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/screw] step 3150/4000 loss_img=0.0070 loss_lat=0.0006 loss_total=0.0076 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 3200/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/screw] step 3250/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.81s/step)
+[iad/screw] step 3250 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/screw] new best val_total=0.0173 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 3300/4000 loss_img=0.0069 loss_lat=0.0007 loss_total=0.0076 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (3.47s/step)
+[iad/screw] step 3350/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0277 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 3400/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/screw] step 3450/4000 loss_img=0.0068 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.83s/step)
+[iad/screw] step 3500/4000 loss_img=0.0068 loss_lat=0.0005 loss_total=0.0074 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 3500 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/screw] step 3550/4000 loss_img=0.0068 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (1.84s/step)
+[iad/screw] step 3600/4000 loss_img=0.0067 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0271 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 3650/4000 loss_img=0.0068 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 3700/4000 loss_img=0.0068 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 3750/4000 loss_img=0.0068 loss_lat=0.0007 loss_total=0.0074 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 3750 val_img=0.0167 val_lat=0.0007 val_total=0.0174 val_seg=0.0297
+[iad/screw] step 3800/4000 loss_img=0.0068 loss_lat=0.0007 loss_total=0.0075 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (1.82s/step)
+[iad/screw] step 3850/4000 loss_img=0.0067 loss_lat=0.0006 loss_total=0.0073 loss_seg=0.0262 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 3900/4000 loss_img=0.0067 loss_lat=0.0007 loss_total=0.0073 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 3950/4000 loss_img=0.0067 loss_lat=0.0006 loss_total=0.0073 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/screw] step 4000/4000 loss_img=0.0067 loss_lat=0.0006 loss_total=0.0073 loss_seg=0.0266 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 4000 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/screw] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.017261624708771704
+[iad/screw] eval-only checkpoint screw_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "screw",
+      "steps": 4000,
+      "best_val": 0.017261624708771704,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt"
+    }
+  ]
+}
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/transistor] 193 train / 20 val normal images (cats: transistor)
+[iad/transistor] batch 2 x 4 accumulation = effective 8
+[iad/transistor] encoder offloaded to CPU (latents cached)
+[iad/transistor] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/transistor] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/transistor] step 50/4000 loss_img=0.0908 loss_lat=0.0062 loss_total=0.0971 loss_seg=0.0365 lr_dit=0.0000 lr_dec=0.0000 (1.84s/step)
+[iad/transistor] step 100/4000 loss_img=0.0290 loss_lat=0.0012 loss_total=0.0302 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.80s/step)
+[iad/transistor] step 150/4000 loss_img=0.0245 loss_lat=0.0008 loss_total=0.0253 loss_seg=0.0314 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 200/4000 loss_img=0.0219 loss_lat=0.0007 loss_total=0.0226 loss_seg=0.0286 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 250/4000 loss_img=0.0198 loss_lat=0.0006 loss_total=0.0204 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (1.70s/step)
+[iad/transistor] step 250 val_img=0.0229 val_lat=0.0094 val_total=0.0322 val_seg=0.0300
+[iad/transistor] new best val_total=0.0322 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 300/4000 loss_img=0.0182 loss_lat=0.0008 loss_total=0.0190 loss_seg=0.0320 lr_dit=0.0001 lr_dec=0.0000 (3.38s/step)
+[iad/transistor] step 350/4000 loss_img=0.0173 loss_lat=0.0007 loss_total=0.0180 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.80s/step)
+[iad/transistor] step 400/4000 loss_img=0.0165 loss_lat=0.0008 loss_total=0.0172 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (1.84s/step)
+[iad/transistor] step 450/4000 loss_img=0.0156 loss_lat=0.0007 loss_total=0.0163 loss_seg=0.0305 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 500/4000 loss_img=0.0149 loss_lat=0.0007 loss_total=0.0156 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/transistor] step 500 val_img=0.0194 val_lat=0.0073 val_total=0.0267 val_seg=0.0296
+[iad/transistor] new best val_total=0.0267 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 550/4000 loss_img=0.0143 loss_lat=0.0007 loss_total=0.0150 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (2.81s/step)
+[iad/transistor] step 600/4000 loss_img=0.0141 loss_lat=0.0007 loss_total=0.0149 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 650/4000 loss_img=0.0136 loss_lat=0.0006 loss_total=0.0142 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.82s/step)
+[iad/transistor] step 700/4000 loss_img=0.0131 loss_lat=0.0007 loss_total=0.0138 loss_seg=0.0300 lr_dit=0.0001 lr_dec=0.0000 (1.69s/step)
+[iad/transistor] step 750/4000 loss_img=0.0129 loss_lat=0.0005 loss_total=0.0134 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.81s/step)
+[iad/transistor] step 750 val_img=0.0186 val_lat=0.0055 val_total=0.0242 val_seg=0.0297
+[iad/transistor] new best val_total=0.0242 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 800/4000 loss_img=0.0124 loss_lat=0.0007 loss_total=0.0131 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (2.96s/step)
+[iad/transistor] step 850/4000 loss_img=0.0124 loss_lat=0.0007 loss_total=0.0130 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/transistor] step 900/4000 loss_img=0.0122 loss_lat=0.0006 loss_total=0.0128 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 950/4000 loss_img=0.0120 loss_lat=0.0007 loss_total=0.0127 loss_seg=0.0280 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/transistor] step 1000/4000 loss_img=0.0119 loss_lat=0.0006 loss_total=0.0125 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/transistor] step 1000 val_img=0.0176 val_lat=0.0033 val_total=0.0210 val_seg=0.0299
+[iad/transistor] new best val_total=0.0210 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 1050/4000 loss_img=0.0115 loss_lat=0.0006 loss_total=0.0121 loss_seg=0.0254 lr_dit=0.0001 lr_dec=0.0000 (2.79s/step)
+[iad/transistor] step 1100/4000 loss_img=0.0114 loss_lat=0.0006 loss_total=0.0120 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 1150/4000 loss_img=0.0113 loss_lat=0.0006 loss_total=0.0119 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 1200/4000 loss_img=0.0112 loss_lat=0.0007 loss_total=0.0119 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/transistor] step 1250/4000 loss_img=0.0110 loss_lat=0.0007 loss_total=0.0117 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 1250 val_img=0.0173 val_lat=0.0016 val_total=0.0188 val_seg=0.0298
+[iad/transistor] new best val_total=0.0188 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 1300/4000 loss_img=0.0109 loss_lat=0.0006 loss_total=0.0115 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.72s/step)
+[iad/transistor] step 1350/4000 loss_img=0.0107 loss_lat=0.0007 loss_total=0.0114 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 1400/4000 loss_img=0.0106 loss_lat=0.0007 loss_total=0.0113 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.80s/step)
+[iad/transistor] step 1450/4000 loss_img=0.0104 loss_lat=0.0007 loss_total=0.0111 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 1500/4000 loss_img=0.0104 loss_lat=0.0007 loss_total=0.0111 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 1500 val_img=0.0169 val_lat=0.0010 val_total=0.0179 val_seg=0.0297
+[iad/transistor] new best val_total=0.0179 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 1550/4000 loss_img=0.0103 loss_lat=0.0007 loss_total=0.0110 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (2.96s/step)
+[iad/transistor] step 1600/4000 loss_img=0.0102 loss_lat=0.0006 loss_total=0.0108 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.82s/step)
+[iad/transistor] step 1650/4000 loss_img=0.0101 loss_lat=0.0006 loss_total=0.0107 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 1700/4000 loss_img=0.0099 loss_lat=0.0007 loss_total=0.0107 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 1750/4000 loss_img=0.0100 loss_lat=0.0007 loss_total=0.0107 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.81s/step)
+[iad/transistor] step 1750 val_img=0.0170 val_lat=0.0008 val_total=0.0178 val_seg=0.0297
+[iad/transistor] new best val_total=0.0178 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 1800/4000 loss_img=0.0099 loss_lat=0.0006 loss_total=0.0105 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (3.35s/step)
+[iad/transistor] step 1850/4000 loss_img=0.0099 loss_lat=0.0007 loss_total=0.0106 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/transistor] step 1900/4000 loss_img=0.0098 loss_lat=0.0006 loss_total=0.0104 loss_seg=0.0249 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 1950/4000 loss_img=0.0097 loss_lat=0.0006 loss_total=0.0103 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.80s/step)
+[iad/transistor] step 2000/4000 loss_img=0.0097 loss_lat=0.0007 loss_total=0.0104 loss_seg=0.0272 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 2000 val_img=0.0166 val_lat=0.0008 val_total=0.0174 val_seg=0.0298
+[iad/transistor] new best val_total=0.0174 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 2050/4000 loss_img=0.0096 loss_lat=0.0007 loss_total=0.0103 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (3.43s/step)
+[iad/transistor] step 2100/4000 loss_img=0.0095 loss_lat=0.0007 loss_total=0.0102 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 2150/4000 loss_img=0.0094 loss_lat=0.0007 loss_total=0.0101 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 2200/4000 loss_img=0.0094 loss_lat=0.0007 loss_total=0.0101 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/transistor] step 2250/4000 loss_img=0.0094 loss_lat=0.0007 loss_total=0.0101 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 2250 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0298
+[iad/transistor] new best val_total=0.0173 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 2300/4000 loss_img=0.0095 loss_lat=0.0007 loss_total=0.0102 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (2.97s/step)
+[iad/transistor] step 2350/4000 loss_img=0.0093 loss_lat=0.0007 loss_total=0.0100 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 2400/4000 loss_img=0.0092 loss_lat=0.0006 loss_total=0.0099 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 2450/4000 loss_img=0.0092 loss_lat=0.0008 loss_total=0.0099 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 2500/4000 loss_img=0.0092 loss_lat=0.0007 loss_total=0.0099 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 2500 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/transistor] step 2550/4000 loss_img=0.0091 loss_lat=0.0008 loss_total=0.0098 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.81s/step)
+[iad/transistor] step 2600/4000 loss_img=0.0091 loss_lat=0.0007 loss_total=0.0098 loss_seg=0.0295 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 2650/4000 loss_img=0.0091 loss_lat=0.0007 loss_total=0.0097 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 2700/4000 loss_img=0.0090 loss_lat=0.0007 loss_total=0.0097 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.80s/step)
+[iad/transistor] step 2750/4000 loss_img=0.0090 loss_lat=0.0008 loss_total=0.0097 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 2750 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0298
+[iad/transistor] step 2800/4000 loss_img=0.0089 loss_lat=0.0007 loss_total=0.0096 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.85s/step)
+[iad/transistor] step 2850/4000 loss_img=0.0089 loss_lat=0.0007 loss_total=0.0096 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 2900/4000 loss_img=0.0089 loss_lat=0.0006 loss_total=0.0095 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/transistor] step 2950/4000 loss_img=0.0089 loss_lat=0.0007 loss_total=0.0096 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 3000/4000 loss_img=0.0088 loss_lat=0.0007 loss_total=0.0096 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 3000 val_img=0.0165 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/transistor] new best val_total=0.0173 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 3050/4000 loss_img=0.0087 loss_lat=0.0007 loss_total=0.0095 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (2.77s/step)
+[iad/transistor] step 3100/4000 loss_img=0.0087 loss_lat=0.0007 loss_total=0.0095 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.83s/step)
+[iad/transistor] step 3150/4000 loss_img=0.0087 loss_lat=0.0007 loss_total=0.0093 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 3200/4000 loss_img=0.0087 loss_lat=0.0006 loss_total=0.0093 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 3250/4000 loss_img=0.0086 loss_lat=0.0007 loss_total=0.0093 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 3250 val_img=0.0165 val_lat=0.0007 val_total=0.0172 val_seg=0.0297
+[iad/transistor] new best val_total=0.0172 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 3300/4000 loss_img=0.0086 loss_lat=0.0008 loss_total=0.0094 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (3.38s/step)
+[iad/transistor] step 3350/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0278 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 3400/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 3450/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/transistor] step 3500/4000 loss_img=0.0085 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.71s/step)
+[iad/transistor] step 3500 val_img=0.0165 val_lat=0.0007 val_total=0.0172 val_seg=0.0297
+[iad/transistor] step 3550/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 3600/4000 loss_img=0.0084 loss_lat=0.0007 loss_total=0.0091 loss_seg=0.0271 lr_dit=0.0000 lr_dec=0.0000 (1.71s/step)
+[iad/transistor] step 3650/4000 loss_img=0.0084 loss_lat=0.0007 loss_total=0.0091 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.91s/step)
+[iad/transistor] step 3700/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.80s/step)
+[iad/transistor] step 3750/4000 loss_img=0.0084 loss_lat=0.0008 loss_total=0.0092 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 3750 val_img=0.0165 val_lat=0.0007 val_total=0.0172 val_seg=0.0297
+[iad/transistor] new best val_total=0.0172 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 3800/4000 loss_img=0.0084 loss_lat=0.0007 loss_total=0.0091 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (2.79s/step)
+[iad/transistor] step 3850/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0090 loss_seg=0.0262 lr_dit=0.0000 lr_dec=0.0000 (1.80s/step)
+[iad/transistor] step 3900/4000 loss_img=0.0084 loss_lat=0.0007 loss_total=0.0091 loss_seg=0.0292 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 3950/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0090 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.51s/step)
+[iad/transistor] step 4000/4000 loss_img=0.0083 loss_lat=0.0007 loss_total=0.0090 loss_seg=0.0266 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/transistor] step 4000 val_img=0.0165 val_lat=0.0007 val_total=0.0172 val_seg=0.0297
+[iad/transistor] new best val_total=0.0172 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.017204420547932385
+[iad/transistor] eval-only checkpoint transistor_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "transistor",
+      "steps": 4000,
+      "best_val": 0.017204420547932385,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt"
+    }
+  ]
+}
+[train] fresh run: moved 6 files of the previous run to /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/previous_20261114-093505
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/carpet] 260 train / 20 val normal images (cats: carpet)
+[iad/carpet] batch 2 x 4 accumulation = effective 8
+[iad/carpet] encoder offloaded to CPU (latents cached)
+[iad/carpet] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/carpet] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/carpet] step 50/4000 loss_img=0.1400 loss_lat=0.0042 loss_total=0.1442 loss_seg=0.0385 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 100/4000 loss_img=0.1014 loss_lat=0.0014 loss_total=0.1027 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 150/4000 loss_img=0.0995 loss_lat=0.0007 loss_total=0.1002 loss_seg=0.0314 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 200/4000 loss_img=0.0991 loss_lat=0.0006 loss_total=0.0997 loss_seg=0.0284 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 250/4000 loss_img=0.0989 loss_lat=0.0006 loss_total=0.0995 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 250 val_img=0.0986 val_lat=0.0085 val_total=0.1072 val_seg=0.0300
+[iad/carpet] new best val_total=0.1072 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 300/4000 loss_img=0.0956 loss_lat=0.0007 loss_total=0.0963 loss_seg=0.0320 lr_dit=0.0001 lr_dec=0.0000 (2.05s/step)
+[iad/carpet] step 350/4000 loss_img=0.0907 loss_lat=0.0008 loss_total=0.0915 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 400/4000 loss_img=0.0887 loss_lat=0.0006 loss_total=0.0893 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 450/4000 loss_img=0.0871 loss_lat=0.0007 loss_total=0.0878 loss_seg=0.0305 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 500/4000 loss_img=0.0853 loss_lat=0.0008 loss_total=0.0861 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 500 val_img=0.0940 val_lat=0.0056 val_total=0.0996 val_seg=0.0296
+[iad/carpet] new best val_total=0.0996 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 550/4000 loss_img=0.0818 loss_lat=0.0007 loss_total=0.0825 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (2.07s/step)
+[iad/carpet] step 600/4000 loss_img=0.0782 loss_lat=0.0007 loss_total=0.0790 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 650/4000 loss_img=0.0758 loss_lat=0.0006 loss_total=0.0764 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 700/4000 loss_img=0.0744 loss_lat=0.0007 loss_total=0.0752 loss_seg=0.0300 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 750/4000 loss_img=0.0730 loss_lat=0.0006 loss_total=0.0735 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 750 val_img=0.0913 val_lat=0.0030 val_total=0.0943 val_seg=0.0297
+[iad/carpet] new best val_total=0.0943 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 800/4000 loss_img=0.0718 loss_lat=0.0007 loss_total=0.0725 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (2.10s/step)
+[iad/carpet] step 850/4000 loss_img=0.0712 loss_lat=0.0007 loss_total=0.0719 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 900/4000 loss_img=0.0701 loss_lat=0.0006 loss_total=0.0707 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 950/4000 loss_img=0.0695 loss_lat=0.0007 loss_total=0.0702 loss_seg=0.0280 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 1000/4000 loss_img=0.0697 loss_lat=0.0005 loss_total=0.0703 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 1000 val_img=0.0909 val_lat=0.0016 val_total=0.0924 val_seg=0.0299
+[iad/carpet] new best val_total=0.0924 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 1050/4000 loss_img=0.0692 loss_lat=0.0006 loss_total=0.0698 loss_seg=0.0253 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/carpet] step 1100/4000 loss_img=0.0688 loss_lat=0.0006 loss_total=0.0694 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 1150/4000 loss_img=0.0687 loss_lat=0.0006 loss_total=0.0693 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 1200/4000 loss_img=0.0681 loss_lat=0.0006 loss_total=0.0687 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 1250/4000 loss_img=0.0675 loss_lat=0.0006 loss_total=0.0681 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 1250 val_img=0.0909 val_lat=0.0010 val_total=0.0919 val_seg=0.0298
+[iad/carpet] new best val_total=0.0919 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 1300/4000 loss_img=0.0672 loss_lat=0.0006 loss_total=0.0678 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.07s/step)
+[iad/carpet] step 1350/4000 loss_img=0.0670 loss_lat=0.0007 loss_total=0.0676 loss_seg=0.0284 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 1400/4000 loss_img=0.0663 loss_lat=0.0006 loss_total=0.0670 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 1450/4000 loss_img=0.0659 loss_lat=0.0007 loss_total=0.0666 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 1500/4000 loss_img=0.0659 loss_lat=0.0007 loss_total=0.0666 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 1500 val_img=0.0906 val_lat=0.0008 val_total=0.0914 val_seg=0.0297
+[iad/carpet] new best val_total=0.0914 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt
+[iad/carpet] step 1550/4000 loss_img=0.0656 loss_lat=0.0006 loss_total=0.0662 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/carpet] step 1600/4000 loss_img=0.0651 loss_lat=0.0006 loss_total=0.0657 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 1650/4000 loss_img=0.0648 loss_lat=0.0006 loss_total=0.0654 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 1700/4000 loss_img=0.0646 loss_lat=0.0007 loss_total=0.0653 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 1750/4000 loss_img=0.0639 loss_lat=0.0007 loss_total=0.0646 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 1750 val_img=0.0923 val_lat=0.0008 val_total=0.0931 val_seg=0.0297
+[iad/carpet] step 1800/4000 loss_img=0.0638 loss_lat=0.0006 loss_total=0.0644 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/carpet] step 1850/4000 loss_img=0.0637 loss_lat=0.0007 loss_total=0.0644 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 1900/4000 loss_img=0.0629 loss_lat=0.0006 loss_total=0.0635 loss_seg=0.0248 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 1950/4000 loss_img=0.0629 loss_lat=0.0006 loss_total=0.0635 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 2000/4000 loss_img=0.0623 loss_lat=0.0007 loss_total=0.0629 loss_seg=0.0272 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 2000 val_img=0.0919 val_lat=0.0007 val_total=0.0926 val_seg=0.0297
+[iad/carpet] step 2050/4000 loss_img=0.0621 loss_lat=0.0006 loss_total=0.0628 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/carpet] step 2100/4000 loss_img=0.0619 loss_lat=0.0007 loss_total=0.0626 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 2150/4000 loss_img=0.0612 loss_lat=0.0007 loss_total=0.0619 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 2200/4000 loss_img=0.0612 loss_lat=0.0007 loss_total=0.0618 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/carpet] step 2250/4000 loss_img=0.0610 loss_lat=0.0007 loss_total=0.0617 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/carpet] step 2250 val_img=0.0927 val_lat=0.0007 val_total=0.0934 val_seg=0.0297
+[iad/carpet] step 2300/4000 loss_img=0.0604 loss_lat=0.0007 loss_total=0.0611 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 2350/4000 loss_img=0.0604 loss_lat=0.0007 loss_total=0.0611 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 2400/4000 loss_img=0.0601 loss_lat=0.0007 loss_total=0.0608 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 2450/4000 loss_img=0.0599 loss_lat=0.0008 loss_total=0.0606 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 2500/4000 loss_img=0.0596 loss_lat=0.0007 loss_total=0.0603 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/carpet] step 2500 val_img=0.0935 val_lat=0.0007 val_total=0.0942 val_seg=0.0297
+[iad/carpet] step 2550/4000 loss_img=0.0593 loss_lat=0.0008 loss_total=0.0601 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 2600/4000 loss_img=0.0592 loss_lat=0.0008 loss_total=0.0600 loss_seg=0.0295 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 2650/4000 loss_img=0.0588 loss_lat=0.0007 loss_total=0.0595 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.90s/step)
+[iad/carpet] step 2700/4000 loss_img=0.0584 loss_lat=0.0007 loss_total=0.0591 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 2750/4000 loss_img=0.0582 loss_lat=0.0008 loss_total=0.0590 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 2750 val_img=0.0942 val_lat=0.0007 val_total=0.0949 val_seg=0.0297
+[iad/carpet] step 2800/4000 loss_img=0.0583 loss_lat=0.0007 loss_total=0.0590 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.81s/step)
+[iad/carpet] step 2850/4000 loss_img=0.0581 loss_lat=0.0008 loss_total=0.0589 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 2900/4000 loss_img=0.0577 loss_lat=0.0007 loss_total=0.0584 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 2950/4000 loss_img=0.0575 loss_lat=0.0008 loss_total=0.0583 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3000/4000 loss_img=0.0572 loss_lat=0.0008 loss_total=0.0580 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 3000 val_img=0.0943 val_lat=0.0007 val_total=0.0950 val_seg=0.0297
+[iad/carpet] step 3050/4000 loss_img=0.0572 loss_lat=0.0008 loss_total=0.0579 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/carpet] step 3100/4000 loss_img=0.0569 loss_lat=0.0008 loss_total=0.0577 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/carpet] step 3150/4000 loss_img=0.0566 loss_lat=0.0008 loss_total=0.0574 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 3200/4000 loss_img=0.0567 loss_lat=0.0007 loss_total=0.0574 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 3250/4000 loss_img=0.0563 loss_lat=0.0007 loss_total=0.0570 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 3250 val_img=0.0948 val_lat=0.0007 val_total=0.0955 val_seg=0.0297
+[iad/carpet] step 3300/4000 loss_img=0.0562 loss_lat=0.0008 loss_total=0.0571 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.80s/step)
+[iad/carpet] step 3350/4000 loss_img=0.0562 loss_lat=0.0008 loss_total=0.0570 loss_seg=0.0278 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 3400/4000 loss_img=0.0558 loss_lat=0.0008 loss_total=0.0566 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3450/4000 loss_img=0.0558 loss_lat=0.0007 loss_total=0.0565 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 3500/4000 loss_img=0.0555 loss_lat=0.0007 loss_total=0.0562 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3500 val_img=0.0949 val_lat=0.0007 val_total=0.0956 val_seg=0.0297
+[iad/carpet] step 3550/4000 loss_img=0.0553 loss_lat=0.0008 loss_total=0.0561 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/carpet] step 3600/4000 loss_img=0.0554 loss_lat=0.0008 loss_total=0.0562 loss_seg=0.0271 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3650/4000 loss_img=0.0553 loss_lat=0.0008 loss_total=0.0561 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 3700/4000 loss_img=0.0552 loss_lat=0.0008 loss_total=0.0560 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3750/4000 loss_img=0.0554 loss_lat=0.0009 loss_total=0.0563 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/carpet] step 3750 val_img=0.0955 val_lat=0.0007 val_total=0.0962 val_seg=0.0297
+[iad/carpet] step 3800/4000 loss_img=0.0549 loss_lat=0.0009 loss_total=0.0558 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (1.80s/step)
+[iad/carpet] step 3850/4000 loss_img=0.0548 loss_lat=0.0008 loss_total=0.0555 loss_seg=0.0262 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/carpet] step 3900/4000 loss_img=0.0546 loss_lat=0.0008 loss_total=0.0555 loss_seg=0.0292 lr_dit=0.0000 lr_dec=0.0000 (1.84s/step)
+[iad/carpet] step 3950/4000 loss_img=0.0548 loss_lat=0.0008 loss_total=0.0556 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/carpet] step 4000/4000 loss_img=0.0544 loss_lat=0.0008 loss_total=0.0552 loss_seg=0.0266 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/carpet] step 4000 val_img=0.0959 val_lat=0.0007 val_total=0.0966 val_seg=0.0297
+[iad/carpet] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.09144483208656311
+[iad/carpet] eval-only checkpoint carpet_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "carpet",
+      "steps": 4000,
+      "best_val": 0.09144483208656311,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/carpet_best.pt"
+    }
+  ]
+}
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/grid] 244 train / 20 val normal images (cats: grid)
+[iad/grid] batch 2 x 4 accumulation = effective 8
+[iad/grid] encoder offloaded to CPU (latents cached)
+[iad/grid] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/grid] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/grid] step 50/4000 loss_img=0.0899 loss_lat=0.0042 loss_total=0.0941 loss_seg=0.0379 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 100/4000 loss_img=0.0641 loss_lat=0.0016 loss_total=0.0657 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 150/4000 loss_img=0.0579 loss_lat=0.0011 loss_total=0.0590 loss_seg=0.0312 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 200/4000 loss_img=0.0516 loss_lat=0.0008 loss_total=0.0525 loss_seg=0.0286 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/grid] step 250/4000 loss_img=0.0507 loss_lat=0.0007 loss_total=0.0514 loss_seg=0.0269 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 250 val_img=0.0509 val_lat=0.0089 val_total=0.0597 val_seg=0.0300
+[iad/grid] new best val_total=0.0597 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 300/4000 loss_img=0.0459 loss_lat=0.0008 loss_total=0.0467 loss_seg=0.0319 lr_dit=0.0001 lr_dec=0.0000 (2.21s/step)
+[iad/grid] step 350/4000 loss_img=0.0439 loss_lat=0.0093 loss_total=0.0532 loss_seg=0.0277 lr_dit=0.0001 lr_dec=0.0000 (1.81s/step)
+[iad/grid] step 400/4000 loss_img=0.0437 loss_lat=0.0006 loss_total=0.0443 loss_seg=0.0259 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 450/4000 loss_img=0.0413 loss_lat=0.0007 loss_total=0.0420 loss_seg=0.0306 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 500/4000 loss_img=0.0384 loss_lat=0.0007 loss_total=0.0391 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 500 val_img=0.0429 val_lat=0.0046 val_total=0.0475 val_seg=0.0296
+[iad/grid] new best val_total=0.0475 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 550/4000 loss_img=0.0383 loss_lat=0.0008 loss_total=0.0390 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/grid] step 600/4000 loss_img=0.0365 loss_lat=0.0007 loss_total=0.0372 loss_seg=0.0302 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 650/4000 loss_img=0.0347 loss_lat=0.0006 loss_total=0.0352 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 700/4000 loss_img=0.0340 loss_lat=0.0007 loss_total=0.0346 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 750/4000 loss_img=0.0335 loss_lat=0.0005 loss_total=0.0340 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 750 val_img=0.0400 val_lat=0.0017 val_total=0.0417 val_seg=0.0297
+[iad/grid] new best val_total=0.0417 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 800/4000 loss_img=0.0323 loss_lat=0.0006 loss_total=0.0329 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/grid] step 850/4000 loss_img=0.0316 loss_lat=0.0006 loss_total=0.0322 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 900/4000 loss_img=0.0314 loss_lat=0.0006 loss_total=0.0320 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 950/4000 loss_img=0.0310 loss_lat=0.0006 loss_total=0.0316 loss_seg=0.0280 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/grid] step 1000/4000 loss_img=0.0296 loss_lat=0.0005 loss_total=0.0301 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/grid] step 1000 val_img=0.0374 val_lat=0.0010 val_total=0.0384 val_seg=0.0298
+[iad/grid] new best val_total=0.0384 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 1050/4000 loss_img=0.0297 loss_lat=0.0006 loss_total=0.0302 loss_seg=0.0253 lr_dit=0.0001 lr_dec=0.0000 (2.09s/step)
+[iad/grid] step 1100/4000 loss_img=0.0286 loss_lat=0.0006 loss_total=0.0292 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 1150/4000 loss_img=0.0290 loss_lat=0.0006 loss_total=0.0296 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 1200/4000 loss_img=0.0278 loss_lat=0.0006 loss_total=0.0284 loss_seg=0.0282 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 1250/4000 loss_img=0.0273 loss_lat=0.0006 loss_total=0.0279 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 1250 val_img=0.0366 val_lat=0.0008 val_total=0.0375 val_seg=0.0297
+[iad/grid] new best val_total=0.0375 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 1300/4000 loss_img=0.0269 loss_lat=0.0006 loss_total=0.0275 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/grid] step 1350/4000 loss_img=0.0265 loss_lat=0.0007 loss_total=0.0271 loss_seg=0.0284 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 1400/4000 loss_img=0.0262 loss_lat=0.0006 loss_total=0.0268 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 1450/4000 loss_img=0.0259 loss_lat=0.0007 loss_total=0.0265 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 1500/4000 loss_img=0.0258 loss_lat=0.0007 loss_total=0.0265 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 1500 val_img=0.0350 val_lat=0.0008 val_total=0.0357 val_seg=0.0296
+[iad/grid] new best val_total=0.0357 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 1550/4000 loss_img=0.0253 loss_lat=0.0006 loss_total=0.0259 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/grid] step 1600/4000 loss_img=0.0248 loss_lat=0.0006 loss_total=0.0254 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 1650/4000 loss_img=0.0244 loss_lat=0.0006 loss_total=0.0250 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 1700/4000 loss_img=0.0245 loss_lat=0.0007 loss_total=0.0252 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 1750/4000 loss_img=0.0244 loss_lat=0.0007 loss_total=0.0251 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 1750 val_img=0.0337 val_lat=0.0007 val_total=0.0344 val_seg=0.0296
+[iad/grid] new best val_total=0.0344 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 1800/4000 loss_img=0.0242 loss_lat=0.0006 loss_total=0.0248 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (2.11s/step)
+[iad/grid] step 1850/4000 loss_img=0.0237 loss_lat=0.0106 loss_total=0.0343 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 1900/4000 loss_img=0.0237 loss_lat=0.0006 loss_total=0.0243 loss_seg=0.0248 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 1950/4000 loss_img=0.0234 loss_lat=0.0006 loss_total=0.0239 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2000/4000 loss_img=0.0231 loss_lat=0.0006 loss_total=0.0237 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2000 val_img=0.0333 val_lat=0.0007 val_total=0.0340 val_seg=0.0297
+[iad/grid] new best val_total=0.0340 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 2050/4000 loss_img=0.0229 loss_lat=0.0006 loss_total=0.0235 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (2.09s/step)
+[iad/grid] step 2100/4000 loss_img=0.0227 loss_lat=0.0007 loss_total=0.0234 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2150/4000 loss_img=0.0230 loss_lat=0.0007 loss_total=0.0236 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 2200/4000 loss_img=0.0224 loss_lat=0.0006 loss_total=0.0230 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 2250/4000 loss_img=0.0224 loss_lat=0.0007 loss_total=0.0231 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2250 val_img=0.0344 val_lat=0.0007 val_total=0.0351 val_seg=0.0297
+[iad/grid] step 2300/4000 loss_img=0.0226 loss_lat=0.0007 loss_total=0.0233 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (1.79s/step)
+[iad/grid] step 2350/4000 loss_img=0.0223 loss_lat=0.0006 loss_total=0.0230 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 2400/4000 loss_img=0.0222 loss_lat=0.0006 loss_total=0.0228 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2450/4000 loss_img=0.0218 loss_lat=0.0007 loss_total=0.0226 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2500/4000 loss_img=0.0218 loss_lat=0.0007 loss_total=0.0225 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 2500 val_img=0.0328 val_lat=0.0007 val_total=0.0335 val_seg=0.0296
+[iad/grid] new best val_total=0.0335 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 2550/4000 loss_img=0.0215 loss_lat=0.0007 loss_total=0.0222 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (2.10s/step)
+[iad/grid] step 2600/4000 loss_img=0.0213 loss_lat=0.0007 loss_total=0.0220 loss_seg=0.0295 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 2650/4000 loss_img=0.0215 loss_lat=0.0006 loss_total=0.0221 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 2700/4000 loss_img=0.0212 loss_lat=0.0007 loss_total=0.0218 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/grid] step 2750/4000 loss_img=0.0211 loss_lat=0.0007 loss_total=0.0218 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 2750 val_img=0.0326 val_lat=0.0007 val_total=0.0333 val_seg=0.0297
+[iad/grid] new best val_total=0.0333 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 2800/4000 loss_img=0.0210 loss_lat=0.0007 loss_total=0.0217 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (2.08s/step)
+[iad/grid] step 2850/4000 loss_img=0.0207 loss_lat=0.0007 loss_total=0.0214 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 2900/4000 loss_img=0.0208 loss_lat=0.0006 loss_total=0.0214 loss_seg=0.0265 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 2950/4000 loss_img=0.0208 loss_lat=0.0007 loss_total=0.0215 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 3000/4000 loss_img=0.0207 loss_lat=0.0007 loss_total=0.0214 loss_seg=0.0294 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/grid] step 3000 val_img=0.0327 val_lat=0.0007 val_total=0.0334 val_seg=0.0297
+[iad/grid] step 3050/4000 loss_img=0.0204 loss_lat=0.0007 loss_total=0.0211 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/grid] step 3100/4000 loss_img=0.0204 loss_lat=0.0007 loss_total=0.0211 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 3150/4000 loss_img=0.0203 loss_lat=0.0007 loss_total=0.0209 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/grid] step 3200/4000 loss_img=0.0200 loss_lat=0.0006 loss_total=0.0206 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 3250/4000 loss_img=0.0200 loss_lat=0.0006 loss_total=0.0206 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/grid] step 3250 val_img=0.0325 val_lat=0.0007 val_total=0.0332 val_seg=0.0297
+[iad/grid] new best val_total=0.0332 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 3300/4000 loss_img=0.0200 loss_lat=0.0007 loss_total=0.0207 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (2.00s/step)
+[iad/grid] step 3350/4000 loss_img=0.0200 loss_lat=0.0007 loss_total=0.0207 loss_seg=0.0278 lr_dit=0.0000 lr_dec=0.0000 (1.89s/step)
+[iad/grid] step 3400/4000 loss_img=0.0200 loss_lat=0.0007 loss_total=0.0206 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 3450/4000 loss_img=0.0199 loss_lat=0.0006 loss_total=0.0206 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/grid] step 3500/4000 loss_img=0.0197 loss_lat=0.0006 loss_total=0.0203 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 3500 val_img=0.0322 val_lat=0.0007 val_total=0.0328 val_seg=0.0296
+[iad/grid] new best val_total=0.0328 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 3550/4000 loss_img=0.0196 loss_lat=0.0007 loss_total=0.0203 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (2.04s/step)
+[iad/grid] step 3600/4000 loss_img=0.0196 loss_lat=0.0007 loss_total=0.0203 loss_seg=0.0270 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 3650/4000 loss_img=0.0194 loss_lat=0.0007 loss_total=0.0201 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 3700/4000 loss_img=0.0195 loss_lat=0.0007 loss_total=0.0202 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/grid] step 3750/4000 loss_img=0.0194 loss_lat=0.0007 loss_total=0.0201 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.70s/step)
+[iad/grid] step 3750 val_img=0.0321 val_lat=0.0007 val_total=0.0328 val_seg=0.0296
+[iad/grid] new best val_total=0.0328 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] step 3800/4000 loss_img=0.0195 loss_lat=0.0007 loss_total=0.0202 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (2.06s/step)
+[iad/grid] step 3850/4000 loss_img=0.0193 loss_lat=0.0006 loss_total=0.0199 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 3900/4000 loss_img=0.0193 loss_lat=0.0007 loss_total=0.0200 loss_seg=0.0292 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 3950/4000 loss_img=0.0193 loss_lat=0.0006 loss_total=0.0199 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 4000/4000 loss_img=0.0192 loss_lat=0.0007 loss_total=0.0198 loss_seg=0.0266 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/grid] step 4000 val_img=0.0319 val_lat=0.0007 val_total=0.0326 val_seg=0.0296
+[iad/grid] new best val_total=0.0326 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt
+[iad/grid] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.032553397864103314
+[iad/grid] eval-only checkpoint grid_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "grid",
+      "steps": 4000,
+      "best_val": 0.032553397864103314,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/grid_best.pt"
+    }
+  ]
+}
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/hazelnut] 371 train / 20 val normal images (cats: hazelnut)
+[iad/hazelnut] batch 2 x 4 accumulation = effective 8
+[iad/hazelnut] encoder offloaded to CPU (latents cached)
+[iad/hazelnut] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/hazelnut] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/hazelnut] step 50/4000 loss_img=0.0626 loss_lat=0.0050 loss_total=0.0677 loss_seg=0.0372 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 100/4000 loss_img=0.0186 loss_lat=0.0014 loss_total=0.0200 loss_seg=0.0300 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 150/4000 loss_img=0.0155 loss_lat=0.0010 loss_total=0.0165 loss_seg=0.0314 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 200/4000 loss_img=0.0144 loss_lat=0.0007 loss_total=0.0152 loss_seg=0.0286 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 250/4000 loss_img=0.0124 loss_lat=0.0006 loss_total=0.0131 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 250 val_img=0.0129 val_lat=0.0087 val_total=0.0216 val_seg=0.0304
+[iad/hazelnut] new best val_total=0.0216 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 300/4000 loss_img=0.0127 loss_lat=0.0007 loss_total=0.0134 loss_seg=0.0320 lr_dit=0.0001 lr_dec=0.0000 (2.03s/step)
+[iad/hazelnut] step 350/4000 loss_img=0.0116 loss_lat=0.0006 loss_total=0.0123 loss_seg=0.0277 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 400/4000 loss_img=0.0113 loss_lat=0.0006 loss_total=0.0119 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 450/4000 loss_img=0.0111 loss_lat=0.0007 loss_total=0.0118 loss_seg=0.0305 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 500/4000 loss_img=0.0106 loss_lat=0.0007 loss_total=0.0113 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 500 val_img=0.0118 val_lat=0.0051 val_total=0.0170 val_seg=0.0297
+[iad/hazelnut] new best val_total=0.0170 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 550/4000 loss_img=0.0103 loss_lat=0.0006 loss_total=0.0109 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/hazelnut] step 600/4000 loss_img=0.0101 loss_lat=0.0007 loss_total=0.0107 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 650/4000 loss_img=0.0097 loss_lat=0.0005 loss_total=0.0102 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 700/4000 loss_img=0.0096 loss_lat=0.0007 loss_total=0.0103 loss_seg=0.0300 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 750/4000 loss_img=0.0094 loss_lat=0.0005 loss_total=0.0099 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 750 val_img=0.0116 val_lat=0.0025 val_total=0.0141 val_seg=0.0298
+[iad/hazelnut] new best val_total=0.0141 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 800/4000 loss_img=0.0093 loss_lat=0.0006 loss_total=0.0099 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (2.07s/step)
+[iad/hazelnut] step 850/4000 loss_img=0.0093 loss_lat=0.0006 loss_total=0.0099 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 900/4000 loss_img=0.0090 loss_lat=0.0006 loss_total=0.0096 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 950/4000 loss_img=0.0089 loss_lat=0.0006 loss_total=0.0095 loss_seg=0.0279 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 1000/4000 loss_img=0.0088 loss_lat=0.0005 loss_total=0.0093 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 1000 val_img=0.0113 val_lat=0.0014 val_total=0.0127 val_seg=0.0299
+[iad/hazelnut] new best val_total=0.0127 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 1050/4000 loss_img=0.0087 loss_lat=0.0006 loss_total=0.0092 loss_seg=0.0253 lr_dit=0.0001 lr_dec=0.0000 (2.11s/step)
+[iad/hazelnut] step 1100/4000 loss_img=0.0088 loss_lat=0.0014 loss_total=0.0103 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 1150/4000 loss_img=0.0085 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 1200/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 1250/4000 loss_img=0.0086 loss_lat=0.0006 loss_total=0.0092 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 1250 val_img=0.0112 val_lat=0.0010 val_total=0.0122 val_seg=0.0298
+[iad/hazelnut] new best val_total=0.0122 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 1300/4000 loss_img=0.0085 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/hazelnut] step 1350/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 1400/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 1450/4000 loss_img=0.0082 loss_lat=0.0007 loss_total=0.0089 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 1500/4000 loss_img=0.0081 loss_lat=0.0007 loss_total=0.0088 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 1500 val_img=0.0112 val_lat=0.0008 val_total=0.0120 val_seg=0.0297
+[iad/hazelnut] new best val_total=0.0120 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 1550/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (2.07s/step)
+[iad/hazelnut] step 1600/4000 loss_img=0.0081 loss_lat=0.0006 loss_total=0.0087 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 1650/4000 loss_img=0.0080 loss_lat=0.0006 loss_total=0.0086 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 1700/4000 loss_img=0.0080 loss_lat=0.0007 loss_total=0.0087 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 1750/4000 loss_img=0.0079 loss_lat=0.0007 loss_total=0.0086 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 1750 val_img=0.0112 val_lat=0.0007 val_total=0.0120 val_seg=0.0297
+[iad/hazelnut] new best val_total=0.0120 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 1800/4000 loss_img=0.0078 loss_lat=0.0006 loss_total=0.0084 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/hazelnut] step 1850/4000 loss_img=0.0079 loss_lat=0.0007 loss_total=0.0086 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 1900/4000 loss_img=0.0079 loss_lat=0.0006 loss_total=0.0085 loss_seg=0.0249 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 1950/4000 loss_img=0.0079 loss_lat=0.0006 loss_total=0.0085 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 2000/4000 loss_img=0.0079 loss_lat=0.0006 loss_total=0.0085 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 2000 val_img=0.0119 val_lat=0.0007 val_total=0.0126 val_seg=0.0297
+[iad/hazelnut] step 2050/4000 loss_img=0.0078 loss_lat=0.0006 loss_total=0.0084 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.81s/step)
+[iad/hazelnut] step 2100/4000 loss_img=0.0077 loss_lat=0.0007 loss_total=0.0084 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 2150/4000 loss_img=0.0076 loss_lat=0.0006 loss_total=0.0083 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 2200/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.69s/step)
+[iad/hazelnut] step 2250/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.96s/step)
+[iad/hazelnut] step 2250 val_img=0.0112 val_lat=0.0007 val_total=0.0119 val_seg=0.0298
+[iad/hazelnut] new best val_total=0.0119 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt
+[iad/hazelnut] step 2300/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/hazelnut] step 2350/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 2400/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/hazelnut] step 2450/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 2500/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0081 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 2500 val_img=0.0115 val_lat=0.0007 val_total=0.0121 val_seg=0.0297
+[iad/hazelnut] step 2550/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 2600/4000 loss_img=0.0073 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0294 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 2650/4000 loss_img=0.0074 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 2700/4000 loss_img=0.0074 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 2750/4000 loss_img=0.0072 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 2750 val_img=0.0113 val_lat=0.0007 val_total=0.0120 val_seg=0.0298
+[iad/hazelnut] step 2800/4000 loss_img=0.0073 loss_lat=0.0006 loss_total=0.0080 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 2850/4000 loss_img=0.0073 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.71s/step)
+[iad/hazelnut] step 2900/4000 loss_img=0.0072 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0265 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 2950/4000 loss_img=0.0072 loss_lat=0.0007 loss_total=0.0078 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 3000/4000 loss_img=0.0073 loss_lat=0.0063 loss_total=0.0136 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 3000 val_img=0.0113 val_lat=0.0007 val_total=0.0120 val_seg=0.0297
+[iad/hazelnut] step 3050/4000 loss_img=0.0072 loss_lat=0.1926 loss_total=0.1998 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 3100/4000 loss_img=0.0072 loss_lat=0.0007 loss_total=0.0079 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 3150/4000 loss_img=0.0072 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 3200/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 3250/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 3250 val_img=0.0114 val_lat=0.0007 val_total=0.0121 val_seg=0.0297
+[iad/hazelnut] step 3300/4000 loss_img=0.0071 loss_lat=0.0007 loss_total=0.0078 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.78s/step)
+[iad/hazelnut] step 3350/4000 loss_img=0.0071 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0278 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 3400/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/hazelnut] step 3450/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/hazelnut] step 3500/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 3500 val_img=0.0114 val_lat=0.0007 val_total=0.0120 val_seg=0.0297
+[iad/hazelnut] step 3550/4000 loss_img=0.0071 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/hazelnut] step 3600/4000 loss_img=0.0070 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0271 lr_dit=0.0000 lr_dec=0.0000 (1.70s/step)
+[iad/hazelnut] step 3650/4000 loss_img=0.0070 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 3700/4000 loss_img=0.0069 loss_lat=0.0007 loss_total=0.0076 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/hazelnut] step 3750/4000 loss_img=0.0070 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 3750 val_img=0.0114 val_lat=0.0007 val_total=0.0121 val_seg=0.0297
+[iad/hazelnut] step 3800/4000 loss_img=0.0069 loss_lat=0.0007 loss_total=0.0076 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/hazelnut] step 3850/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 3900/4000 loss_img=0.0070 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0292 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 3950/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 4000/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/hazelnut] step 4000 val_img=0.0114 val_lat=0.0007 val_total=0.0121 val_seg=0.0297
+[iad/hazelnut] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.011873399652540684
+[iad/hazelnut] eval-only checkpoint hazelnut_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "hazelnut",
+      "steps": 4000,
+      "best_val": 0.011873399652540684,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/hazelnut_best.pt"
+    }
+  ]
+}
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/screw] 300 train / 20 val normal images (cats: screw)
+[iad/screw] batch 2 x 4 accumulation = effective 8
+[iad/screw] encoder offloaded to CPU (latents cached)
+[iad/screw] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/screw] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/screw] step 50/4000 loss_img=0.1430 loss_lat=0.0046 loss_total=0.1476 loss_seg=0.0380 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 100/4000 loss_img=0.0244 loss_lat=0.0013 loss_total=0.0257 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 150/4000 loss_img=0.0218 loss_lat=0.0009 loss_total=0.0227 loss_seg=0.0314 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 200/4000 loss_img=0.0213 loss_lat=0.0008 loss_total=0.0221 loss_seg=0.0286 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 250/4000 loss_img=0.0186 loss_lat=0.0007 loss_total=0.0193 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 250 val_img=0.0269 val_lat=0.0089 val_total=0.0358 val_seg=0.0300
+[iad/screw] new best val_total=0.0358 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 300/4000 loss_img=0.0162 loss_lat=0.0008 loss_total=0.0170 loss_seg=0.0320 lr_dit=0.0001 lr_dec=0.0000 (2.04s/step)
+[iad/screw] step 350/4000 loss_img=0.0152 loss_lat=0.0007 loss_total=0.0158 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 400/4000 loss_img=0.0152 loss_lat=0.0006 loss_total=0.0158 loss_seg=0.0259 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 450/4000 loss_img=0.0148 loss_lat=0.0007 loss_total=0.0155 loss_seg=0.0305 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 500/4000 loss_img=0.0136 loss_lat=0.0007 loss_total=0.0143 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 500 val_img=0.0191 val_lat=0.0052 val_total=0.0243 val_seg=0.0296
+[iad/screw] new best val_total=0.0243 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 550/4000 loss_img=0.0127 loss_lat=0.0006 loss_total=0.0134 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/screw] step 600/4000 loss_img=0.0113 loss_lat=0.0007 loss_total=0.0120 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 650/4000 loss_img=0.0115 loss_lat=0.0005 loss_total=0.0121 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 700/4000 loss_img=0.0116 loss_lat=0.0007 loss_total=0.0123 loss_seg=0.0300 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 750/4000 loss_img=0.0109 loss_lat=0.0005 loss_total=0.0114 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 750 val_img=0.0189 val_lat=0.0029 val_total=0.0218 val_seg=0.0298
+[iad/screw] new best val_total=0.0218 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 800/4000 loss_img=0.0103 loss_lat=0.0006 loss_total=0.0109 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/screw] step 850/4000 loss_img=0.0102 loss_lat=0.0006 loss_total=0.0108 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 900/4000 loss_img=0.0098 loss_lat=0.0006 loss_total=0.0104 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 950/4000 loss_img=0.0102 loss_lat=0.0006 loss_total=0.0108 loss_seg=0.0279 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 1000/4000 loss_img=0.0099 loss_lat=0.0005 loss_total=0.0104 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 1000 val_img=0.0192 val_lat=0.0019 val_total=0.0211 val_seg=0.0299
+[iad/screw] new best val_total=0.0211 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 1050/4000 loss_img=0.0095 loss_lat=0.0005 loss_total=0.0101 loss_seg=0.0253 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/screw] step 1100/4000 loss_img=0.0093 loss_lat=0.0005 loss_total=0.0099 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 1150/4000 loss_img=0.0090 loss_lat=0.0006 loss_total=0.0096 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.70s/step)
+[iad/screw] step 1200/4000 loss_img=0.0092 loss_lat=0.0006 loss_total=0.0098 loss_seg=0.0282 lr_dit=0.0001 lr_dec=0.0000 (1.70s/step)
+[iad/screw] step 1250/4000 loss_img=0.0094 loss_lat=0.0006 loss_total=0.0100 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (1.94s/step)
+[iad/screw] step 1250 val_img=0.0184 val_lat=0.0014 val_total=0.0198 val_seg=0.0298
+[iad/screw] new best val_total=0.0198 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 1300/4000 loss_img=0.0090 loss_lat=0.0005 loss_total=0.0095 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.05s/step)
+[iad/screw] step 1350/4000 loss_img=0.0088 loss_lat=0.0006 loss_total=0.0094 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 1400/4000 loss_img=0.0088 loss_lat=0.0006 loss_total=0.0093 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 1450/4000 loss_img=0.0087 loss_lat=0.1125 loss_total=0.1213 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 1500/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0090 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 1500 val_img=0.0176 val_lat=0.0011 val_total=0.0187 val_seg=0.0297
+[iad/screw] new best val_total=0.0187 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 1550/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0090 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/screw] step 1600/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 1650/4000 loss_img=0.0083 loss_lat=0.0006 loss_total=0.0089 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 1700/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 1750/4000 loss_img=0.0080 loss_lat=0.0007 loss_total=0.0087 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 1750 val_img=0.0166 val_lat=0.0009 val_total=0.0175 val_seg=0.0297
+[iad/screw] new best val_total=0.0175 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 1800/4000 loss_img=0.0080 loss_lat=0.0005 loss_total=0.0085 loss_seg=0.0257 lr_dit=0.0001 lr_dec=0.0000 (2.05s/step)
+[iad/screw] step 1850/4000 loss_img=0.0081 loss_lat=0.0006 loss_total=0.0087 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 1900/4000 loss_img=0.0082 loss_lat=0.0467 loss_total=0.0549 loss_seg=0.0248 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/screw] step 1950/4000 loss_img=0.0081 loss_lat=0.0005 loss_total=0.0086 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 2000/4000 loss_img=0.0081 loss_lat=0.0006 loss_total=0.0087 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 2000 val_img=0.0174 val_lat=0.0008 val_total=0.0182 val_seg=0.0298
+[iad/screw] step 2050/4000 loss_img=0.0078 loss_lat=0.0006 loss_total=0.0083 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/screw] step 2100/4000 loss_img=0.0077 loss_lat=0.0006 loss_total=0.0083 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 2150/4000 loss_img=0.0077 loss_lat=0.0006 loss_total=0.0083 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 2200/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 2250/4000 loss_img=0.0076 loss_lat=0.0006 loss_total=0.0082 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 2250 val_img=0.0170 val_lat=0.0008 val_total=0.0178 val_seg=0.0298
+[iad/screw] step 2300/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (1.78s/step)
+[iad/screw] step 2350/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0081 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/screw] step 2400/4000 loss_img=0.0075 loss_lat=0.0006 loss_total=0.0080 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/screw] step 2450/4000 loss_img=0.0075 loss_lat=0.0007 loss_total=0.0082 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 2500/4000 loss_img=0.0074 loss_lat=0.0006 loss_total=0.0080 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 2500 val_img=0.0168 val_lat=0.0007 val_total=0.0176 val_seg=0.0297
+[iad/screw] step 2550/4000 loss_img=0.0074 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/screw] step 2600/4000 loss_img=0.0073 loss_lat=0.0007 loss_total=0.0080 loss_seg=0.0295 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 2650/4000 loss_img=0.0073 loss_lat=0.0006 loss_total=0.0079 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 2700/4000 loss_img=0.0072 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 2750/4000 loss_img=0.0073 loss_lat=0.0007 loss_total=0.0079 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 2750 val_img=0.0170 val_lat=0.0007 val_total=0.0177 val_seg=0.0298
+[iad/screw] step 2800/4000 loss_img=0.0072 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/screw] step 2850/4000 loss_img=0.0072 loss_lat=0.0007 loss_total=0.0078 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 2900/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0077 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 2950/4000 loss_img=0.0071 loss_lat=0.0006 loss_total=0.0078 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 3000/4000 loss_img=0.0071 loss_lat=0.0007 loss_total=0.0078 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 3000 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/screw] new best val_total=0.0173 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 3050/4000 loss_img=0.0070 loss_lat=0.0006 loss_total=0.0076 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (2.07s/step)
+[iad/screw] step 3100/4000 loss_img=0.0070 loss_lat=0.0007 loss_total=0.0077 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 3150/4000 loss_img=0.0070 loss_lat=0.0006 loss_total=0.0076 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 3200/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 3250/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 3250 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/screw] new best val_total=0.0173 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt
+[iad/screw] step 3300/4000 loss_img=0.0069 loss_lat=0.0007 loss_total=0.0076 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (2.06s/step)
+[iad/screw] step 3350/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0277 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 3400/4000 loss_img=0.0069 loss_lat=0.0006 loss_total=0.0075 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 3450/4000 loss_img=0.0068 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 3500/4000 loss_img=0.0068 loss_lat=0.0005 loss_total=0.0074 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/screw] step 3500 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/screw] step 3550/4000 loss_img=0.0068 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/screw] step 3600/4000 loss_img=0.0067 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0271 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 3650/4000 loss_img=0.0068 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 3700/4000 loss_img=0.0068 loss_lat=0.0006 loss_total=0.0074 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 3750/4000 loss_img=0.0068 loss_lat=0.0007 loss_total=0.0074 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 3750 val_img=0.0167 val_lat=0.0007 val_total=0.0174 val_seg=0.0297
+[iad/screw] step 3800/4000 loss_img=0.0068 loss_lat=0.0007 loss_total=0.0075 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/screw] step 3850/4000 loss_img=0.0067 loss_lat=0.0006 loss_total=0.0073 loss_seg=0.0262 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 3900/4000 loss_img=0.0067 loss_lat=0.0007 loss_total=0.0073 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/screw] step 3950/4000 loss_img=0.0067 loss_lat=0.0006 loss_total=0.0073 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/screw] step 4000/4000 loss_img=0.0067 loss_lat=0.0006 loss_total=0.0073 loss_seg=0.0266 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/screw] step 4000 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/screw] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.017261624708771704
+[iad/screw] eval-only checkpoint screw_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "screw",
+      "steps": 4000,
+      "best_val": 0.017261624708771704,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/screw_best.pt"
+    }
+  ]
+}
+[iad] SDPA: math backend only (flash / memory-efficient attention off)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True}
+[iad/transistor] 193 train / 20 val normal images (cats: transistor)
+[iad/transistor] batch 2 x 4 accumulation = effective 8
+[iad/transistor] encoder offloaded to CPU (latents cached)
+[iad/transistor] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=1e-05, base_lr=0.0001, warmup_from_zero=True
+[iad/transistor] Optimizer: AdamW(lr=0.0001, decoder_lr=1e-05, betas=(0.9, 0.95), wd=0.0, eps=1e-08) [DiT + discriminator(5315841 params) + decoder groups]
+[iad/transistor] step 50/4000 loss_img=0.0908 loss_lat=0.0062 loss_total=0.0971 loss_seg=0.0365 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 100/4000 loss_img=0.0290 loss_lat=0.0012 loss_total=0.0302 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.68s/step)
+[iad/transistor] step 150/4000 loss_img=0.0245 loss_lat=0.0008 loss_total=0.0253 loss_seg=0.0314 lr_dit=0.0000 lr_dec=0.0000 (1.70s/step)
+[iad/transistor] step 200/4000 loss_img=0.0219 loss_lat=0.0007 loss_total=0.0226 loss_seg=0.0286 lr_dit=0.0001 lr_dec=0.0000 (1.96s/step)
+[iad/transistor] step 250/4000 loss_img=0.0198 loss_lat=0.0006 loss_total=0.0204 loss_seg=0.0268 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 250 val_img=0.0229 val_lat=0.0094 val_total=0.0322 val_seg=0.0300
+[iad/transistor] new best val_total=0.0322 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 300/4000 loss_img=0.0182 loss_lat=0.0008 loss_total=0.0190 loss_seg=0.0320 lr_dit=0.0001 lr_dec=0.0000 (2.03s/step)
+[iad/transistor] step 350/4000 loss_img=0.0173 loss_lat=0.0007 loss_total=0.0180 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 400/4000 loss_img=0.0165 loss_lat=0.0008 loss_total=0.0172 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 450/4000 loss_img=0.0156 loss_lat=0.0007 loss_total=0.0163 loss_seg=0.0305 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 500/4000 loss_img=0.0149 loss_lat=0.0007 loss_total=0.0156 loss_seg=0.0309 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 500 val_img=0.0194 val_lat=0.0073 val_total=0.0267 val_seg=0.0296
+[iad/transistor] new best val_total=0.0267 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 550/4000 loss_img=0.0143 loss_lat=0.0007 loss_total=0.0150 loss_seg=0.0288 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/transistor] step 600/4000 loss_img=0.0141 loss_lat=0.0007 loss_total=0.0149 loss_seg=0.0301 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 650/4000 loss_img=0.0136 loss_lat=0.0006 loss_total=0.0142 loss_seg=0.0252 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 700/4000 loss_img=0.0131 loss_lat=0.0007 loss_total=0.0138 loss_seg=0.0300 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 750/4000 loss_img=0.0129 loss_lat=0.0005 loss_total=0.0134 loss_seg=0.0231 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 750 val_img=0.0186 val_lat=0.0055 val_total=0.0242 val_seg=0.0297
+[iad/transistor] new best val_total=0.0242 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 800/4000 loss_img=0.0124 loss_lat=0.0007 loss_total=0.0131 loss_seg=0.0271 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/transistor] step 850/4000 loss_img=0.0124 loss_lat=0.0007 loss_total=0.0130 loss_seg=0.0273 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 900/4000 loss_img=0.0122 loss_lat=0.0006 loss_total=0.0128 loss_seg=0.0260 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 950/4000 loss_img=0.0120 loss_lat=0.0007 loss_total=0.0127 loss_seg=0.0280 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 1000/4000 loss_img=0.0119 loss_lat=0.0006 loss_total=0.0125 loss_seg=0.0239 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 1000 val_img=0.0176 val_lat=0.0033 val_total=0.0210 val_seg=0.0299
+[iad/transistor] new best val_total=0.0210 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 1050/4000 loss_img=0.0115 loss_lat=0.0006 loss_total=0.0121 loss_seg=0.0254 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/transistor] step 1100/4000 loss_img=0.0114 loss_lat=0.0006 loss_total=0.0120 loss_seg=0.0256 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 1150/4000 loss_img=0.0113 loss_lat=0.0006 loss_total=0.0119 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 1200/4000 loss_img=0.0112 loss_lat=0.0007 loss_total=0.0119 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 1250/4000 loss_img=0.0110 loss_lat=0.0007 loss_total=0.0117 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 1250 val_img=0.0173 val_lat=0.0016 val_total=0.0188 val_seg=0.0298
+[iad/transistor] new best val_total=0.0188 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 1300/4000 loss_img=0.0109 loss_lat=0.0006 loss_total=0.0115 loss_seg=0.0255 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/transistor] step 1350/4000 loss_img=0.0107 loss_lat=0.0007 loss_total=0.0114 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 1400/4000 loss_img=0.0106 loss_lat=0.0007 loss_total=0.0113 loss_seg=0.0265 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 1450/4000 loss_img=0.0104 loss_lat=0.0007 loss_total=0.0111 loss_seg=0.0294 lr_dit=0.0001 lr_dec=0.0000 (1.71s/step)
+[iad/transistor] step 1500/4000 loss_img=0.0104 loss_lat=0.0007 loss_total=0.0111 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 1500 val_img=0.0169 val_lat=0.0010 val_total=0.0179 val_seg=0.0297
+[iad/transistor] new best val_total=0.0179 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 1550/4000 loss_img=0.0103 loss_lat=0.0007 loss_total=0.0110 loss_seg=0.0267 lr_dit=0.0001 lr_dec=0.0000 (2.04s/step)
+[iad/transistor] step 1600/4000 loss_img=0.0102 loss_lat=0.0006 loss_total=0.0108 loss_seg=0.0262 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 1650/4000 loss_img=0.0101 loss_lat=0.0006 loss_total=0.0107 loss_seg=0.0264 lr_dit=0.0001 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 1700/4000 loss_img=0.0099 loss_lat=0.0007 loss_total=0.0107 loss_seg=0.0292 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 1750/4000 loss_img=0.0100 loss_lat=0.0007 loss_total=0.0107 loss_seg=0.0291 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 1750 val_img=0.0170 val_lat=0.0008 val_total=0.0178 val_seg=0.0297
+[iad/transistor] new best val_total=0.0178 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 1800/4000 loss_img=0.0099 loss_lat=0.0006 loss_total=0.0105 loss_seg=0.0258 lr_dit=0.0001 lr_dec=0.0000 (2.07s/step)
+[iad/transistor] step 1850/4000 loss_img=0.0099 loss_lat=0.0007 loss_total=0.0106 loss_seg=0.0287 lr_dit=0.0001 lr_dec=0.0000 (1.70s/step)
+[iad/transistor] step 1900/4000 loss_img=0.0098 loss_lat=0.0006 loss_total=0.0104 loss_seg=0.0249 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 1950/4000 loss_img=0.0097 loss_lat=0.0006 loss_total=0.0103 loss_seg=0.0241 lr_dit=0.0001 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 2000/4000 loss_img=0.0097 loss_lat=0.0007 loss_total=0.0104 loss_seg=0.0272 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 2000 val_img=0.0166 val_lat=0.0008 val_total=0.0174 val_seg=0.0298
+[iad/transistor] new best val_total=0.0174 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 2050/4000 loss_img=0.0096 loss_lat=0.0007 loss_total=0.0103 loss_seg=0.0261 lr_dit=0.0001 lr_dec=0.0000 (2.08s/step)
+[iad/transistor] step 2100/4000 loss_img=0.0095 loss_lat=0.0007 loss_total=0.0102 loss_seg=0.0289 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 2150/4000 loss_img=0.0094 loss_lat=0.0007 loss_total=0.0101 loss_seg=0.0276 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 2200/4000 loss_img=0.0094 loss_lat=0.0007 loss_total=0.0101 loss_seg=0.0274 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 2250/4000 loss_img=0.0094 loss_lat=0.0007 loss_total=0.0101 loss_seg=0.0283 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 2250 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0298
+[iad/transistor] new best val_total=0.0173 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 2300/4000 loss_img=0.0095 loss_lat=0.0007 loss_total=0.0102 loss_seg=0.0285 lr_dit=0.0001 lr_dec=0.0000 (2.06s/step)
+[iad/transistor] step 2350/4000 loss_img=0.0093 loss_lat=0.0007 loss_total=0.0100 loss_seg=0.0270 lr_dit=0.0001 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 2400/4000 loss_img=0.0092 loss_lat=0.0006 loss_total=0.0099 loss_seg=0.0266 lr_dit=0.0001 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 2450/4000 loss_img=0.0092 loss_lat=0.0008 loss_total=0.0099 loss_seg=0.0301 lr_dit=0.0000 lr_dec=0.0000 (1.75s/step)
+[iad/transistor] step 2500/4000 loss_img=0.0092 loss_lat=0.0007 loss_total=0.0099 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 2500 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/transistor] step 2550/4000 loss_img=0.0091 loss_lat=0.0008 loss_total=0.0098 loss_seg=0.0299 lr_dit=0.0000 lr_dec=0.0000 (1.79s/step)
+[iad/transistor] step 2600/4000 loss_img=0.0091 loss_lat=0.0007 loss_total=0.0098 loss_seg=0.0295 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 2650/4000 loss_img=0.0091 loss_lat=0.0007 loss_total=0.0097 loss_seg=0.0267 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 2700/4000 loss_img=0.0090 loss_lat=0.0007 loss_total=0.0097 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 2750/4000 loss_img=0.0090 loss_lat=0.0008 loss_total=0.0097 loss_seg=0.0302 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 2750 val_img=0.0166 val_lat=0.0007 val_total=0.0173 val_seg=0.0298
+[iad/transistor] step 2800/4000 loss_img=0.0089 loss_lat=0.0007 loss_total=0.0096 loss_seg=0.0276 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 2850/4000 loss_img=0.0089 loss_lat=0.0007 loss_total=0.0096 loss_seg=0.0303 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 2900/4000 loss_img=0.0089 loss_lat=0.0006 loss_total=0.0095 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 2950/4000 loss_img=0.0089 loss_lat=0.0007 loss_total=0.0096 loss_seg=0.0287 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 3000/4000 loss_img=0.0088 loss_lat=0.0007 loss_total=0.0096 loss_seg=0.0293 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 3000 val_img=0.0165 val_lat=0.0007 val_total=0.0173 val_seg=0.0297
+[iad/transistor] new best val_total=0.0173 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 3050/4000 loss_img=0.0087 loss_lat=0.0007 loss_total=0.0095 loss_seg=0.0279 lr_dit=0.0000 lr_dec=0.0000 (2.03s/step)
+[iad/transistor] step 3100/4000 loss_img=0.0087 loss_lat=0.0007 loss_total=0.0095 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (1.76s/step)
+[iad/transistor] step 3150/4000 loss_img=0.0087 loss_lat=0.0007 loss_total=0.0093 loss_seg=0.0273 lr_dit=0.0000 lr_dec=0.0000 (1.70s/step)
+[iad/transistor] step 3200/4000 loss_img=0.0087 loss_lat=0.0006 loss_total=0.0093 loss_seg=0.0256 lr_dit=0.0000 lr_dec=0.0000 (1.70s/step)
+[iad/transistor] step 3250/4000 loss_img=0.0086 loss_lat=0.0007 loss_total=0.0093 loss_seg=0.0264 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 3250 val_img=0.0165 val_lat=0.0007 val_total=0.0172 val_seg=0.0297
+[iad/transistor] new best val_total=0.0172 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 3300/4000 loss_img=0.0086 loss_lat=0.0008 loss_total=0.0094 loss_seg=0.0298 lr_dit=0.0000 lr_dec=0.0000 (2.09s/step)
+[iad/transistor] step 3350/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0278 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 3400/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 3450/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0263 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 3500/4000 loss_img=0.0085 loss_lat=0.0006 loss_total=0.0091 loss_seg=0.0244 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 3500 val_img=0.0165 val_lat=0.0007 val_total=0.0172 val_seg=0.0297
+[iad/transistor] step 3550/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0282 lr_dit=0.0000 lr_dec=0.0000 (1.77s/step)
+[iad/transistor] step 3600/4000 loss_img=0.0084 loss_lat=0.0007 loss_total=0.0091 loss_seg=0.0271 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 3650/4000 loss_img=0.0084 loss_lat=0.0007 loss_total=0.0091 loss_seg=0.0272 lr_dit=0.0000 lr_dec=0.0000 (1.72s/step)
+[iad/transistor] step 3700/4000 loss_img=0.0085 loss_lat=0.0007 loss_total=0.0092 loss_seg=0.0289 lr_dit=0.0000 lr_dec=0.0000 (1.74s/step)
+[iad/transistor] step 3750/4000 loss_img=0.0084 loss_lat=0.0008 loss_total=0.0092 loss_seg=0.0304 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 3750 val_img=0.0165 val_lat=0.0007 val_total=0.0172 val_seg=0.0297
+[iad/transistor] new best val_total=0.0172 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] step 3800/4000 loss_img=0.0084 loss_lat=0.0007 loss_total=0.0091 loss_seg=0.0296 lr_dit=0.0000 lr_dec=0.0000 (2.06s/step)
+[iad/transistor] step 3850/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0090 loss_seg=0.0262 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 3900/4000 loss_img=0.0084 loss_lat=0.0007 loss_total=0.0091 loss_seg=0.0292 lr_dit=0.0000 lr_dec=0.0000 (1.71s/step)
+[iad/transistor] step 3950/4000 loss_img=0.0084 loss_lat=0.0006 loss_total=0.0090 loss_seg=0.0252 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 4000/4000 loss_img=0.0083 loss_lat=0.0007 loss_total=0.0090 loss_seg=0.0266 lr_dit=0.0000 lr_dec=0.0000 (1.73s/step)
+[iad/transistor] step 4000 val_img=0.0165 val_lat=0.0007 val_total=0.0172 val_seg=0.0297
+[iad/transistor] new best val_total=0.0172 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt
+[iad/transistor] done at step 4000; encoder_frozen=True; decoder_finetune=True; adaptor=None; best_total=0.017204420547932385
+[iad/transistor] eval-only checkpoint transistor_best.pt: 5.1 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "transistor",
+      "steps": 4000,
+      "best_val": 0.017204420547932385,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/E_image_l1_latent_decfinetune/transistor_best.pt"
+    }
+  ]
+}
