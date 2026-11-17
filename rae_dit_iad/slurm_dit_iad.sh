@@ -10,14 +10,15 @@
 #SBATCH --error=RAE_DIT_IAD_%j.err
 #SBATCH -v
 #
-# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=retry): the arms job 156032 lost. PLAN=all: every experiment, one
+# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=samelr): A@2, J, J3, K5 at lr 2e-5. PLAN=all: every experiment, one
 # DiT per category. PLAN=structured: J3-J5, K5 (+ A, J2). PLAN=next: J2, K2, A@1, A@2.
 # PLAN=matrix: the 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
 # The pipeline is single-process (one model per GPU, no DDP), so instead of torchrun
 # each GPU gets its own queue of experiments and works through it with run_dit_iad.sh
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
-#   sbatch slurm_dit_iad.sh                           # PLAN=retry: the 7 arms job 156032 lost
+#   sbatch slurm_dit_iad.sh                           # PLAN=samelr: A@2 J J3 K5 at lr 2e-5
+#   PLAN=retry sbatch slurm_dit_iad.sh                # the 7 arms job 156032 lost (job 158158)
 #   PLAN=all sbatch slurm_dit_iad.sh                  # 20 runs x 2 categories (carpet, screw)
 #   CATS="carpet grid hazelnut screw transistor" sbatch slurm_dit_iad.sh  # the 5 pilot categories
 #   STEPS=2000 sbatch slurm_dit_iad.sh                # half the steps per category model
@@ -52,7 +53,9 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 # ---- one queue per GPU ----------------------------------------------------------
 # An entry is an experiment (letter or config basename), optionally with @SEED to
 # run that entry at one seed only (overrides SEEDS), e.g. "A@1".
-#   PLAN=retry  (default) only the 7 arms job 156032 stopped on the non-finite guard
+#   PLAN=samelr (default) A@2, J, J3, K5: the latent arms job 156032 finished at lr 1e-4,
+#               rerun at 2e-5 so every latent arm shares one lr (carpet + screw)
+#   PLAN=retry  job 158158: only the 7 arms job 156032 stopped on the non-finite guard
 #               (A seeds 0-1, J2, J4, J5, K, K2), at lr 2e-5. Its finished arms keep
 #               their results in place (each arm writes only to its own <exp_id>/).
 #   PLAN=all    every experiment so far, one DiT per category (SCOPE,
@@ -64,8 +67,9 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 #   PLAN=matrix the full A-K matrix + noise ablations of job 152776
 # MVTec categories: one texture (carpet) + one object (screw) by default
 export CATS=${CATS:-"carpet screw"}
-PLAN=${PLAN:-retry}
+PLAN=${PLAN:-samelr}
 case "$PLAN" in
+  samelr)     QUEUES=("A@2" "J" "J3" "K5") ;;
   retry)      QUEUES=("A@0 J4" "A@1 J5" "K J2" "K2") ;;
   all)        QUEUES=("A J B C D"
                       "A@1 K E F G"
@@ -74,7 +78,7 @@ case "$PLAN" in
   structured) QUEUES=("J3 A" "J4 J2" "J5" "K5") ;;
   next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
   matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
-  *) echo "unknown PLAN '$PLAN' (retry | all | structured | next | matrix)"; exit 1 ;;
+  *) echo "unknown PLAN '$PLAN' (samelr | retry | all | structured | next | matrix)"; exit 1 ;;
 esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------

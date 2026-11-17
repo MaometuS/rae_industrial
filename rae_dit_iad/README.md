@@ -549,14 +549,26 @@ arms that failed (A, J2, J4, J5, K, K2) now use lr 2e-5, final 2e-6.
 
 **Job 156032 results are kept for the arms that finished** (B-G, J, J3, K5, A@2, the three
 noise ablations; 5 categories, lr 1e-4). Their configs stay at lr 1e-4 so they match those
-results. `PLAN=retry` (the SLURM default) reruns only the 7 runs the guard stopped (A at
+results. `PLAN=retry` reruns only the 7 runs the guard stopped (A at
 seeds 0-1, J2, J4, J5, K, K2) at lr 2e-5 on carpet + screw. Each arm writes only to its own
 `<exp_id>/`, so the finished arms' results are untouched. Caveats when comparing: the
 retried arms use a 5x lower lr, and their means cover 2 categories instead of 5. Compare
 them on the carpet and screw rows. A@2 finished at 1e-4, so the three A seeds no longer
 share an lr. J, J3, K5 and A@2 also skipped 1-63 updates in some categories.
 
-**Next (`PLAN=all`, the SLURM default):** every experiment so far, per category --
+**Job 158158 (`PLAN=retry`, lr 2e-5, carpet + screw): all 7 runs finished.** Only J2 on
+screw skipped updates (28 of 4000). Image AUROC (max, mean of carpet and screw): J5 mix
+0.955 (latent_cos, AUPRO 0.904, best pixel AUROC 0.980), A seeds 0/1 0.924/0.933, J4 0.909
+(disc), K2 0.904, J2 0.892 (disc), K 0.810. With the same lr, the anchored adaptor does
+not help (K vs J, K2 vs J2 within 0.02); the corruption type does (strong noise, DTD
+paste and the mix all beat plain J/K by about 0.1). A dropped from 0.971 (seed 2, lr 1e-4)
+to 0.92-0.93 at 2e-5, so lr or seed noise moves A by ~0.04.
+
+**Next (`PLAN=samelr`, the SLURM default):** A@2, J, J3 and K5 at lr 2e-5 on carpet +
+screw, so every latent arm shares one lr. Their configs (A already) are now at 2e-5. The
+156032 results of those four (5 categories, lr 1e-4) are moved aside as `previous_*`.
+
+**`PLAN=all`:** every experiment so far, per category --
 A (seeds 0–2), B–G, J, K, the three noise ablations, J2, K2, J3 token swap, J4 DTD
 texture paste, J5 mix, K5 mix + adaptor (20 runs × 2 category models: carpet as
 the texture, screw as the object; `CATS="..."` restores the 5 pilot categories). DTD is read
