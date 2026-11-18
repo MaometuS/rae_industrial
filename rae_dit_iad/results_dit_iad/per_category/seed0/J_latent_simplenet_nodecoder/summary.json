@@ -1,14 +1,14 @@
 {
   "runs": [
     {
-      "scope": "transistor",
+      "scope": "screw",
       "steps": 4000,
-      "best_val": 0.0006452567438827827,
+      "best_val": 0.0006725648214342073,
       "skipped_dit_steps": 0,
       "skipped_head_steps": 0,
       "encoder_frozen": true,
-      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/J_latent_simplenet_nodecoder/transistor_last.pt",
-      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/J_latent_simplenet_nodecoder/transistor_best.pt"
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/J_latent_simplenet_nodecoder/screw_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/J_latent_simplenet_nodecoder/screw_best.pt"
     }
   ]
 }
