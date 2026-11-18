@@ -564,9 +564,22 @@ not help (K vs J, K2 vs J2 within 0.02); the corruption type does (strong noise,
 paste and the mix all beat plain J/K by about 0.1). A dropped from 0.971 (seed 2, lr 1e-4)
 to 0.92-0.93 at 2e-5, so lr or seed noise moves A by ~0.04.
 
-**Next (`PLAN=samelr`, the SLURM default):** A@2, J, J3 and K5 at lr 2e-5 on carpet +
+**`PLAN=samelr`:** A@2, J, J3 and K5 at lr 2e-5 on carpet +
 screw, so every latent arm shares one lr. Their configs (A already) are now at 2e-5. The
 156032 results of those four (5 categories, lr 1e-4) are moved aside as `previous_*`.
+
+**Job 158355 (`PLAN=samelr`): all 4 runs finished, no skipped updates.** Every latent arm
+is now at lr 2e-5 on carpet + screw. Image AUROC (max, mean of the two), latent_cos unless
+noted: J5 mix 0.955, K5 mix + adaptor 0.949, A 0.933 +- 0.009 (3 seeds), J4 DTD 0.909
+(disc), K2 0.904, J3 swap 0.901, J2 0.892 (disc), J 0.815, K 0.810. J5 and K5 match or beat
+A at one seed; J5 and K5 are the only arms other than A above 0.89 on screw (0.911, 0.899).
+The adaptor still does not help at the same lr (K vs J, K2 vs J2, K5 vs J5 within 0.01).
+At 1e-4, K5 (0.812) and J3 (0.814) had looked weak: the lr, not the method. A at 2e-5 is
+~0.03 below A seed 2 at 1e-4 (0.971), more than the seed spread.
+
+**Next (`PLAN=seeds`, the SLURM default):** J5 and K5 at seeds 1 and 2 (carpet + screw,
+lr 2e-5), so the two best arms have 3 seeds like A and the gap to A (~0.02) can be
+compared with seed noise.
 
 **`PLAN=all`:** every experiment so far, per category --
 A (seeds 0–2), B–G, J, K, the three noise ablations, J2, K2, J3 token swap, J4 DTD
