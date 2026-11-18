@@ -577,9 +577,15 @@ The adaptor still does not help at the same lr (K vs J, K2 vs J2, K5 vs J5 withi
 At 1e-4, K5 (0.812) and J3 (0.814) had looked weak: the lr, not the method. A at 2e-5 is
 ~0.03 below A seed 2 at 1e-4 (0.971), more than the seed spread.
 
-**Next (`PLAN=seeds`, the SLURM default):** J5 and K5 at seeds 1 and 2 (carpet + screw,
-lr 2e-5), so the two best arms have 3 seeds like A and the gap to A (~0.02) can be
-compared with seed noise.
+**`PLAN=seeds` (job 158993):** J5 and K5 at seeds 1 and 2 (carpet + screw, lr 2e-5), so
+the two best arms have 3 seeds like A. Carpet: J5 and K5 reach 1.000 image AUROC at every
+seed (A 0.957-0.970); screw was still training when these results were pushed.
+
+**Next (`PLAN=full`, the SLURM default):** J5 and K5 at seed 0 on all 15 MVTec categories
+(lr 2e-5). Carpet and screw already ran with this config (jobs 158158, 158355) and are
+kept; the other 13 categories are trained, each arm split over two GPUs (7 + 6
+categories). `KEEP_RESULTS=1` makes every worker add to the arm's existing `results.csv`
+instead of archiving it. A queue entry can carry its own categories: `J5:tile,wood`.
 
 **`PLAN=all`:** every experiment so far, per category --
 A (seeds 0–2), B–G, J, K, the three noise ablations, J2, K2, J3 token swap, J4 DTD

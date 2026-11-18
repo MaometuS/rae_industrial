@@ -10,14 +10,15 @@
 #SBATCH --error=RAE_DIT_IAD_%j.err
 #SBATCH -v
 #
-# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=seeds): J5, K5 at seeds 1-2. PLAN=all: every experiment, one
+# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=full): J5, K5 on all 15 categories. PLAN=all: every experiment, one
 # DiT per category. PLAN=structured: J3-J5, K5 (+ A, J2). PLAN=next: J2, K2, A@1, A@2.
 # PLAN=matrix: the 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
 # The pipeline is single-process (one model per GPU, no DDP), so instead of torchrun
 # each GPU gets its own queue of experiments and works through it with run_dit_iad.sh
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
-#   sbatch slurm_dit_iad.sh                           # PLAN=seeds: J5 and K5 at seeds 1, 2
+#   sbatch slurm_dit_iad.sh                           # PLAN=full: J5, K5 on all 15 MVTec categories
+#   PLAN=seeds sbatch slurm_dit_iad.sh                # J5 and K5 at seeds 1, 2 (job 158993)
 #   PLAN=samelr sbatch slurm_dit_iad.sh               # A@2 J J3 K5 at lr 2e-5 (job 158355)
 #   PLAN=retry sbatch slurm_dit_iad.sh                # the 7 arms job 156032 lost (job 158158)
 #   PLAN=all sbatch slurm_dit_iad.sh                  # 20 runs x 2 categories (carpet, screw)
@@ -53,8 +54,12 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 
 # ---- one queue per GPU ----------------------------------------------------------
 # An entry is an experiment (letter or config basename), optionally with @SEED to
-# run that entry at one seed only (overrides SEEDS), e.g. "A@1".
-#   PLAN=seeds  (default) J5 and K5 at seeds 1 and 2 (carpet + screw, lr 2e-5): do they
+# run that entry at one seed only (overrides SEEDS), e.g. "A@1", and/or with :CATS to
+# run it on its own comma-separated categories (overrides CATS), e.g. "J5:tile,wood".
+#   PLAN=full   (default) J5 and K5 at seed 0 on the 13 MVTec categories not run yet
+#               (carpet + screw are kept), each arm split over two GPUs; KEEP_RESULTS=1
+#               so the workers add to the arm's existing results.csv
+#   PLAN=seeds  job 158993: J5 and K5 at seeds 1 and 2 (carpet + screw, lr 2e-5): do they
 #               beat A (0.933 +- 0.009 over 3 seeds) beyond seed noise?
 #   PLAN=samelr job 158355: A@2, J, J3, K5: the latent arms job 156032 finished at lr 1e-4,
 #               rerun at 2e-5 so every latent arm shares one lr (carpet + screw)
@@ -70,8 +75,11 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 #   PLAN=matrix the full A-K matrix + noise ablations of job 152776
 # MVTec categories: one texture (carpet) + one object (screw) by default
 export CATS=${CATS:-"carpet screw"}
-PLAN=${PLAN:-seeds}
+PLAN=${PLAN:-full}
 case "$PLAN" in
+  full)       QUEUES=("J5:bottle,cable,capsule,grid,hazelnut,leather,metal_nut" "J5:pill,tile,toothbrush,transistor,wood,zipper" "K5:bottle,cable,capsule,grid,hazelnut,leather,metal_nut" "K5:pill,tile,toothbrush,transistor,wood,zipper")
+              CATS="carpet screw bottle cable capsule grid hazelnut leather metal_nut pill tile toothbrush transistor wood zipper"
+              export KEEP_RESULTS=1 ;;
   seeds)      QUEUES=("J5@1" "J5@2" "K5@1" "K5@2") ;;
   samelr)     QUEUES=("A@2" "J" "J3" "K5") ;;
   retry)      QUEUES=("A@0 J4" "A@1 J5" "K J2" "K2") ;;
@@ -82,7 +90,7 @@ case "$PLAN" in
   structured) QUEUES=("J3 A" "J4 J2" "J5" "K5") ;;
   next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
   matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
-  *) echo "unknown PLAN '$PLAN' (seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
+  *) echo "unknown PLAN '$PLAN' (full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
 esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------
@@ -266,7 +274,7 @@ sys.exit(0 if n else 1)
 PYDTD
   )
 }
-if [[ " ${QUEUES[*]} " =~ [[:space:]](J4|J5|K5)(@[0-9]+)?[[:space:]] ]]; then
+if [[ " ${QUEUES[*]} " =~ [[:space:]](J4|J5|K5)(@[0-9]+)?(:[^[:space:]]*)?[[:space:]] ]]; then
   with_lock ensure_dtd || { echo "DTD setup failed (set DTD_ROOT); nothing was run"; exit 1; }
 fi
 set -u
@@ -304,14 +312,17 @@ for i in "${!QUEUES[@]}"; do
   (
     export CUDA_VISIBLE_DEVICES="${GPUS[$i]}"
     for item in ${QUEUES[$i]}; do  # one exp at a time, so one failure doesn't stop the queue
-      exp=${item%@*}
+      spec=${item%%:*}                  # EXP[@SEED]
+      cats=$CATS
+      [[ "$item" == *:* ]] && cats=${item#*:} && cats=${cats//,/ }
+      exp=${spec%@*}
       seeds=$SEEDS
-      [[ "$item" == *@* ]] && seeds=${item#*@}
+      [[ "$spec" == *@* ]] && seeds=${spec#*@}
       if [ -n "${ONLY:-}" ] && [[ " $ONLY " != *" $exp "* && " $ONLY " != *" $item "* ]]; then
         continue
       fi
       echo "[gpu ${GPUS[$i]}] start $item $(date +%T)"
-      if EXPT="$exp" SEEDS="$seeds" bash "$HERE/run_dit_iad.sh"; then
+      if EXPT="$exp" SEEDS="$seeds" CATS="$cats" bash "$HERE/run_dit_iad.sh"; then
         echo "[gpu ${GPUS[$i]}] done  $item $(date +%T)"
       else
         echo "[gpu ${GPUS[$i]}] FAILED $item $(date +%T)"

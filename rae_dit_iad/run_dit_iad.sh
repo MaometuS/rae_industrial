@@ -42,6 +42,9 @@ CKPT_ROOT=${CKPT_ROOT:-/po1/rakhimov/training/rae_dit_iad}
 # SCOPE=per_category and STAGE="train eval" each category is then trained, evaluated
 # and deleted in turn, so a run holds at most one ~3.5 GB checkpoint at a time.
 KEEP_CKPT=${KEEP_CKPT:-0}
+# KEEP_RESULTS=1: add to the experiment's existing results instead of archiving them on a
+# fresh training (more categories for the same run, or several workers on one arm)
+KEEP_RESULTS=${KEEP_RESULTS:-0}
 EXPT=${EXPT:-"A B C D E F G J K"}
 STAGE=${STAGE:-"train eval"}      # "train", "eval" or "train eval"
 STEPS=${STEPS:-""}                # empty = config default (4000)
@@ -132,7 +135,7 @@ for exp in $EXPT; do
     else
       PASSES="__all__"
     fi
-    FIRST=1
+    FIRST=1; [ "$KEEP_RESULTS" = 1 ] && FIRST=0
     for PASS in $PASSES; do
     if [ "$PASS" = "__all__" ]; then PCATS=$CATS; else PCATS=$PASS; fi
 
