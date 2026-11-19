@@ -10,14 +10,16 @@
 #SBATCH --error=RAE_DIT_IAD_%j.err
 #SBATCH -v
 #
-# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=loco): MVTec LOCO (J5, A, J3, kNN). PLAN=all: every experiment, one
+# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=loc): localization ablation on 5 MVTec
+# categories (J5, J5 + pixel head, J5 on a 32x32 grid). PLAN=loco: MVTec LOCO (J5, A, J3, kNN). PLAN=all: every experiment, one
 # DiT per category. PLAN=structured: J3-J5, K5 (+ A, J2). PLAN=next: J2, K2, A@1, A@2.
 # PLAN=matrix: the 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
 # The pipeline is single-process (one model per GPU, no DDP), so instead of torchrun
 # each GPU gets its own queue of experiments and works through it with run_dit_iad.sh
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
-#   sbatch slurm_dit_iad.sh                           # PLAN=loco: MVTec LOCO, J5 A J3 + kNN
+#   sbatch slurm_dit_iad.sh                           # PLAN=loc: localization ablation
+#   PLAN=loco sbatch slurm_dit_iad.sh                 # MVTec LOCO, J5 A J3 + kNN
 #   PLAN=full sbatch slurm_dit_iad.sh                 # J5, K5 on all 15 MVTec categories
 #   PLAN=seeds sbatch slurm_dit_iad.sh                # J5 and K5 at seeds 1, 2 (job 158993)
 #   PLAN=samelr sbatch slurm_dit_iad.sh               # A@2 J J3 K5 at lr 2e-5 (job 158355)
@@ -57,7 +59,14 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 # An entry is an experiment (letter or config basename), optionally with @SEED to
 # run that entry at one seed only (overrides SEEDS), e.g. "A@1", and/or with :CATS to
 # run it on its own comma-separated categories (overrides CATS), e.g. "J5:tile,wood".
-#   PLAN=loco   (default) MVTec LOCO AD (5 categories, LOCO_ROOT): J5 (split over two GPUs), A,
+#   PLAN=loc    (default) localization ablation on the 5 MVTec AD categories where J5
+#               localizes worst (metal_nut, tile, transistor, wood, cable; pixel AUROC
+#               0.86-0.90): J5 retrained (seed 0, its checkpoints were deleted), J5 +
+#               pixel head, J5 on a 32x32 grid (split over two GPUs). Every checkpoint
+#               is scored with LOC_SCORES at blur sigmas LOC_BLURS before it is deleted:
+#               oracles, shift TTA, guided filter, decoder difference, fusions, pixel
+#               head. Results in results_dit_iad_loc/.
+#   PLAN=loco   MVTec LOCO AD (5 categories, LOCO_ROOT): J5 (split over two GPUs), A,
 #               J3 and the frozen-token kNN control. Results in results_dit_iad_loco/,
 #               checkpoints in CKPT_ROOT/../rae_dit_iad_loco: never mixed with MVTec AD.
 #   PLAN=full   job 159148: J5 and K5 at seed 0 on the 13 MVTec categories not run yet
@@ -79,8 +88,18 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 #   PLAN=matrix the full A-K matrix + noise ablations of job 152776
 # MVTec categories: one texture (carpet) + one object (screw) by default
 export CATS=${CATS:-"carpet screw"}
-PLAN=${PLAN:-loco}
+PLAN=${PLAN:-loc}
+# localization ablation (PLAN=loc): every spec is one row per blur sigma, from shared
+# DiT passes (iad/infer.py score_maps). Specs a checkpoint cannot compute (pxhead
+# without a pixel head) are skipped with a message.
+LOC_SCORES=${LOC_SCORES:-"latent_cos,disc,pixel,dec_diff,fuse_dec,fuse_pixel,fuse_disc,oracle16,oracle32,oracle16+gf,latent_cos+s4,latent_cos+s16,disc+s4,disc+s16,fuse_dec+s4,latent_cos+gf,disc+gf,fuse_dec+gf,disc+s4+gf,pxhead,pxhead+s4"}
+LOC_BLURS=${LOC_BLURS:-"0,1,2,4,8"}
 case "$PLAN" in
+  loc)        QUEUES=("J5" "J5_pixel_head" "J5_grid32:metal_nut,tile,transistor" "J5_grid32:wood,cable")
+              export OUT=${OUT_LOC:-$HERE/results_dit_iad_loc}
+              CATS="metal_nut tile transistor wood cable"
+              export SCORES=$LOC_SCORES BLUR_SWEEP=$LOC_BLURS
+              export KEEP_RESULTS=1 ;;
   loco)       QUEUES=("J5:breakfast_box,juice_bottle,pushpins" "J5:screw_bag,splicing_connectors" "A" "J3 knn")
               export MVTEC_ROOT=${LOCO_ROOT:-/po1/rakhimov/datasets/mvtec_loco}
               export OUT=${OUT_LOCO:-$HERE/results_dit_iad_loco}
@@ -100,7 +119,7 @@ case "$PLAN" in
   structured) QUEUES=("J3 A" "J4 J2" "J5" "K5") ;;
   next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
   matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
-  *) echo "unknown PLAN '$PLAN' (loco | full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
+  *) echo "unknown PLAN '$PLAN' (loc | loco | full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
 esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------
@@ -284,7 +303,7 @@ sys.exit(0 if n else 1)
 PYDTD
   )
 }
-if [[ " ${QUEUES[*]} " =~ [[:space:]](J4|J5|K5)(@[0-9]+)?(:[^[:space:]]*)?[[:space:]] ]]; then
+if [[ " ${QUEUES[*]} " =~ [[:space:]](J4|J5|K5|J5_[a-z0-9_]+)(@[0-9]+)?(:[^[:space:]]*)?[[:space:]] ]]; then
   with_lock ensure_dtd || { echo "DTD setup failed (set DTD_ROOT); nothing was run"; exit 1; }
 fi
 set -u

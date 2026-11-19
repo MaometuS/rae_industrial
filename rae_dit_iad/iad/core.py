@@ -432,8 +432,13 @@ def structured_corrupt(
     noise_cfg: Optional[Dict[str, Any]],
     size: int,
     generator: Optional[torch.Generator] = None,
+    aux: Optional[Dict[str, Any]] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, list]:
     """Synthetic anomaly for the SimpleNet path, by ``noise.kind``.
+
+    ``aux`` (a dict, optional) receives ``x_in`` (the images with the DTD paste
+    applied where it was), ``pmask`` (the pixel Perlin mask) and ``kinds``: the
+    pixel-resolution head's inputs and targets.  It draws no extra randomness.
 
     ``z0`` is the (adapted) clean latent.  Returns ``(z_in, m, t, kinds)``:
     ``m`` the token mask (loss weights and the DRAEM head's target), ``t`` the
@@ -475,8 +480,19 @@ def structured_corrupt(
         full = zin.clone()
         full[ii] = za
         zin = full
+        if aux is not None:
+            x_in = images.clone()
+            x_in[ii] = xa.to(images.dtype)
+            aux["x_in"] = x_in
     clean = (mask.flatten(1).sum(1) == 0).view(-1, 1, 1, 1)
     zin = torch.where(clean, z0, zin)
+    if aux is not None:
+        aux.setdefault("x_in", images)
+        aux["pmask"] = pmask
+        aux["kinds"] = kinds
+        aux["clean"] = clean.view(-1)
+        if "dtd" in kinds:  # a clean sample keeps its original image
+            aux["x_in"] = torch.where(clean.view(-1, 1, 1, 1), images, aux["x_in"])
     return zin, mask, t, kinds
 
 
@@ -599,7 +615,8 @@ def image_reconstruction_loss(
 
     Returns ``(loss, reconstruction)``.
     """
-    recon = rae.decode(zhat)
+    from iad.models import decode_latent
+    recon = decode_latent(rae, zhat)  # any latent grid (32x32 is pooled to 16)
     if recon.shape[-2:] != images.shape[-2:]:
         recon = F.interpolate(recon, size=images.shape[-2:], mode="bilinear", align_corners=False)
     if clamp:
@@ -678,6 +695,16 @@ def compute_losses(
     if disc is not None and corruption != "simplenet":
         raise ValueError("the discriminator needs synthetic-anomaly masks: it requires "
                          "corruption='simplenet' (the flow path has no mask)")
+    aux: Optional[Dict[str, Any]] = None  # pixel head inputs/targets (structured_corrupt)
+    if disc is not None:
+        from iad.disc import disc_cfg as _dcfg
+        if _dcfg(disc_cfg)["pixel"]:
+            sn_kind = simplenet_cfg(noise_cfg)["kind"]
+            sn_kinds = simplenet_cfg(noise_cfg)["kinds"] if sn_kind == "mix" else [sn_kind]
+            if "dtd" not in sn_kinds:
+                raise ValueError("discriminator.pixel needs image-space anomalies: "
+                                 "noise.kind dtd, or mix with dtd in noise.kinds")
+            aux = {}
 
     if loss_type == "flow_matching":
         # Untouched official objective; it draws its own (t, eps) internally.
@@ -704,7 +731,7 @@ def compute_losses(
         else:
             # structured synthetic anomalies (swap / dtd / mix), graded the same way
             zt, mask, t, _ = structured_corrupt(z0, images, rae, adaptor, noise_cfg,
-                                                size, generator)
+                                                size, generator, aux=aux)
     else:
         # shared draw for image / hybrid
         t, eps = sample_time(noise_cfg, transport, z0, generator)
@@ -762,7 +789,22 @@ def compute_losses(
         from iad.disc import disc_cfg as _disc_cfg, seg_loss as _seg_loss
         dc = _disc_cfg(disc_cfg)
         z_in, z_r = (zt.detach(), zhat.detach()) if dc["detach"] else (zt, zhat)
-        loss_seg = _seg_loss(disc(z_in, z_r), mask, dc["gamma"])
+        logit = disc(z_in, z_r)
+        loss_seg = _seg_loss(logit, mask, dc["gamma"])
         terms["seg"] = float(loss_seg.detach())
         total = total + dc["w_seg"] * loss_seg
+        if dc["pixel"]:
+            # pixel head: only samples whose anomaly is visible in the image (DTD
+            # paste) or that are clean (target 0) carry a pixel target
+            keep = torch.tensor([k == "dtd" for k in aux["kinds"]], device=zt.device)
+            keep = keep | aux["clean"].to(zt.device)
+            if bool(keep.any()):
+                ii = keep.nonzero().squeeze(1)
+                px_logit = disc.pixel(aux["x_in"][ii], zt[ii], zhat[ii], logit[ii])
+                tgt = aux["pmask"][ii].to(px_logit.dtype)
+                if tgt.shape[-2:] != px_logit.shape[-2:]:
+                    tgt = F.interpolate(tgt, size=px_logit.shape[-2:], mode="nearest")
+                loss_pix = _seg_loss(px_logit, tgt, dc["gamma"])
+                terms["pix"] = float(loss_pix.detach())
+                total = total + dc["w_pix"] * loss_pix
     return total, terms, zt, zhat

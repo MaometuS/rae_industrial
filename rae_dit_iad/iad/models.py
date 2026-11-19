@@ -23,6 +23,7 @@ from typing import Any, Dict, Optional
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 DEFAULT_RAE_ROOT = Path(__file__).resolve().parent.parent.parent / "rae_fidelity" / "RAE"
 
@@ -100,7 +101,8 @@ def _to_dict(cfg) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def build_rae(rae_root: Path, rae_cfg: Dict[str, Any], device: torch.device,
-              require_decoder_ckpt: bool = True) -> nn.Module:
+              require_decoder_ckpt: bool = True,
+              grid: Optional[int] = None) -> nn.Module:
     """Instantiate ``stage1.RAE`` exactly like ``stage1_sample.py``.
 
     If the decoder checkpoint is missing (unit-test environments) and
@@ -130,11 +132,106 @@ def build_rae(rae_root: Path, rae_cfg: Dict[str, Any], device: torch.device,
         rae = instantiate_from_config(rae_cfg)
     rae = rae.to(device)
     rae.eval()
+    rae._dec_grid = int(round(rae.base_patches ** 0.5))  # the decoder's token grid (16)
+    if grid is not None and int(grid) * rae.encoder_patch_size != rae.encoder_input_size:
+        set_encoder_grid(rae, int(grid) * rae.encoder_patch_size)  # 32 -> 448 px
     return rae
 
 
+def latent_grid(rae: nn.Module) -> int:
+    """Side of the encoder's token grid (16 at the official 224 px input)."""
+    return int(rae.encoder_input_size // rae.encoder_patch_size)
+
+
+def _regrid_stat(t, grid: int):
+    """Resize a per-position latent statistic ``(C, h, w)`` / ``(1, C, h, w)`` to
+    ``grid x grid`` (bilinear); per-channel or scalar statistics are returned as is."""
+    if not torch.is_tensor(t) or t.dim() < 3 or tuple(t.shape[-2:]) in ((1, 1), (grid, grid)):
+        return t
+    x = t if t.dim() == 4 else t.unsqueeze(0)
+    y = F.interpolate(x.float(), size=(grid, grid), mode="bilinear", align_corners=False)
+    return (y if t.dim() == 4 else y[0]).to(t.dtype)
+
+
+def set_encoder_grid(rae: nn.Module, encoder_input_size: int) -> None:
+    """Encode at ``encoder_input_size`` px (448 -> a 32x32 token grid) with the same
+    frozen DINOv2 (HF interpolates its position embeddings).  The decoder keeps its
+    16x16 grid: ``decode_latent`` pools a finer latent back before decoding.
+    Per-position normalization statistics are resized to the new grid; the
+    original ones are kept for decoding."""
+    if int(encoder_input_size) % int(rae.encoder_patch_size):
+        raise ValueError(f"encoder_input_size {encoder_input_size} must be a multiple of the "
+                         f"encoder patch size {rae.encoder_patch_size}")
+    rae.encoder_input_size = int(encoder_input_size)
+    g = latent_grid(rae)
+    if getattr(rae, "do_normalization", False):
+        rae._dec_stats = (rae.latent_mean, rae.latent_var)
+        rae.latent_mean = _regrid_stat(rae.latent_mean, g)
+        rae.latent_var = _regrid_stat(rae.latent_var, g)
+    print(f"[iad] encoder input {encoder_input_size} px -> {g}x{g} latent grid "
+          f"(decoder stays {rae._dec_grid}x{rae._dec_grid})", flush=True)
+
+
+def decode_latent(rae: nn.Module, z: torch.Tensor) -> torch.Tensor:
+    """``rae.decode`` for any latent grid: a finer grid is average-pooled to the
+    decoder's own grid (and de-normalized with the decoder-grid statistics)."""
+    g = int(getattr(rae, "_dec_grid", z.shape[-1]))
+    if z.shape[-1] == g:
+        return rae.decode(z)
+    z = F.adaptive_avg_pool2d(z, (g, g))
+    stats = getattr(rae, "_dec_stats", None)
+    if stats is None:
+        return rae.decode(z)
+    cur = (rae.latent_mean, rae.latent_var)
+    rae.latent_mean, rae.latent_var = stats
+    try:
+        return rae.decode(z)
+    finally:
+        rae.latent_mean, rae.latent_var = cur
+
+
+def regrid_dit(dit: nn.Module, grid: int) -> nn.Module:
+    """Run a DiT-DH trained on a 16x16 grid on ``grid x grid`` tokens.
+
+    Every weight is per-token (patch size 1), so only the positional parts change:
+    the fixed sin-cos ``pos_embed`` is bicubically resized, the RoPE tables are
+    rebuilt with positions interpolated onto the trained range (EVA's
+    ``ft_seq_len``), and the patch embedders' expected input size is updated.
+    Call it after loading the released 16x16 weights and before loading a
+    checkpoint trained on ``grid``."""
+    old = int(round(dit.s_embedder.num_patches ** 0.5))
+    grid = int(grid)
+    if grid == old:
+        return dit
+    from stage2.models.model_utils import VisionRotaryEmbeddingFast  # official
+    for emb in (dit.s_embedder, dit.x_embedder):
+        emb.img_size = (grid, grid)
+        emb.grid_size = (grid, grid)
+        emb.num_patches = grid * grid
+    dev = next(dit.parameters()).device
+    if getattr(dit, "use_pos_embed", False) and getattr(dit, "pos_embed", None) is not None:
+        pe = dit.pos_embed.data
+        c = pe.shape[-1]
+        pe = pe.reshape(1, old, old, c).permute(0, 3, 1, 2).float()
+        pe = F.interpolate(pe, size=(grid, grid), mode="bicubic", align_corners=False)
+        dit.pos_embed = nn.Parameter(
+            pe.permute(0, 2, 3, 1).reshape(1, grid * grid, c).to(dit.pos_embed.dtype),
+            requires_grad=False)
+    if getattr(dit, "use_rope", False):
+        enc_half = dit.encoder_hidden_size // dit.num_heads[0] // 2
+        dec_half = dit.decoder_hidden_size // dit.num_heads[1] // 2
+        dit.enc_feat_rope = VisionRotaryEmbeddingFast(
+            dim=enc_half, pt_seq_len=old, ft_seq_len=grid).to(dev)
+        dit.dec_feat_rope = VisionRotaryEmbeddingFast(
+            dim=dec_half, pt_seq_len=old, ft_seq_len=grid).to(dev)
+    dit.iad_grid = grid
+    print(f"[iad] DiT re-gridded {old}x{old} -> {grid}x{grid} (pos_embed resized, "
+          f"RoPE interpolated)", flush=True)
+    return dit
+
+
 def build_dit(stage2_cfg: Dict[str, Any], rae_root: Path, device: torch.device,
-              require_ckpt: bool = True) -> nn.Module:
+              require_ckpt: bool = True, grid: Optional[int] = None) -> nn.Module:
     """Instantiate ``DiTwDDTHead`` with the official released checkpoint.
 
     The checkpoint (``stage_2.ckpt``) is handled by the official
@@ -167,6 +264,8 @@ def build_dit(stage2_cfg: Dict[str, Any], rae_root: Path, device: torch.device,
         dit = instantiate_from_config(stage2_cfg)
     dit = dit.to(device)
     dit.eval()  # dropout-free by default; .train() in the training loop
+    if grid is not None:
+        regrid_dit(dit, int(grid))
     return dit
 
 

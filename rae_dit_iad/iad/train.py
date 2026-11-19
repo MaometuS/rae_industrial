@@ -506,12 +506,15 @@ def train(
     from utils.optim_utils import build_scheduler  # official
 
     # Initial DiT state (official released checkpoint) for per-category resets.
+    grid = cfg.get("latent_grid")  # None = the official 16x16 (224 px encoder input)
     rae = M.build_rae(rae_root, M._to_dict(rae_cfg), device,
-                      require_decoder_ckpt=not cfg.get("allow_random_decoder", False))
+                      require_decoder_ckpt=not cfg.get("allow_random_decoder", False),
+                      grid=grid)
     M.freeze_encoder(rae)
     init_decoder_state = copy.deepcopy(rae.decoder.state_dict())
     dit = M.build_dit(M._to_dict(stage2_cfg), rae_root, device,
-                      require_ckpt=bool(cfg.get("init", {}).get("from_pretrained", True)))
+                      require_ckpt=bool(cfg.get("init", {}).get("from_pretrained", True)),
+                      grid=grid)
     init_state = copy.deepcopy(dit.state_dict())
     adaptor = A.build_adaptor(cfg.get("adaptor"),
                               dim=M.latent_dim_from_misc(misc, cfg), device=device)
@@ -760,8 +763,12 @@ def _train_scope(
             scaler.unscale_(optimizer)  # grads must be unscaled before clipping
         max_norm = clip_grad if clip_grad else math.inf
         grad_norm = torch.nn.utils.clip_grad_norm_(trainable, max_norm)
-        disc_norm = (torch.nn.utils.clip_grad_norm_(list(disc.parameters()), max_norm)
-                     if disc is not None else None)  # own clip: never rescales the DiT
+        # own clip per head part: never rescales the DiT, and a pixel head never
+        # rescales the token head
+        disc_norms = [torch.nn.utils.clip_grad_norm_(ps, max_norm)
+                      for ps in DS.head_parts(disc)]
+        disc_norm = (torch.stack([n.float() for n in disc_norms]).norm()
+                     if disc_norms else None)
         # Non-finite guard: clip_grad_norm_ turns one inf/NaN gradient into NaN for
         # every element, and a single such update writes NaN into all weights for
         # good (seen on the image-L1 arms, job 152307). Skip that update instead.

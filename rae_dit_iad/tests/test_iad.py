@@ -1399,3 +1399,269 @@ def test_s_loco_score_setting():
     assert row["spro_logical"] < row["spro"] < row["spro_structural"]
     plain = R._score_setting(maps, masks, labels, size, 0.0)
     assert "spro" not in plain and "img_auroc_max_logical" not in plain
+
+
+# ---------------------------------------------------------------------------
+# T. localization ablation: score variants, pixel head, 32x32 grid
+# ---------------------------------------------------------------------------
+
+class _ShiftDiT(nn.Module):
+    """Predicts v = c * z (per-token, translation-equivariant): z^ = z - t*c*z."""
+
+    def forward(self, zt, t, y=None):
+        return 0.3 * zt
+
+
+def test_t_score_spec_parsing():
+    sp = I.parse_score_spec("fuse_dec+s4+gf")
+    assert sp["base"] == "fuse_dec" and sp["shifts"] == 4 and sp["gf"]
+    assert sp["needs"] == ("latent_cos", "dec_diff")
+    assert I.parse_score_spec("oracle16")["needs"] == ()
+    for bad in ("nope", "latent_cos+s3", "disc+zz", "oracle16+s4", ""):
+        with pytest.raises(ValueError):
+            I.parse_score_spec(bad)
+    # nested shift sets: s1 in s4 in s16
+    s1, s4, s16 = (set(I.shift_offsets(k, 16)) for k in (1, 4, 16))
+    assert s1 == {(0, 0)} and s1 <= s4 <= s16 and len(s16) == 16
+    assert s4 == {(0, 0), (0, 8), (8, 0), (8, 8)}
+
+
+def test_t_shift_unshift_roundtrip():
+    x = torch.rand(2, 3, 32, 32)
+    for dy, dx in ((0, 0), (4, 0), (0, 8), (8, 4)):
+        xs = I.shift_image(x, dy, dx)
+        assert xs.shape == x.shape
+        assert torch.equal(xs[..., : 32 - dy, : 32 - dx], x[..., dy:, dx:])
+        m = x[:, 0]
+        back = I.unshift_map(I.shift_image(x, dy, dx)[:, 0], dy, dx)
+        assert torch.equal(back[:, dy:, dx:], m[:, dy:, dx:])
+
+
+def test_t_guided_filter_sharpens_a_token_map():
+    """A bilinearly upsampled token map whose defect is visible in the image: the
+    guided filter (radius = one token) snaps it to the image edges."""
+    from sklearn.metrics import roc_auc_score
+    S = 64
+    yy, xx = torch.meshgrid(torch.arange(S), torch.arange(S), indexing="ij")
+    sharp = ((((yy - 30) ** 2 + (xx - 22) ** 2) < 8 ** 2)
+             | ((yy > 50) & (yy < 52) & (xx > 10) & (xx < 55))).float()
+    guide = (torch.rand(1, 3, S, S, generator=torch.Generator().manual_seed(0)) * 0.1
+             + 0.8 * sharp)
+    tok = F.adaptive_avg_pool2d(sharp[None, None], 8)
+    p = F.interpolate(tok, size=(S, S), mode="bilinear", align_corners=False)[:, 0]
+    out = I.guided_filter(p, guide, r=8)
+    assert out.shape == p.shape
+    lab = sharp.ravel() > 0
+    assert roc_auc_score(lab, out.ravel()) > roc_auc_score(lab, p.ravel()) + 0.002
+    const = torch.full((1, S, S), 0.7)
+    assert torch.allclose(I.guided_filter(const, torch.rand(1, 3, S, S), r=3), const, atol=1e-5)
+
+
+def test_t_mask_oracle_is_grid_limited():
+    from sklearn.metrics import roc_auc_score
+    masks = np.zeros((2, 64, 64), bool)
+    masks[0, 10:12, 5:60] = True                             # thin scratch
+    o16, o64 = I.mask_oracle(masks, 16), I.mask_oracle(masks, 64)
+    a16 = roc_auc_score(masks.ravel(), o16.ravel())
+    a64 = roc_auc_score(masks.ravel(), o64.ravel())
+    assert a64 > 0.999 and a16 < a64                         # coarser grid, worse ceiling
+
+
+def test_t_score_maps_bases_and_fusion():
+    rae, dit = TinyRAE(), _ShiftDiT()
+    x = _batch(2, 32, seed=71)
+    specs = [I.parse_score_spec(s) for s in
+             ("latent_cos", "pixel", "dec_diff", "fuse_dec", "fuse_pixel", "latent_cos+s4")]
+    xh, maps = I.score_maps(rae, dit, x, specs, t=1.0, patch_px=8)  # s4: 4 px offsets
+    assert set(maps) == {s["spec"] for s in specs}
+    for m in maps.values():
+        assert m.shape == (2, 32, 32) and torch.isfinite(m).all()
+    # same numbers as the single-score path
+    _, ref, _ = I.reconstruct(rae, dit, x, [0, 1], t=1.0, corruption="simplenet",
+                              score="latent_cos")
+    assert torch.allclose(maps["latent_cos"], ref, atol=1e-6)
+    _, refp, _ = I.reconstruct(rae, dit, x, [0, 1], t=1.0, corruption="simplenet",
+                               score="pixel")
+    assert torch.allclose(maps["pixel"], refp, atol=1e-6)
+    # identity decoder: D(z) = x, so the decoder difference equals the pixel score
+    assert torch.allclose(maps["dec_diff"], maps["pixel"], atol=1e-6)
+    assert torch.allclose(maps["fuse_dec"], maps["latent_cos"] * maps["dec_diff"], atol=1e-6)
+    # a translation-equivariant model: shift TTA leaves the interior unchanged
+    assert torch.allclose(maps["latent_cos+s4"][:, 4:-4, 4:-4],
+                          maps["latent_cos"][:, 4:-4, 4:-4], atol=1e-5)
+    assert not torch.allclose(maps["latent_cos+s4"], maps["latent_cos"])  # borders differ
+    with pytest.raises(ValueError):
+        I.score_maps(rae, dit, x, [I.parse_score_spec("disc")], t=1.0)
+
+
+_PIXDISC = {"enabled": True, "d": 8, "blocks": 1, "pixel": True, "pixel_ch": 8}
+
+
+def test_t_pixel_head_starts_at_token_map_and_keeps_token_head():
+    from iad import disc as DS
+    plain = DS.build_discriminator({"enabled": True, "d": 8, "blocks": 1}, dim=3, seed=4)
+    both = DS.build_discriminator(_PIXDISC, dim=3, seed=4)
+    for a, b in zip(plain.parameters(), both.seg.parameters()):
+        assert torch.equal(a, b)                             # token head init unchanged
+    assert len(DS.head_parts(both)) == 2 and len(DS.head_parts(plain)) == 1
+    x = _batch(2, 32, seed=72)
+    za, r = torch.randn(2, 3, 8, 8), torch.randn(2, 3, 8, 8)
+    logit = both(za, r)
+    assert torch.equal(logit, plain(za, r))
+    px = both.pixel(x, za, r, logit)
+    up = F.interpolate(logit, size=(32, 32), mode="bilinear", align_corners=False)
+    assert px.shape == (2, 1, 32, 32) and torch.allclose(px, up, atol=1e-6)
+    with pytest.raises(ValueError):
+        DS.disc_cfg({"pixel": True, "pixel_ch": 12})
+
+
+def test_t_pixel_head_loss_leaves_dit_and_token_head_unchanged():
+    from iad import disc as DS
+    rae, dit = TinyRAE(), TinyDiT()
+    core.set_texture_bank(torch.rand(6, 3, 32, 32).half())
+    try:
+        x = _batch(4, 32, seed=73)
+        z0 = rae.encode(x).detach()
+        y = torch.full((4,), 1000, dtype=torch.long)
+        noise = _q_noise("dtd", p_clean=0.25)
+        kw = dict(loss_type="latent", noise_cfg=noise, lambda_fm=0.0, y=y,
+                  corruption="simplenet", size=32)
+        tok_cfg = {k: v for k, v in _PIXDISC.items() if not k.startswith("pixel")}
+        runs = []
+        for cfg in (tok_cfg, _PIXDISC):
+            head = DS.build_discriminator(cfg, dim=3, seed=0)
+            for p in dit.parameters():
+                p.grad = None
+            seed_all(74)
+            tot, terms, _, _ = core.compute_losses(rae, dit, None, x, z0, disc=head,
+                                                   disc_cfg=cfg, **kw)
+            tot.backward()
+            seg = head.seg if hasattr(head, "seg") else head
+            runs.append((terms, [p.grad.clone() for p in dit.parameters()],
+                         [p.grad.clone() for p in seg.parameters()], head))
+        (t0, g0, s0, _), (t1, g1, s1, h1) = runs
+        assert "pix" in t1 and math.isfinite(t1["pix"]) and "pix" not in t0
+        assert t1["seg"] == pytest.approx(t0["seg"], rel=1e-6)
+        for a, b in zip(g0 + s0, g1 + s1):
+            assert torch.allclose(a, b, rtol=1e-6, atol=1e-8)
+        assert any(p.grad is not None and float(p.grad.abs().sum()) > 0
+                   for p in h1.pix.parameters())
+        # Gaussian-only corruption has no image-space anomaly: refused
+        with pytest.raises(ValueError):
+            core.compute_losses(rae, dit, None, x, z0, disc=h1, disc_cfg=_PIXDISC,
+                                **{**kw, "noise_cfg": _q_noise("swap")})
+    finally:
+        core.set_texture_bank(None)
+
+
+def test_t_score_maps_pxhead():
+    from iad import disc as DS
+    rae, dit = TinyRAE(), _ShiftDiT()
+    head = DS.build_discriminator(_PIXDISC, dim=3, seed=0).eval()
+    x = _batch(2, 32, seed=75)
+    _, maps = I.score_maps(rae, dit, x, [I.parse_score_spec("pxhead"),
+                                         I.parse_score_spec("disc")], t=1.0, disc=head)
+    # zero-initialized residual: the pixel head equals the upsampled token map
+    assert torch.allclose(maps["pxhead"], maps["disc"], atol=1e-5)
+    plain = DS.build_discriminator({"enabled": True, "d": 8, "blocks": 1}, dim=3, seed=0)
+    with pytest.raises(ValueError):
+        I.score_maps(rae, dit, x, [I.parse_score_spec("pxhead")], t=1.0, disc=plain)
+
+
+def test_t_regrid_stats_and_pooled_decode():
+    st = torch.randn(1, 4, 2, 2)
+    assert M._regrid_stat(st, 4).shape == (1, 4, 4, 4)
+    assert M._regrid_stat(torch.randn(4, 1, 1), 4).shape == (4, 1, 1)   # per-channel: kept
+
+    class FakeRAE(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self._dec_grid = 2
+            self.seen = None
+
+        def decode(self, z):
+            self.seen = z
+            return z
+
+    r = FakeRAE()
+    z = torch.arange(16.).view(1, 1, 4, 4)
+    out = M.decode_latent(r, z)
+    assert out.shape == (1, 1, 2, 2)
+    assert torch.allclose(out, F.adaptive_avg_pool2d(z, 2))
+    assert M.decode_latent(r, out).shape == (1, 1, 2, 2)
+
+
+def test_t_regrid_official_dit():
+    """The released DiT-DH architecture runs on a 2x finer grid after re-gridding."""
+    pytest.importorskip("stage2.models.DDT")
+    pytest.importorskip("timm")
+    from stage2.models.DDT import DiTwDDTHead
+    torch.manual_seed(0)
+    dit = DiTwDDTHead(input_size=4, patch_size=1, in_channels=8, hidden_size=[32, 32],
+                      depth=[1, 1], num_heads=[2, 2], num_classes=10).eval()
+    pe = dit.pos_embed.detach().clone()
+    M.regrid_dit(dit, 8)
+    assert dit.pos_embed.shape == (1, 64, 32) and not dit.pos_embed.requires_grad
+    assert dit.enc_feat_rope.freqs_cos.shape[0] == 64
+    z = torch.randn(2, 8, 8, 8)
+    with torch.no_grad():
+        v = dit(z, torch.rand(2), y=torch.zeros(2, dtype=torch.long))
+    assert v.shape == z.shape and torch.isfinite(v).all()
+    # the state dict round-trips at the new grid (eval rebuilds, re-grids, then loads)
+    dit2 = DiTwDDTHead(input_size=4, patch_size=1, in_channels=8, hidden_size=[32, 32],
+                       depth=[1, 1], num_heads=[2, 2], num_classes=10)
+    M.regrid_dit(dit2, 8)
+    dit2.load_state_dict(dit.state_dict(), strict=True)
+    # re-gridding to the same size is a no-op
+    dit3 = DiTwDDTHead(input_size=4, patch_size=1, in_channels=8, hidden_size=[32, 32],
+                       depth=[1, 1], num_heads=[2, 2], num_classes=10)
+    dit3.pos_embed.data.copy_(pe)
+    M.regrid_dit(dit3, 4)
+    assert torch.equal(dit3.pos_embed, pe)
+
+
+def test_t_eval_multi_rows_on_a_synthetic_category(tmp_path):
+    """The eval path for score variants: one row per (spec, blur), resumable,
+    metrics at eval_size, the oracle beats the model, skipped specs reported."""
+    import argparse
+    import importlib.util
+    from PIL import Image
+    spec = importlib.util.spec_from_file_location(
+        "rae_dit_iad_cli", Path(__file__).resolve().parent.parent / "rae_dit_iad.py")
+    R = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(R)
+
+    c = tmp_path / "carpet"
+    rng = np.random.default_rng(0)
+    def png(p, a):
+        p.parent.mkdir(parents=True, exist_ok=True)
+        Image.fromarray(a.astype(np.uint8)).save(p)
+    for i in range(2):
+        png(c / "train" / "good" / f"{i:03d}.png", rng.integers(0, 255, (48, 48, 3)))
+    for i in range(3):
+        png(c / "test" / "good" / f"{i:03d}.png", rng.integers(0, 255, (48, 48, 3)))
+    for i in range(2):
+        png(c / "test" / "hole" / f"{i:03d}.png", rng.integers(0, 255, (48, 48, 3)))
+        m = np.zeros((48, 48)); m[10:20, 10:30] = 255
+        png(c / "ground_truth" / "hole" / f"{i:03d}_mask.png", m)
+
+    args = argparse.Namespace(mvtec_root=str(tmp_path), batch_size=3, blur_sweep="0,2",
+                              save_maps=None)
+    cfg = {"size": 32, "eval_size": 24}
+    done = set()
+    kw = dict(cat="carpet", ckpt_path=Path("carpet_best.pt"), used_ema=True, exp_id="T",
+              seed=0, t=1.0, num_classes=10, device=torch.device("cpu"), blur_sigma=2.0,
+              done=done)
+    specs = ["latent_cos", "fuse_dec+s4", "oracle16", "oracle16+gf", "disc"]
+    rows, pi = R._eval_multi(TinyRAE(), _ShiftDiT(), None, None, cfg, args, specs, **kw)
+    assert len(rows) == 4 * 2                                  # disc skipped (no head)
+    assert {(r["score"], r["blur_sigma"]) for r in rows} == {
+        (s, b) for s in specs[:4] for b in (0.0, 2.0)}
+    assert len(pi) == 4 * 5 and all("score" in r for r in pi)
+    orc = [r for r in rows if r["score"] == "oracle16" and r["blur_sigma"] == 0.0][0]
+    assert orc["px_auroc"] > 0.95 and orc["img_auroc_max"] == pytest.approx(1.0)
+    assert orc["dit_passes_per_img"] == 0
+    # resumable: a second call with the same `done` adds nothing
+    rows2, _ = R._eval_multi(TinyRAE(), _ShiftDiT(), None, None, cfg, args, specs, **kw)
+    assert rows2 == []
+    assert R._resize_maps(np.zeros((2, 32, 32), np.float32), 24).shape == (2, 24, 24)
