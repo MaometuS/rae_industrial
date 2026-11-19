@@ -1367,3 +1367,35 @@ def test_s_ema_step_cpu_resident():
     T.ema_step(ema, net, 0.9)
     assert torch.allclose(ema[0].weight, torch.full((3, 3), 0.1))
     assert torch.equal(ema[1].running_mean, net[1].running_mean)
+
+
+# ---------------------------------------------------------------------------
+# S. MVTec LOCO metrics in the eval scorer
+# ---------------------------------------------------------------------------
+
+def test_s_loco_score_setting():
+    """Per-type image AUROC (each type vs good) and sPRO columns for LOCO rows."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "rae_dit_iad_cli", Path(__file__).resolve().parent.parent / "rae_dit_iad.py")
+    R = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(R)
+
+    size = 32
+    rng = np.random.default_rng(0)
+    types = np.array(["good"] * 4 + ["logical_anomalies"] * 2 + ["structural_anomalies"] * 2)
+    labels = (types != "good").astype(int)
+    masks = np.zeros((8, size, size), bool)
+    masks[4:, 8:16, 8:16] = True
+    maps = rng.random((8, size, size)).astype(np.float32) * 0.1
+    maps[6:, 8:16, 8:16] += 1.0            # only the structural defects are found
+    maps[4:6] *= 0.5                       # logical images score below every good one
+    defects = [(i, masks[i].copy(), 16.0) for i in range(4, 8)]
+    row = R._score_setting(maps, masks, labels, size, 0.0,
+                           loco=dict(types=types, defects=defects))
+    assert row["img_auroc_max_structural"] == pytest.approx(1.0)
+    assert row["img_auroc_max_logical"] == pytest.approx(0.0)
+    assert row["spro_structural"] > 0.9 > row["spro_logical"]
+    assert row["spro_logical"] < row["spro"] < row["spro_structural"]
+    plain = R._score_setting(maps, masks, labels, size, 0.0)
+    assert "spro" not in plain and "img_auroc_max_logical" not in plain

@@ -52,7 +52,8 @@ _LATENT_DRAEM_DIR = HERE.parent / "latent_draem"
 if str(_LATENT_DRAEM_DIR) not in sys.path:
     sys.path.insert(0, str(_LATENT_DRAEM_DIR))
 
-from latent_draem import PILOT_CATEGORIES, evaluate_maps, load_mask, load_rgb, mvtec_split, seed_all  # noqa: E402
+from latent_draem import PILOT_CATEGORIES, evaluate_maps, load_rgb, seed_all  # noqa: E402
+from iad import datasets as DSET  # noqa: E402
 from iad import adaptor as A  # noqa: E402
 from iad import disc as DS  # noqa: E402
 from iad import core, models as M  # noqa: E402
@@ -95,6 +96,8 @@ def _parse_categories(spec) -> List[str]:
                 out.extend(ALL_CATEGORIES)
             elif tok == "pilot":
                 out.extend(PILOT_CATEGORIES)
+            elif tok == "loco":
+                out.extend(DSET.LOCO_CATEGORIES)
             else:
                 out.append(tok)
     return list(dict.fromkeys(out))  # dedupe, keep order
@@ -358,13 +361,19 @@ def cmd_eval(args: argparse.Namespace) -> None:
         size = int(cfg.get("size", 256))
         seed_all(seed)
 
-        train_paths, test_entries = mvtec_split(Path(args.mvtec_root), cat)
-        del train_paths  # test split only; training data never touched here
-        # test entries are (path, defect_name, mask_path) — project convention
+        _train, _val, test_entries = DSET.split(Path(args.mvtec_root), cat)
+        del _train, _val  # test split only; training data never touched here
+        # test entries are (path, defect_name, masks) — project convention
         paths = [Path(p) for p, _defect, _m in test_entries]
-        masks = (np.stack([load_mask(m, size) for _p, _d, m in test_entries])
+        masks = (np.stack([DSET.load_mask_any(m, size) for _p, _d, m in test_entries])
                  if test_entries else np.zeros((0, size, size), bool))
         labels = np.array([int(d != "good") for _p, d, _m in test_entries])
+        loco = None  # MVTec LOCO: per-type metrics + sPRO on the per-defect masks
+        if DSET.is_loco(Path(args.mvtec_root), cat):
+            loco = dict(types=np.array([d for _p, d, _m in test_entries]),
+                        defects=DSET.loco_defects([m for _p, _d, m in test_entries], size,
+                                                  DSET.loco_defects_config(
+                                                      Path(args.mvtec_root), cat)))
 
         # batched inference (loading lazily per batch to bound memory)
         bs = int(args.batch_size)
@@ -403,7 +412,13 @@ def cmd_eval(args: argparse.Namespace) -> None:
 
         key_base = dict(exp=exp_id, cat=cat, seed=seed, reps=cat_reps, score=cat_score,
                         ckpt=ckpt_path.name, ema=int(used_ema))
-        row = _score_setting(maps_np, masks, labels, size, blur_sigma)
+        row = _score_setting(maps_np, masks, labels, size, blur_sigma, loco=loco)
+        if args.save_maps:
+            # native-resolution maps for MVTec's official evaluation scripts
+            md = Path(args.save_maps) / f"{exp_id}_seed{seed}_{cat_score}"
+            n_saved = DSET.save_native_maps(I.blur_maps(maps_np, float(blur_sigma)),
+                                            test_entries, md, cat)
+            print(f"[eval/{cat}] saved {n_saved} native-resolution maps -> {md}", flush=True)
         row.update(key_base, mode=mode_used, t=t_used,
                    n_images=len(paths),
                    infer_s_per_img=round(infer_time / max(len(paths), 1), 4),
@@ -440,7 +455,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
                                       ode_steps=ode_steps, num_classes=num_classes,
                                       corruption=corruption, seed=seed, shift=shift,
                                       device=device, bs=bs, adaptor=adaptor,
-                                      score=cat_score, disc=disc)
+                                      score=cat_score, disc=disc, loco=loco)
                 if row_x is None:
                     continue
                 row_x, maps_x = row_x
@@ -466,6 +481,75 @@ def cmd_eval(args: argparse.Namespace) -> None:
     print(f"wrote {results_csv} ({len(new_rows)} new rows), report -> {out / 'report.md'}")
 
 
+def cmd_knn(args: argparse.Namespace) -> None:
+    """Frozen-token kNN control (latent_draem's ``knn``, PatchCore-lite): no training.
+
+    Per category: every ``train/good`` image is encoded by the frozen RAE encoder
+    (the same tokens the DiT sees), each test token's map value is ``1 - max cos``
+    to that bank, and the 16x16 map goes through the same upsampling, blur and
+    metrics as the DiT arms (``latent_cos``), LOCO's per-type metrics included.
+    """
+    from latent_draem import knn_maps
+    from iad.train import encode_cache
+
+    device = _device(args.device)
+    rae_root = M.setup_rae_root(Path(args.rae_root))
+    cfg = load_experiment_config(Path(args.config))
+    size = int(cfg.get("size", 256))
+    blur_sigma = float(args.blur_sigma)
+    exp_id = "knn_frozen"
+    out = Path(args.out) / exp_id
+    out.mkdir(parents=True, exist_ok=True)
+    sections = M.load_official_sections(cfg["rae_config"], rae_root,
+                                        cfg.get("rae_config_overrides"))
+    rae = M.build_rae(rae_root, M._to_dict(sections[0]), device,
+                      require_decoder_ckpt=False)  # the decoder is never used
+    M.freeze_encoder(rae)
+    results_csv = out / "results.csv"
+    done = _read_done(results_csv)
+    new_rows: List[Dict[str, Any]] = []
+    for cat in _parse_categories(args.categories):
+        train, _val, test_entries = DSET.split(Path(args.mvtec_root), cat)
+        if not train or not test_entries:
+            print(f"[knn/{cat}] no train or test images under {args.mvtec_root}", flush=True)
+            continue
+        paths = [Path(p) for p, _d, _m in test_entries]
+        bank = encode_cache(rae, train, size, device)
+        train_z = torch.stack([bank[Path(p)] for p in train]).to(device)
+        test_c = encode_cache(rae, paths, size, device)
+        test_z = torch.stack([test_c[p] for p in paths]).to(device)
+        tok = knn_maps(train_z, test_z, k=1)                          # (N, 1, h, w)
+        maps_np = torch.nn.functional.interpolate(
+            tok.float(), size=(size, size), mode="bilinear", align_corners=False
+        )[:, 0].cpu().numpy()
+        masks = np.stack([DSET.load_mask_any(m, size) for _p, _d, m in test_entries])
+        labels = np.array([int(d != "good") for _p, d, _m in test_entries])
+        loco = None
+        if DSET.is_loco(Path(args.mvtec_root), cat):
+            loco = dict(types=np.array([d for _p, d, _m in test_entries]),
+                        defects=DSET.loco_defects([m for _p, _d, m in test_entries], size,
+                                                  DSET.loco_defects_config(
+                                                      Path(args.mvtec_root), cat)))
+        row = _score_setting(maps_np, masks, labels, size, blur_sigma, loco=loco)
+        row.update(exp=exp_id, cat=cat, seed=0, ckpt="none", ema=0, mode="knn", t=0.0,
+                   reps=1, score="knn", n_images=len(paths))
+        if args.save_maps:
+            md = Path(args.save_maps) / f"{exp_id}_seed0_knn"
+            DSET.save_native_maps(I.blur_maps(maps_np, blur_sigma), test_entries, md, cat)
+        if _row_sig(row) not in done:
+            new_rows.append(row)
+            done.add(_row_sig(row))
+        print(f"[knn/{cat}] bank {len(train)} images  I-AUROC(max)={row['img_auroc_max']:.4f} "
+              f"P-AUROC={row['px_auroc']:.4f} AUPRO={row['aupro']:.4f}"
+              + (f" logical={row.get('img_auroc_max_logical', float('nan')):.4f} "
+                 f"structural={row.get('img_auroc_max_structural', float('nan')):.4f}"
+                 if loco else ""), flush=True)
+    if new_rows:
+        _append_rows(results_csv, new_rows)
+    write_report(results_csv, out / "report.md", exp_id)
+    print(f"wrote {results_csv} ({len(new_rows)} new rows)")
+
+
 def _per_image_rows(paths, labels, maps_np, *, exp_id, cat, seed, mode, t) -> List[Dict[str, Any]]:
     return [{
         "exp": exp_id, "cat": cat, "seed": seed, "mode": mode, "t": t,
@@ -477,7 +561,7 @@ def _per_image_rows(paths, labels, maps_np, *, exp_id, cat, seed, mode, t) -> Li
 
 def _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma, *, mode, t, reps,
                   ode_steps, num_classes, corruption, seed, shift, device, bs,
-                  adaptor=None, score="pixel", disc=None):
+                  adaptor=None, score="pixel", disc=None, loco=None):
     """Run one (mode, t) setting. Returns ``(row, maps_np)`` or ``None``."""
     maps_list = []
     infer_time = 0.0
@@ -497,14 +581,17 @@ def _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma, *, mode, t, 
     if not maps_list:
         return None
     maps_np = np.concatenate(maps_list, axis=0)
-    row = _score_setting(maps_np, masks, labels, size, blur_sigma)
+    row = _score_setting(maps_np, masks, labels, size, blur_sigma, loco=loco)
     row.update(infer_s_per_img=round(infer_time / max(len(paths), 1), 4),
                dit_passes_per_img=dit_passes)
     return row, maps_np
 
 
 def _score_setting(maps_np: np.ndarray, masks: np.ndarray, labels: np.ndarray,
-                   size: int, blur_sigma: float) -> Dict[str, Any]:
+                   size: int, blur_sigma: float,
+                   loco: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Metrics of one setting. ``loco`` (MVTec LOCO: ``types``, ``defects``) adds
+    image AUROC per anomaly type (each type vs the good images) and sPRO@0.05."""
     from sklearn.metrics import average_precision_score, roc_auc_score
 
     if not np.isfinite(maps_np).all():
@@ -521,6 +608,18 @@ def _score_setting(maps_np: np.ndarray, masks: np.ndarray, labels: np.ndarray,
         scores = I.image_score(blurred, agg)
         row[f"img_auroc_{agg}"] = float(roc_auc_score(labels, scores)) if two else float("nan")
         row[f"img_ap_{agg}"] = float(average_precision_score(labels, scores)) if two else float("nan")
+    if loco is not None:
+        types, defects = loco["types"], loco["defects"]
+        row["spro"] = DSET.spro(blurred, labels, defects)
+        for full, short in DSET.LOCO_SHORT.items():
+            sel = (labels == 0) | (types == full)
+            if not (types == full).any():
+                continue
+            for agg in IMAGE_AGGS:
+                sc = I.image_score(blurred[sel], agg)
+                row[f"img_auroc_{agg}_{short}"] = float(roc_auc_score(labels[sel], sc))
+            row[f"spro_{short}"] = DSET.spro(
+                blurred, labels, [d for d in defects if types[d[0]] == full])
     return row
 
 
@@ -532,6 +631,8 @@ RESULT_FIELDS = [
     "exp", "cat", "seed", "ckpt", "ema", "mode", "t", "reps", "score",
     "blur_sigma", "n_images", "img_auroc_mean", "img_auroc_max", "img_auroc_top1",
     "img_ap_mean", "img_ap_max", "img_ap_top1", "px_auroc", "px_ap", "aupro",
+    "img_auroc_max_logical", "img_auroc_max_structural", "spro", "spro_logical",
+    "spro_structural",
     "infer_s_per_img", "dit_passes_per_img",
 ]
 
@@ -605,6 +706,10 @@ def write_report(csv_path: Path, report_path: Path, exp_id: str) -> None:
     metrics = ["img_auroc_mean", "img_auroc_max", "img_auroc_top1",
                "img_ap_mean", "img_ap_max", "img_ap_top1",
                "px_auroc", "px_ap", "aupro"]
+    loco_metrics = ["img_auroc_max_logical", "img_auroc_max_structural",
+                    "img_auroc_mean_logical", "img_auroc_mean_structural",
+                    "spro", "spro_logical", "spro_structural"]
+    metrics += [m for m in loco_metrics if any(r.get(m) not in (None, "") for r in rows)]
     def ckpt_kind(name: Optional[str]) -> str:
         # per-category runs have one checkpoint per category (carpet_best.pt,
         # grid_best.pt, ...): aggregate over categories by best/last, not by file
@@ -673,7 +778,7 @@ def build_parser() -> argparse.ArgumentParser:
                     default="/home/maometus/Documents/datasets/mvtec_anomaly_detection")
     tr.add_argument("--out", default=str(HERE / "results_dit_iad"))
     tr.add_argument("--categories", nargs="+", default=["pilot"],
-                    help="'all' | 'pilot' | category names (space or comma separated)")
+                    help="'all' | 'pilot' | 'loco' | category names (space or comma separated)")
     tr.add_argument("--scope", choices=["joint", "per_category"], default=None)
     tr.add_argument("--ckpt-dir", default=None,
                     help="root for checkpoints (<ckpt-dir>/<exp_id>/); default: --out")
@@ -726,7 +831,7 @@ def build_parser() -> argparse.ArgumentParser:
                     default="/home/maometus/Documents/datasets/mvtec_anomaly_detection")
     ev.add_argument("--out", default=str(HERE / "results_dit_iad"))
     ev.add_argument("--categories", nargs="+", default=["all"],
-                    help="'all' | 'pilot' | category names (space or comma separated)")
+                    help="'all' | 'pilot' | 'loco' | category names (space or comma separated)")
     ev.add_argument("--seed", type=int, default=None)
     ev.add_argument("--mode", default=None,
                     help="single | multi | ode (comma list for sweeps)")
@@ -739,9 +844,25 @@ def build_parser() -> argparse.ArgumentParser:
                          "latent_l2 = token distance between E(x) and the DiT output z^, "
                          "no decoder (experiment J; works on any checkpoint); disc = "
                          "DRAEM's learned segmentation map (SimpleNet arms)")
+    ev.add_argument("--save-maps", default=None, metavar="DIR",
+                    help="also write the blurred anomaly maps as float TIFFs at native "
+                         "resolution (<DIR>/<exp>_seed<S>_<score>/<cat>/test/<type>/), "
+                         "the layout MVTec's LOCO evaluation script reads")
     ev.add_argument("--batch-size", type=int, default=16)
     ev.add_argument("--viz", type=int, default=6, help="grid images per category (0=off)")
     ev.add_argument("--device", default=None)
+    kn = sub.add_parser("knn", help="frozen-token kNN control (no training)")
+    kn.add_argument("--config", required=True,
+                    help="any experiment YAML: only its rae_config and size are used")
+    kn.add_argument("--rae-root", default=str(HERE.parent / "rae_fidelity" / "RAE"))
+    kn.add_argument("--mvtec-root",
+                    default="/home/maometus/Documents/datasets/mvtec_anomaly_detection")
+    kn.add_argument("--out", default=str(HERE / "results_dit_iad"),
+                    help="results go to <out>/knn_frozen/")
+    kn.add_argument("--categories", nargs="+", default=["all"])
+    kn.add_argument("--blur-sigma", type=float, default=4.0)
+    kn.add_argument("--save-maps", default=None, metavar="DIR")
+    kn.add_argument("--device", default=None)
     return p
 
 
@@ -749,6 +870,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     args = build_parser().parse_args(argv)
     if args.cmd == "train":
         cmd_train(args)
+    elif args.cmd == "knn":
+        cmd_knn(args)
     else:
         cmd_eval(args)
 

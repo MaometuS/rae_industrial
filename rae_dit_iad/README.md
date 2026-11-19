@@ -587,8 +587,52 @@ kept; the other 13 categories are trained, each arm split over two GPUs (7 + 6
 categories). `KEEP_RESULTS=1` makes every worker add to the arm's existing `results.csv`
 instead of archiving it. A queue entry can carry its own categories: `J5:tile,wood`.
 
+**Jobs 158993 + 159148: results.** Carpet + screw over 3 seeds (image AUROC max, mean of
+the two, latent_cos): J5 0.958 +- 0.002, K5 0.954 +- 0.006, A 0.933 +- 0.009. Screw: J5
+0.911/0.916/0.920, K5 0.899/0.905/0.922, A 0.892/0.903/0.914. J5's lead over A holds
+beyond seed noise; the adaptor (K5) still adds nothing.
+
+All 15 MVTec categories, seed 0, latent_cos (image AUROC max / pixel AUROC / AUPRO):
+J5 0.973 / 0.939 / 0.851, K5 0.971 / 0.939 / 0.849. J5 reaches >= 0.996 on bottle,
+carpet, grid, leather, metal_nut, tile, wood, zipper; it is weakest on screw 0.911, cable
+0.918, toothbrush 0.944, capsule 0.950, pill 0.952, transistor 0.954. Pixel AUROC is the
+weak side: metal_nut 0.862, tile 0.866, transistor 0.891, wood 0.892, cable 0.904. The
+published SimpleNet averages are about 0.996 image / 0.981 pixel AUROC (test-set epoch
+selection, different setup).
+
 **`PLAN=all`:** every experiment so far, per category --
 A (seeds 0–2), B–G, J, K, the three noise ablations, J2, K2, J3 token swap, J4 DTD
 texture paste, J5 mix, K5 mix + adaptor (20 runs × 2 category models: carpet as
 the texture, screw as the object; `CATS="..."` restores the 5 pilot categories). DTD is read
 from `DTD_ROOT` (default `../latent_draem/data/dtd`, downloaded once if empty).
+
+**Next (`PLAN=loco`, the SLURM default): MVTec LOCO AD.** The question: does J5, which restores the whole
+token grid with global attention, catch *logical* anomalies (missing, extra or misplaced
+parts that look normal patch by patch) better than per-patch methods, while staying
+comparable on *structural* ones? Arms: J5 (split over two GPUs), A, J3 (token swap only:
+does the swap corruption drive any logical gain?) and the frozen-token kNN control
+(`rae_dit_iad.py knn`, no training: the direct test of whether the DiT adds anything over
+the DINOv2 tokens). Same hyperparameters as on MVTec AD (lr 2e-5, 4000 steps, batch 8),
+no tuning on LOCO. Expected: J5 logical AUROC clearly above kNN's (>= 0.05 over 3 seeds)
+with structural AUROC comparable; if both are equally weak on logical, global attention
+is not helping.
+
+* Data: `LOCO_ROOT` (default `/po1/rakhimov/datasets/mvtec_loco_anomaly_detection`, the
+  official archive extracted; download it from MVTec, non-commercial licence). The layout
+  is detected per category (`iad/datasets.py`), so every command keeps `--mvtec-root`.
+* Splits: training uses all of `train/good`; checkpoints are selected on the official
+  `validation/good` split instead of a slice of train.
+* Images are resized to 256 x 256 (most LOCO categories are not square, so they are
+  squashed). Ground truth: the per-defect masks of an image are OR-ed for pixel AUROC and
+  AUPRO.
+* New columns (LOCO rows only): `img_auroc_{mean,max,top1}_{logical,structural}` (each
+  type vs the good test images), `spro`, `spro_logical`, `spro_structural`: sPRO up to
+  FPR 0.05 with the per-defect saturation thresholds of `defects_config.json`, FPR on the
+  good test images. It runs on the 256 px maps (absolute thresholds rescaled by the area
+  ratio, capped at the region area): a close approximation, not MVTec's script. For
+  reported numbers, `eval --save-maps DIR` writes the blurred maps as float TIFFs at
+  native resolution in the layout the official LOCO evaluation script reads.
+* Results go to `results_dit_iad_loco/`, checkpoints to
+  `/po1/rakhimov/training/rae_dit_iad_loco`: never mixed with the MVTec AD runs (same exp
+  ids). Queue entries `J5:<cats>` split one arm over GPUs (`KEEP_RESULTS=1`); `knn` runs
+  the control.

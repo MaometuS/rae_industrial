@@ -10,14 +10,15 @@
 #SBATCH --error=RAE_DIT_IAD_%j.err
 #SBATCH -v
 #
-# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=full): J5, K5 on all 15 categories. PLAN=all: every experiment, one
+# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=loco): MVTec LOCO (J5, A, J3, kNN). PLAN=all: every experiment, one
 # DiT per category. PLAN=structured: J3-J5, K5 (+ A, J2). PLAN=next: J2, K2, A@1, A@2.
 # PLAN=matrix: the 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
 # The pipeline is single-process (one model per GPU, no DDP), so instead of torchrun
 # each GPU gets its own queue of experiments and works through it with run_dit_iad.sh
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
-#   sbatch slurm_dit_iad.sh                           # PLAN=full: J5, K5 on all 15 MVTec categories
+#   sbatch slurm_dit_iad.sh                           # PLAN=loco: MVTec LOCO, J5 A J3 + kNN
+#   PLAN=full sbatch slurm_dit_iad.sh                 # J5, K5 on all 15 MVTec categories
 #   PLAN=seeds sbatch slurm_dit_iad.sh                # J5 and K5 at seeds 1, 2 (job 158993)
 #   PLAN=samelr sbatch slurm_dit_iad.sh               # A@2 J J3 K5 at lr 2e-5 (job 158355)
 #   PLAN=retry sbatch slurm_dit_iad.sh                # the 7 arms job 156032 lost (job 158158)
@@ -56,7 +57,10 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 # An entry is an experiment (letter or config basename), optionally with @SEED to
 # run that entry at one seed only (overrides SEEDS), e.g. "A@1", and/or with :CATS to
 # run it on its own comma-separated categories (overrides CATS), e.g. "J5:tile,wood".
-#   PLAN=full   (default) J5 and K5 at seed 0 on the 13 MVTec categories not run yet
+#   PLAN=loco   (default) MVTec LOCO AD (5 categories, LOCO_ROOT): J5 (split over two GPUs), A,
+#               J3 and the frozen-token kNN control. Results in results_dit_iad_loco/,
+#               checkpoints in CKPT_ROOT/../rae_dit_iad_loco: never mixed with MVTec AD.
+#   PLAN=full   job 159148: J5 and K5 at seed 0 on the 13 MVTec categories not run yet
 #               (carpet + screw are kept), each arm split over two GPUs; KEEP_RESULTS=1
 #               so the workers add to the arm's existing results.csv
 #   PLAN=seeds  job 158993: J5 and K5 at seeds 1 and 2 (carpet + screw, lr 2e-5): do they
@@ -75,8 +79,14 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 #   PLAN=matrix the full A-K matrix + noise ablations of job 152776
 # MVTec categories: one texture (carpet) + one object (screw) by default
 export CATS=${CATS:-"carpet screw"}
-PLAN=${PLAN:-full}
+PLAN=${PLAN:-loco}
 case "$PLAN" in
+  loco)       QUEUES=("J5:breakfast_box,juice_bottle,pushpins" "J5:screw_bag,splicing_connectors" "A" "J3 knn")
+              export MVTEC_ROOT=${LOCO_ROOT:-/po1/rakhimov/datasets/mvtec_loco_anomaly_detection}
+              export OUT=${OUT_LOCO:-$HERE/results_dit_iad_loco}
+              export CKPT_ROOT=${CKPT_ROOT:-/po1/rakhimov/training/rae_dit_iad_loco}
+              CATS="breakfast_box juice_bottle pushpins screw_bag splicing_connectors"
+              export KEEP_RESULTS=1 ;;
   full)       QUEUES=("J5:bottle,cable,capsule,grid,hazelnut,leather,metal_nut" "J5:pill,tile,toothbrush,transistor,wood,zipper" "K5:bottle,cable,capsule,grid,hazelnut,leather,metal_nut" "K5:pill,tile,toothbrush,transistor,wood,zipper")
               CATS="carpet screw bottle cable capsule grid hazelnut leather metal_nut pill tile toothbrush transistor wood zipper"
               export KEEP_RESULTS=1 ;;
@@ -90,7 +100,7 @@ case "$PLAN" in
   structured) QUEUES=("J3 A" "J4 J2" "J5" "K5") ;;
   next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
   matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
-  *) echo "unknown PLAN '$PLAN' (full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
+  *) echo "unknown PLAN '$PLAN' (loco | full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
 esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------
@@ -293,7 +303,7 @@ nvidia-smi --query-gpu=index,name,memory.total --format=csv
 # ---- unit tests first (CPU, ~1 min): don't burn GPU hours on a broken build ---
 if [ -z "${SKIP_TESTS:-}" ]; then
   if python -c "import pytest" 2>/dev/null; then
-    python -m pytest tests/test_iad.py -q -p no:cacheprovider || {
+    python -m pytest tests/test_iad.py tests/test_datasets.py -q -p no:cacheprovider || {
       echo "unit tests failed; aborting (SKIP_TESTS=1 to override)"; exit 1; }
   else
     echo "pytest not installed in $ENV_NAME; skipping unit tests"

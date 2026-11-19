@@ -119,6 +119,17 @@ echo "memory preset: MEM=$MEM (grad_checkpoint=$([ "$MEM" = low ] && echo on || 
 mkdir -p "$OUT"
 
 for exp in $EXPT; do
+  if [ "$exp" = knn ]; then
+    # frozen-token kNN control: no training, no seeds; results in $OUT/<scope>/knn/knn_frozen/
+    if [ "$SCOPE" = joint ]; then KD="$OUT/knn"; else KD="$OUT/$SCOPE/knn"; fi
+    mkdir -p "$KD"
+    echo "=== knn control cats=$CATS ==="
+    # shellcheck disable=SC2086
+    python "$HERE/rae_dit_iad.py" knn --config "$(config_for J5)" --rae-root "$RAE_ROOT" \
+      --mvtec-root "$MVTEC_ROOT" --out "$KD" --categories $CATS \
+      2>&1 | tee -a "$KD/knn.log"
+    continue
+  fi
   CFG=$(config_for "$exp")
   [ -f "$CFG" ] || { echo "unknown experiment '$exp' (no $CFG)"; exit 1; }
   for SEED in $SEEDS; do

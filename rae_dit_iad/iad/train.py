@@ -36,10 +36,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from latent_draem import load_rgb, mvtec_split, seed_all
+from latent_draem import load_rgb, seed_all
 
 from iad import adaptor as A
 from iad import core
+from iad import datasets as DSET
 from iad import disc as DS
 from iad import models as M
 
@@ -59,15 +60,19 @@ def split_train_val(
 
     Mirrors ``rae_recon_ablation.py``: per category, a ``np.random.default_rng(1234)``
     permutation of ``train/good``; the first ``n_val`` paths are validation,
-    the rest training.  Test images are never used here.
+    the rest training.  Test images are never used here.  A dataset with an
+    official normal validation split (MVTec LOCO) uses that split instead and
+    keeps all of ``train/good`` for training.
     """
     train_paths: List[Path] = []
     val_paths: List[Path] = []
     per_cat: Dict[str, List[Path]] = {}
     for cat in categories:
-        tr, _te = mvtec_split(Path(mvtec_root), cat)
+        tr, official_val, _te = DSET.split(Path(mvtec_root), cat)
         tr = [Path(p) for p in tr]
-        if n_val > 0 and len(tr) > n_val:
+        if official_val:
+            val, keep = [Path(p) for p in official_val], tr
+        elif n_val > 0 and len(tr) > n_val:
             perm = np.random.default_rng(val_seed).permutation(len(tr))
             val = [tr[i] for i in perm[:n_val]]
             keep = [tr[i] for i in perm[n_val:]]
