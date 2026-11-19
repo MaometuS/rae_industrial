@@ -82,7 +82,7 @@ export CATS=${CATS:-"carpet screw"}
 PLAN=${PLAN:-loco}
 case "$PLAN" in
   loco)       QUEUES=("J5:breakfast_box,juice_bottle,pushpins" "J5:screw_bag,splicing_connectors" "A" "J3 knn")
-              export MVTEC_ROOT=${LOCO_ROOT:-/po1/rakhimov/datasets/mvtec_loco_anomaly_detection}
+              export MVTEC_ROOT=${LOCO_ROOT:-/po1/rakhimov/datasets/mvtec_loco}
               export OUT=${OUT_LOCO:-$HERE/results_dit_iad_loco}
               export CKPT_ROOT=${CKPT_ROOT:-/po1/rakhimov/training/rae_dit_iad_loco}
               CATS="breakfast_box juice_bottle pushpins screw_bag splicing_connectors"

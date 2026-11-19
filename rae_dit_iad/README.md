@@ -617,7 +617,7 @@ no tuning on LOCO. Expected: J5 logical AUROC clearly above kNN's (>= 0.05 over 
 with structural AUROC comparable; if both are equally weak on logical, global attention
 is not helping.
 
-* Data: `LOCO_ROOT` (default `/po1/rakhimov/datasets/mvtec_loco_anomaly_detection`, the
+* Data: `LOCO_ROOT` (default `/po1/rakhimov/datasets/mvtec_loco`, the
   official archive extracted; download it from MVTec, non-commercial licence). The layout
   is detected per category (`iad/datasets.py`), so every command keeps `--mvtec-root`.
 * Splits: training uses all of `train/good`; checkpoints are selected on the official
