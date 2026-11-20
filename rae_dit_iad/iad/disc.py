@@ -19,6 +19,17 @@ the DiT but never changes how the DiT trains (unit test N), so adding it leaves
 every arm comparison intact and only adds a learned score on top.  Its loss is
 reported as ``seg`` and kept out of ``total``, so it cannot change which DiT
 checkpoint is selected as ``best``.
+
+``pixel: true`` (localization ablation) adds a pixel-resolution head on top
+(``PixelHead``): RGB stem at 1/4 resolution + the token cues (z_in, z^, cos
+distance, the token logit) upsampled, two residual blocks, a full-resolution
+refinement, and a zero-initialized output added to the upsampled token logit
+(so at step 0 it IS the bilinear ``disc`` map).  It is trained with the same
+focal loss against the *pixel* Perlin mask on the samples whose corruption is
+visible in the image (DTD paste) and on clean samples (all-zero target);
+Gaussian / swap samples change only the latent, so they carry no pixel target.
+Its inputs are detached (the token head and the DiT train exactly as without
+it) and it is clipped separately.  Score: ``--score pxhead``.
 """
 
 from __future__ import annotations
@@ -36,6 +47,9 @@ DISC_DEFAULTS: Dict[str, Any] = {
     "w_seg": 1.0,    # weight of the focal segmentation loss
     "gamma": 2.0,    # focal-loss focusing parameter (DRAEM)
     "detach": True,  # True: the head never changes the DiT's training
+    "pixel": False,  # pixel-resolution head on top (localization ablation)
+    "pixel_ch": 32,  # its width (multiple of 8)
+    "w_pix": 1.0,    # weight of its focal loss
 }
 
 
@@ -52,6 +66,10 @@ def disc_cfg(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     out["d"], out["blocks"] = int(out["d"]), int(out["blocks"])
     out["w_seg"], out["gamma"] = float(out["w_seg"]), float(out["gamma"])
     out["detach"] = bool(out["detach"])
+    out["pixel"], out["pixel_ch"], out["w_pix"] = (bool(out["pixel"]), int(out["pixel_ch"]),
+                                                   float(out["w_pix"]))
+    if out["pixel"] and (out["pixel_ch"] <= 0 or out["pixel_ch"] % 8 or out["w_pix"] <= 0):
+        raise ValueError(f"invalid discriminator pixel head config {out}")
     if out["d"] <= 0 or out["d"] % 8:
         raise ValueError(f"discriminator.d must be a positive multiple of 8 (got {out['d']})")
     if out["blocks"] < 0 or out["w_seg"] <= 0 or out["gamma"] < 0:
@@ -73,7 +91,64 @@ def build_discriminator(
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(int(seed) + 1_000_003)
         head = Discriminator(int(dim), dc["d"], dc["blocks"])
+        if dc["pixel"]:  # built after the token head: its init is unchanged
+            head = DiscWithPixel(head, PixelHead(int(dim), dc["pixel_ch"]))
     return head.to(device) if device is not None else head
+
+
+class PixelHead(nn.Module):
+    """Pixel-resolution anomaly logit from the image and the token-grid cues."""
+
+    def __init__(self, dim: int, ch: int = 32):
+        super().__init__()
+        from latent_draem import ResBlock
+        self.tok = nn.Conv2d(2 * dim + 2, ch, 1)          # [z_in, z^, cos, token logit]
+        self.stem = nn.Sequential(                           # RGB -> 1/4 resolution
+            nn.Conv2d(3, ch, 3, stride=2, padding=1), nn.GroupNorm(8, ch), nn.GELU(),
+            nn.Conv2d(ch, ch, 3, stride=2, padding=1))
+        self.mid = nn.Sequential(nn.Conv2d(2 * ch, ch, 1), ResBlock(ch), ResBlock(ch))
+        self.full = nn.Conv2d(3, ch // 2, 3, padding=1)      # full-resolution edges
+        self.out = nn.Sequential(nn.Conv2d(ch + ch // 2, ch // 2, 3, padding=1), nn.GELU(),
+                                 nn.Conv2d(ch // 2, 1, 3, padding=1))
+        nn.init.zeros_(self.out[-1].weight)
+        nn.init.zeros_(self.out[-1].bias)
+
+    def forward(self, x, za, r, logit):
+        import torch.nn.functional as F
+        h, w = x.shape[-2:]
+        cd = 1 - F.cosine_similarity(za, r, dim=1, eps=1e-6).unsqueeze(1)
+        tok = self.tok(torch.cat([za, r, cd, logit], 1))
+        s = self.stem(x)
+        tok = F.interpolate(tok, size=s.shape[-2:], mode="bilinear", align_corners=False)
+        f = self.mid(torch.cat([s, tok], 1))
+        f = F.interpolate(f, size=(h, w), mode="bilinear", align_corners=False)
+        res = self.out(torch.cat([f, self.full(x)], 1))
+        base = F.interpolate(logit, size=(h, w), mode="bilinear", align_corners=False)
+        return base + res
+
+
+class DiscWithPixel(nn.Module):
+    """Token head (``seg``, unchanged) + pixel head (``pix``).  ``forward`` is the
+    token head, so every existing caller is unaffected."""
+
+    def __init__(self, seg: nn.Module, pix: nn.Module):
+        super().__init__()
+        self.seg, self.pix = seg, pix
+
+    def forward(self, za, r):
+        return self.seg(za, r)
+
+    def pixel(self, x, za, r, logit):
+        return self.pix(x, za.detach(), r.detach(), logit.detach())
+
+
+def head_parts(head: Optional[nn.Module]):
+    """Parameter groups clipped separately (token head, pixel head)."""
+    if head is None:
+        return []
+    if isinstance(head, DiscWithPixel):
+        return [list(head.seg.parameters()), list(head.pix.parameters())]
+    return [list(head.parameters())]
 
 
 def seg_loss(logits: torch.Tensor, target: torch.Tensor, gamma: float = 2.0) -> torch.Tensor:

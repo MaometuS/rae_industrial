@@ -371,7 +371,11 @@ Eval runs under `no_grad` and uses `EVAL_BATCH` (default 8).
   SimpleNet arms add no test-time noise, so they run `single`.
 * **Scores** (`--score`): `pixel` = `mean_c |x − D(ẑ)|`, `latent_cos` /
   `latent_l2` = token distance between `E(x)` and `ẑ` before the decoder, `disc` =
-  DRAEM's learned segmentation map (SimpleNet arms; skipped for A).
+  DRAEM's learned segmentation map (SimpleNet arms; skipped for A). A comma list, or
+  any localization variant (`base[+sK][+gf]`, see the `PLAN=loc` section), goes through
+  one shared pass per batch (`iad/infer.py score_maps`); `--blur-sweep 0,2,4,8` writes one
+  row per blur sigma. A config's `eval_size` sets the metric resolution (maps are resized
+  to it), so a 448 px run is scored on the same 256 px masks as the rest.
 * **Reproducibility**: `--seed` fixes training init/data order and inference
   noise. Inference noise is per-image-index (`seed·1_000_003 + idx·97 +
   rep·13`), so results are **batch-size invariant** and comparable across model
@@ -606,7 +610,7 @@ texture paste, J5 mix, K5 mix + adaptor (20 runs × 2 category models: carpet as
 the texture, screw as the object; `CATS="..."` restores the 5 pilot categories). DTD is read
 from `DTD_ROOT` (default `../latent_draem/data/dtd`, downloaded once if empty).
 
-**Next (`PLAN=loco`, the SLURM default): MVTec LOCO AD.** The question: does J5, which restores the whole
+**`PLAN=loco`: MVTec LOCO AD** (submitted; results pending). The question: does J5, which restores the whole
 token grid with global attention, catch *logical* anomalies (missing, extra or misplaced
 parts that look normal patch by patch) better than per-patch methods, while staying
 comparable on *structural* ones? Arms: J5 (split over two GPUs), A, J3 (token swap only:
@@ -636,3 +640,33 @@ is not helping.
   `/po1/rakhimov/training/rae_dit_iad_loco`: never mixed with the MVTec AD runs (same exp
   ids). Queue entries `J5:<cats>` split one arm over GPUs (`KEEP_RESULTS=1`); `knn` runs
   the control.
+
+**Next (`PLAN=loc`, the SLURM default): the localization ablation.** J5's image AUROC is
+0.973 over the 15 MVTec categories but its pixel AUROC is 0.939, and the worst categories
+are the ones with thin or fine structure (metal_nut 0.862, tile 0.866, transistor 0.891,
+wood 0.892, cable 0.904). Every J5 score is a 16x16 token map upsampled bilinearly, so a
+defect boundary is smeared over a 16 px patch. The question: how much of the gap is the
+grid, and which fix recovers it? All arms run at seed 0 on those 5 categories, with the
+same hyperparameters as J5. Results go to `results_dit_iad_loc/`.
+
+| option | what | cost | how it is run |
+|---|---|---|---|
+| 0 diagnostic | `oracle16`, `oracle32`: the GT mask area-pooled to a GxG grid and upsampled the same way, i.e. the best pixel AUROC / AUPRO *any* 16x16 (32x32) map can reach | none | eval spec |
+| 1 shift TTA | `+s4` / `+s16`: the input shifted by half / quarter-patch offsets, maps un-shifted and averaged (a 2x / 4x finer effective sampling) | 4 / 16 DiT passes | eval spec |
+| 2 upsampling | `--blur-sweep 0,1,2,4,8` (sigma 4 was tuned for 256 px pixel maps, not token maps) and `+gf`: guided filter, radius one token, guided by the image, so the map's edges move to the image's edges | free | eval spec |
+| 3 high-res cues | `dec_diff` = `mean_c |D(E(x)) − D(ẑ)|` (the decoder's own error, which makes `pixel` weak at 0.694, appears in both terms and cancels), and products with the token map: `fuse_dec` = latent_cos · dec_diff, `fuse_pixel` = latent_cos · pixel, `fuse_disc` = disc · dec_diff. Products are scale-free: no normalization statistics needed | +1 decode | eval spec |
+| 4 pixel head | `J5_pixel_head`: a small conv head (RGB at 1/4 and full resolution + token cues) on top of the DRAEM head, trained with the focal loss on the pixel Perlin mask of DTD-paste and clean samples. Inputs detached, own clip: DiT and token head train exactly as J5 | retrain (+~0.1 M params) | `pxhead` |
+| 5 finer grid | `J5_grid32`: DINOv2 at 448 px (32x32 tokens), the DiT's pos_embed and RoPE re-gridded, fine-tuned as J5; metrics at 256 px | retrain, ~4x DiT time | all specs |
+
+Tiling (running 16x16 tokens on crops) is left out: the DiT was fine-tuned on whole images,
+a crop changes object scale and context, and on object categories the global layout is
+part of what the DiT restores.
+
+Each checkpoint is scored with `LOC_SCORES` (21 specs; `pxhead` specs are skipped on
+checkpoints without the head) x `LOC_BLURS` before it is deleted. Reading the result:
+* oracle16 well above J5's own score: the grid is not the bottleneck yet (the token
+  scores themselves are noisy); fixes 1-3 can only help at the margin.
+* oracle16 close to J5 and oracle32 much higher: the grid is the bottleneck, and option 5
+  (or 1 and 4, which approximate a finer grid cheaply) is the fix.
+* `+gf`, `fuse_*` and the blur sweep are free at test time: if one of them closes most of
+  the gap, it becomes the default score for every arm.

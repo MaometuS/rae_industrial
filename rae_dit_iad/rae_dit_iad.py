@@ -42,6 +42,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
@@ -228,11 +229,13 @@ def _build_models_from_ckpt(ckpt_path: Path, rae_root: Path, device: torch.devic
     rae_cfg, stage2_cfg, misc_cfg = M._to_dict(sections[0]), M._to_dict(sections[1]), M._to_dict(sections[5])
     misc = M._to_dict(misc_cfg)
 
+    grid = cfg.get("latent_grid")  # re-grid before loading a checkpoint trained on it
     rae = M.build_rae(rae_root, rae_cfg, device,
-                      require_decoder_ckpt=not cfg.get("allow_random_decoder", False))
+                      require_decoder_ckpt=not cfg.get("allow_random_decoder", False),
+                      grid=grid)
     M.freeze_encoder(rae)
     M.freeze_decoder(rae)
-    dit = M.build_dit(stage2_cfg, rae_root, device, require_ckpt=False)
+    dit = M.build_dit(stage2_cfg, rae_root, device, require_ckpt=False, grid=grid)
     if state.get("model") is not None:
         dit.load_state_dict(state["model"], strict=True)
     elif state.get("ema") is None:
@@ -353,27 +356,31 @@ def cmd_eval(args: argparse.Namespace) -> None:
         cat_score = score
         if args.score is None and "score" not in inf:  # no --config: follow the ckpt
             cat_score = str(cfg.get("inference", {}).get("score", "pixel"))
+        specs = _as_list(cat_score)
+        multi = (len(specs) > 1 or any(sp not in LEGACY_SCORES for sp in specs)
+                 or bool(args.blur_sweep))
+        if multi:
+            if corruption != "simplenet":
+                print(f"[eval/{cat}] score variants {specs} need a SimpleNet-path checkpoint "
+                      f"(deterministic single pass); {ckpt_path.name} is corruption="
+                      f"{corruption}: skipped", flush=True)
+                continue
+            rows_m, pi_m = _eval_multi(
+                rae, dit, adaptor, disc, cfg, args, specs, cat=cat, ckpt_path=ckpt_path,
+                used_ema=used_ema, exp_id=exp_id, seed=seed, t=cat_t_list[0],
+                num_classes=num_classes, device=device, blur_sigma=blur_sigma, done=done)
+            new_rows.extend(rows_m)
+            per_image_rows.extend(pi_m)
+            continue
         if cat_score == "disc" and disc is None:
             print(f"[eval/{cat}] score=disc skipped: {ckpt_path.name} has no discriminator "
                   f"(flow-path arm A, or discriminator disabled)", flush=True)
             del rae, dit, adaptor
             continue
         size = int(cfg.get("size", 256))
+        esize = int(cfg.get("eval_size", size))  # metric resolution (maps are resized to it)
         seed_all(seed)
-
-        _train, _val, test_entries = DSET.split(Path(args.mvtec_root), cat)
-        del _train, _val  # test split only; training data never touched here
-        # test entries are (path, defect_name, masks) — project convention
-        paths = [Path(p) for p, _defect, _m in test_entries]
-        masks = (np.stack([DSET.load_mask_any(m, size) for _p, _d, m in test_entries])
-                 if test_entries else np.zeros((0, size, size), bool))
-        labels = np.array([int(d != "good") for _p, d, _m in test_entries])
-        loco = None  # MVTec LOCO: per-type metrics + sPRO on the per-defect masks
-        if DSET.is_loco(Path(args.mvtec_root), cat):
-            loco = dict(types=np.array([d for _p, d, _m in test_entries]),
-                        defects=DSET.loco_defects([m for _p, _d, m in test_entries], size,
-                                                  DSET.loco_defects_config(
-                                                      Path(args.mvtec_root), cat)))
+        paths, masks, labels, loco, test_entries = _test_set(Path(args.mvtec_root), cat, esize)
 
         # batched inference (loading lazily per batch to bound memory)
         bs = int(args.batch_size)
@@ -406,13 +413,13 @@ def cmd_eval(args: argparse.Namespace) -> None:
 
         if not paths:
             continue
-        maps_np = np.concatenate(maps_all, axis=0)
+        maps_np = _resize_maps(np.concatenate(maps_all, axis=0), esize)
         inputs_np = np.concatenate(inputs_uint8, axis=0)
         recons_np = np.concatenate(recons_uint8, axis=0)
 
         key_base = dict(exp=exp_id, cat=cat, seed=seed, reps=cat_reps, score=cat_score,
                         ckpt=ckpt_path.name, ema=int(used_ema))
-        row = _score_setting(maps_np, masks, labels, size, blur_sigma, loco=loco)
+        row = _score_setting(maps_np, masks, labels, esize, blur_sigma, loco=loco)
         if args.save_maps:
             # native-resolution maps for MVTec's official evaluation scripts
             md = Path(args.save_maps) / f"{exp_id}_seed{seed}_{cat_score}"
@@ -430,7 +437,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
             per_image_rows.extend(_per_image_rows(
                 paths, labels, maps_np, exp_id=exp_id, cat=cat, seed=seed,
                 mode=mode_used, t=t_used))
-        if int(args.viz) > 0:
+        if int(args.viz) > 0 and esize == size:
             sfx = "" if cat_score == "pixel" else f"_{cat_score}"
             viz_path = out / "viz" / f"{cat}_{exp_id}_{mode_used}_t{t_used}{sfx}.png"
             n_normal = max(1, int(args.viz) // 3)
@@ -451,6 +458,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
                 if cand_sig in done:
                     continue
                 row_x = _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma,
+                                      esize=esize,
                                       mode=extra_mode, t=extra_t, reps=cat_reps,
                                       ode_steps=ode_steps, num_classes=num_classes,
                                       corruption=corruption, seed=seed, shift=shift,
@@ -550,6 +558,114 @@ def cmd_knn(args: argparse.Namespace) -> None:
     print(f"wrote {results_csv} ({len(new_rows)} new rows)")
 
 
+LEGACY_SCORES = ("pixel", "latent_cos", "latent_l2", "disc")
+
+
+def _test_set(root: Path, cat: str, esize: int):
+    """``(paths, masks@esize, labels, loco, entries)`` of a category's test split."""
+    _train, _val, entries = DSET.split(root, cat)
+    del _train, _val  # test split only; training data never touched here
+    # test entries are (path, defect_name, masks) — project convention
+    paths = [Path(p) for p, _defect, _m in entries]
+    masks = (np.stack([DSET.load_mask_any(m, esize) for _p, _d, m in entries])
+             if entries else np.zeros((0, esize, esize), bool))
+    labels = np.array([int(d != "good") for _p, d, _m in entries])
+    loco = None  # MVTec LOCO: per-type metrics + sPRO on the per-defect masks
+    if DSET.is_loco(root, cat):
+        loco = dict(types=np.array([d for _p, d, _m in entries]),
+                    defects=DSET.loco_defects([m for _p, _d, m in entries], esize,
+                                              DSET.loco_defects_config(root, cat)))
+    return paths, masks, labels, loco, entries
+
+
+def _resize_maps(maps_np: np.ndarray, esize: int) -> np.ndarray:
+    """Bilinearly resize ``(N, H, W)`` raw maps to the metric resolution."""
+    if maps_np.shape[-1] == esize and maps_np.shape[-2] == esize:
+        return maps_np
+    t = torch.from_numpy(np.ascontiguousarray(maps_np, dtype=np.float32)).unsqueeze(1)
+    return F.interpolate(t, size=(esize, esize), mode="bilinear",
+                         align_corners=False)[:, 0].numpy()
+
+
+def _eval_multi(rae, dit, adaptor, disc, cfg, args, spec_strs, *, cat, ckpt_path, used_ema,
+                exp_id, seed, t, num_classes, device, blur_sigma, done):
+    """Localization ablation: every score spec (``I.parse_score_spec``) and blur
+    sigma of one SimpleNet-path checkpoint from shared DiT passes.  Returns
+    ``(new result rows, per-image rows)``."""
+    size = int(cfg.get("size", 256))
+    esize = int(cfg.get("eval_size", size))
+    blurs = ([float(b) for b in str(args.blur_sweep).split(",") if b.strip()]
+             if args.blur_sweep else [float(blur_sigma)])
+    specs = [I.parse_score_spec(sp) for sp in spec_strs]
+    keep = []
+    for sp in specs:
+        if ({"disc", "pxhead"} & set(sp["needs"])) and disc is None:
+            print(f"[eval/{cat}] {sp['spec']} skipped: {ckpt_path.name} has no discriminator",
+                  flush=True)
+        elif "pxhead" in sp["needs"] and getattr(disc, "pix", None) is None:
+            print(f"[eval/{cat}] {sp['spec']} skipped: {ckpt_path.name} has no pixel head",
+                  flush=True)
+        else:
+            keep.append(sp)
+    specs = keep
+    key = lambda sp, b: (exp_id, cat, seed, ckpt_path.name, int(used_ema), "single",  # noqa: E731
+                         float(t), 1, float(b), sp["spec"])
+    specs = [sp for sp in specs if any(key(sp, b) not in done for b in blurs)]
+    if not specs:
+        return [], []
+    paths, masks, labels, loco, entries = _test_set(Path(args.mvtec_root), cat, esize)
+    if not paths:
+        return [], []
+    bs = int(args.batch_size)
+    raw: Dict[str, List[np.ndarray]] = {sp["spec"]: [] for sp in specs}
+    oracle = [sp for sp in specs if sp["base"] in I.ORACLE_BASES]
+    passes = [sp for sp in specs if sp["base"] not in I.ORACLE_BASES]
+    kmax = max([sp["shifts"] for sp in passes], default=0)
+    t0 = time.time()
+    for start in range(0, len(paths), bs):
+        chunk = paths[start:start + bs]
+        x = torch.stack([load_rgb(p, size) for p in chunk]).to(device)
+        _xh, maps = I.score_maps(rae, dit, x, passes, t=t, num_classes=num_classes,
+                                 adaptor=adaptor, disc=disc)
+        for name, m in maps.items():
+            raw[name].append(m.cpu().numpy())
+        for sp in oracle:  # GT through a GxG token grid (the masks, not the model)
+            g = int(sp["base"][len("oracle"):])
+            mk = masks[start:start + len(chunk)]
+            mk = (_resize_maps(mk.astype(np.float32), size) > 0.5) if esize != size else mk
+            m = torch.from_numpy(I.mask_oracle(mk, g)).to(device)
+            if sp["gf"]:
+                m = I.guided_filter(m, x, r=max(1, int(round(size / g))))
+            raw[sp["spec"]].append(m.cpu().numpy())
+    sec = (time.time() - t0) / max(len(paths), 1)
+    rows, pi_rows = [], []
+    for sp in specs:
+        maps_np = _resize_maps(np.concatenate(raw[sp["spec"]], axis=0), esize)
+        for b in blurs:
+            if key(sp, b) in done:
+                continue
+            row = _score_setting(maps_np, masks, labels, esize, b, loco=loco)
+            row.update(exp=exp_id, cat=cat, seed=seed, reps=1, score=sp["spec"],
+                       ckpt=ckpt_path.name, ema=int(used_ema), mode="single", t=float(t),
+                       n_images=len(paths), infer_s_per_img=round(sec, 4),
+                       dit_passes_per_img=sp["shifts"] if sp["base"] not in I.ORACLE_BASES
+                       else 0)
+            rows.append(row)
+            done.add(key(sp, b))
+            print(f"[eval/{cat}] {sp['spec']:<22} blur={b:<4g} "
+                  f"I-AUROC(max)={row['img_auroc_max']:.4f} P-AUROC={row['px_auroc']:.4f} "
+                  f"AUPRO={row['aupro']:.4f}" + (f" sPRO={row['spro']:.4f}" if loco else ""),
+                  flush=True)
+            if args.save_maps and b == float(blur_sigma):
+                md = Path(args.save_maps) / f"{exp_id}_seed{seed}_{sp['spec']}"
+                DSET.save_native_maps(I.blur_maps(maps_np, b), entries, md, cat)
+        for r in _per_image_rows(paths, labels, maps_np, exp_id=exp_id, cat=cat, seed=seed,
+                                 mode="single", t=float(t)):
+            r["score"] = sp["spec"]
+            pi_rows.append(r)
+    return rows, pi_rows
+
+
 def _per_image_rows(paths, labels, maps_np, *, exp_id, cat, seed, mode, t) -> List[Dict[str, Any]]:
     return [{
         "exp": exp_id, "cat": cat, "seed": seed, "mode": mode, "t": t,
@@ -561,8 +677,9 @@ def _per_image_rows(paths, labels, maps_np, *, exp_id, cat, seed, mode, t) -> Li
 
 def _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma, *, mode, t, reps,
                   ode_steps, num_classes, corruption, seed, shift, device, bs,
-                  adaptor=None, score="pixel", disc=None, loco=None):
+                  adaptor=None, score="pixel", disc=None, loco=None, esize=None):
     """Run one (mode, t) setting. Returns ``(row, maps_np)`` or ``None``."""
+    esize = int(esize or size)
     maps_list = []
     infer_time = 0.0
     dit_passes = 0
@@ -580,8 +697,8 @@ def _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma, *, mode, t, 
         maps_list.append(maps.cpu().numpy())
     if not maps_list:
         return None
-    maps_np = np.concatenate(maps_list, axis=0)
-    row = _score_setting(maps_np, masks, labels, size, blur_sigma, loco=loco)
+    maps_np = _resize_maps(np.concatenate(maps_list, axis=0), esize)
+    row = _score_setting(maps_np, masks, labels, esize, blur_sigma, loco=loco)
     row.update(infer_s_per_img=round(infer_time / max(len(paths), 1), 4),
                dit_passes_per_img=dit_passes)
     return row, maps_np
@@ -839,11 +956,17 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--repeats", type=int, default=None, help="repetitions for mode=multi")
     ev.add_argument("--ode-steps", type=int, default=None)
     ev.add_argument("--blur-sigma", type=float, default=None)
-    ev.add_argument("--score", choices=["pixel", "latent_cos", "latent_l2", "disc"], default=None,
+    ev.add_argument("--score", default=None,
                     help="anomaly map: pixel = |x - D(z^)| after the decoder; latent_cos / "
                          "latent_l2 = token distance between E(x) and the DiT output z^, "
                          "no decoder (experiment J; works on any checkpoint); disc = "
-                         "DRAEM's learned segmentation map (SimpleNet arms)")
+                         "DRAEM's learned segmentation map (SimpleNet arms). A comma list "
+                         "and the localization variants (base[+sK][+gf], bases dec_diff, "
+                         "pxhead, fuse_dec, fuse_pixel, fuse_disc, oracle16, oracle32; "
+                         "see iad/infer.py) are computed together from shared DiT passes "
+                         "(SimpleNet arms)")
+    ev.add_argument("--blur-sweep", default=None, metavar="S1,S2,..",
+                    help="score every map at each of these blur sigmas (one row each)")
     ev.add_argument("--save-maps", default=None, metavar="DIR",
                     help="also write the blurred anomaly maps as float TIFFs at native "
                          "resolution (<DIR>/<exp>_seed<S>_<score>/<cat>/test/<type>/), "

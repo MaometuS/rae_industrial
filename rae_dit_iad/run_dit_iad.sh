@@ -67,6 +67,9 @@ ADAPTOR=${ADAPTOR:-""}            # override adaptor type (experiments F/G)
 SIGMA=${SIGMA:-""}                # override SimpleNet-style noise sigma (every arm but A)
 SDPA=${SDPA:-""}                  # attention kernels for training: auto | math (NaN debugging)
 SCORES=${SCORES:-"pixel latent_cos disc"}  # each arm scored with each: pixel | latent_cos | latent_l2 | disc
+# (a comma list in one item = one eval computing all of them; localization variants
+# such as fuse_dec, disc+s4, latent_cos+gf, oracle16: see iad/infer.py)
+BLUR_SWEEP=${BLUR_SWEEP:-""}      # e.g. "0,2,4,8": one row per blur sigma (SimpleNet arms)
 
 # letter -> config file
 config_for() {
@@ -187,6 +190,7 @@ for exp in $EXPT; do
           --out "$RUN_DIR" --ckpt-dir "$CK_DIR" --categories $PCATS --seed "$SEED" \
           --mode "$MODES" $T_ARG --score "$SC" --repeats "$REPEATS" \
           --ode-steps "$ODE_STEPS" --batch-size "$EVAL_BATCH" --viz "$VIZ" \
+          ${BLUR_SWEEP:+--blur-sweep "$BLUR_SWEEP"} \
           2>&1 | tee -a "$RUN_DIR/eval_${exp}.log"
       done
     fi

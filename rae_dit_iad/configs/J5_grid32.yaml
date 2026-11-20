@@ -1,0 +1,91 @@
+# J5_grid32: J5 on a native 32x32 token grid (localization ablation, option 5).
+#
+# The frozen DINOv2-B encoder gets 448 px instead of 224 (its position embeddings are
+# interpolated, as HF does for any size), so every token covers 8 px of a 256 px map
+# instead of 16. The released DiT-DH is per-token (patch size 1): only its fixed
+# sin-cos pos_embed (bicubic) and its RoPE tables (positions interpolated onto the
+# trained 16-range) are re-gridded (iad/models.py regrid_dit), then it is fine-tuned
+# as in J5. Per-position latent statistics are resized to 32x32; the decoder keeps
+# its 16x16 grid (decode_latent pools 32 -> 16), so pixel / dec_diff scores stay
+# coarse-decoder scores. Images load at 448 px (the encoder input), metrics are
+# computed at 256 px (eval_size) so every number compares with J5.
+# Cost: 4x the tokens -> ~4x DiT time, ~16x attention.
+#
+experiment:
+  id: J5_grid32
+  loss: latent             # weighted token MSE to the clean latent; the decoder is never called
+  lambda_fm: 0.0
+  lambda_latent: 0.0       # unused with loss=latent (the latent term IS the loss)
+  decoder_finetune: false  # must be false: the decoder is offloaded to CPU during training
+  corruption: simplenet
+  clamp_recon: false
+  best_metric: lat         # val_lat (latent restore loss on the val split)
+
+discriminator:   # DRAEM's discriminative sub-network on the token grid (iad/disc.py)
+  enabled: true
+  d: 256          # hidden channels
+  blocks: 4       # residual conv blocks
+  w_seg: 1.0      # weight of the focal segmentation loss
+  gamma: 2.0      # focal-loss focusing (DRAEM)
+  detach: true    # true: the head never changes the DiT's training (clean comparisons)
+
+rae_config: configs/stage2/training/ImageNet256/DiTDH-XL_DINOv2-B.yaml
+rae_config_overrides:
+  stage_2:
+    ckpt: "models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt"
+
+noise:
+  # Default SimpleNet-style corruption (iad.core.SIMPLENET_DEFAULTS), identical to B-G.
+  sigma: [0.5, 1.5]   # U(lo, hi) per sample; test conditions on the midpoint (1.0)
+  kind: mix       # gaussian | swap | dtd | mix (structured synthetic anomalies)
+  kinds: [gaussian, swap, dtd]   # pool for kind: mix
+  beta: [0.5, 1.0]  # texture / swap opacity (latent_draem)
+  dtd_bank: 1000    # DTD crops preloaded once; DTD_ROOT or latent_draem/data/dtd
+  mask: perlin    # perlin | all
+  p_clean: 0.2
+  w_anom: 5.0     # latent-loss up-weight on corrupted tokens
+  mask_thr: 0.5
+
+size: 448            # = the encoder input (32 tokens x 14 px)
+eval_size: 256       # metric resolution: comparable with every 256 px arm
+latent_grid: 32      # token grid (official: 16)
+seed: 42
+scope: per_category  # one DiT per category (standard one-class setting); joint = multi-class
+
+training:
+  steps: 4000
+  batch_size: 2        # micro-batch (DiT-XL + decoder must fit in GPU memory)
+  grad_accum_steps: 4  # effective batch = 2 x 4 = 8
+  precision: fp32
+  clip_grad: 1.0
+  log_every: 50
+  val_every: 250
+  save_every: 500
+  n_val: 20
+  use_ema: true
+  ema_decay: 0.9995
+  # --- memory/speed knobs: defaults are the fastest (full-speed) settings ---
+  grad_checkpoint: false  # set true if 1024 tokens do not fit  # true = recompute activations in backward (slower step, much less VRAM)
+  ema_device: cuda        # cuda = fastest; cpu = keeps EMA off the GPU (frees ~4 bytes/param)
+  cache_latents: true
+  decoder_lr_ratio: 0.1  # unused while decoder_finetune=false
+  optimizer:
+    lr: 2.0e-5         # official 2e-4 @ batch 1024 -> sqrt-scaled to batch 8 (no QK-norm: 1e-4 blew up)
+    betas: [0.9, 0.95]
+    weight_decay: 0.0
+    eps: 1.0e-8
+  scheduler:
+    type: linear
+    base_lr: 2.0e-5
+    final_lr: 2.0e-6
+    warmup_steps: 400  # linear ramp from 0 to base_lr (10% of steps)
+    decay_end_steps: 4000
+    warmup_from_zero: true   # false = official "warmup" holds the full lr from step 1
+
+inference:
+  mode: single      # deterministic: no test-time noise
+  t: 1.0            # = midpoint of noise.sigma; eval uses the checkpoint's sigma when --t is omitted
+  score: latent_cos # decoder-free map; latent_l2 also available, pixel for comparison
+  reps: 1
+  ode_steps: 50
+  blur_sigma: 4.0
