@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "splicing_connectors",
+      "steps": 4000,
+      "best_val": 0.019596258636253576,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad_loco/per_category/seed0/J3_latent_swap/splicing_connectors_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad_loco/per_category/seed0/J3_latent_swap/splicing_connectors_best.pt"
+    }
+  ]
+}

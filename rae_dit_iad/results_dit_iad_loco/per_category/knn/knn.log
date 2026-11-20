@@ -1,0 +1,10 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[knn/breakfast_box] bank 351 images  I-AUROC(max)=0.8681 P-AUROC=0.8966 AUPRO=0.7809 logical=0.8436 structural=0.8907
+[knn/juice_bottle] bank 335 images  I-AUROC(max)=0.8697 P-AUROC=0.8646 AUPRO=0.7602 logical=0.8269 structural=0.9342
+[knn/pushpins] bank 372 images  I-AUROC(max)=0.5622 P-AUROC=0.8014 AUPRO=0.4861 logical=0.5170 structural=0.6129
+[knn/screw_bag] bank 360 images  I-AUROC(max)=0.6161 P-AUROC=0.7265 AUPRO=0.4065 logical=0.5209 structural=0.7752
+[knn/splicing_connectors] bank 360 images  I-AUROC(max)=0.8136 P-AUROC=0.7558 AUPRO=0.4414 logical=0.8121 structural=0.8155
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loco/per_category/knn/knn_frozen/results.csv (5 new rows)

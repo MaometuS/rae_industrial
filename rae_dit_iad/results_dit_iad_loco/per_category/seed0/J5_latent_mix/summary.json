@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "pushpins",
+      "steps": 4000,
+      "best_val": 0.03068491630256176,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad_loco/per_category/seed0/J5_latent_mix/pushpins_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad_loco/per_category/seed0/J5_latent_mix/pushpins_best.pt"
+    }
+  ]
+}
