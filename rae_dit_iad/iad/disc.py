@@ -161,3 +161,15 @@ def disc_meta(head: Optional[nn.Module], cfg: Optional[Dict[str, Any]]) -> Optio
     if head is None:
         return None
     return {**disc_cfg(cfg), "params": int(sum(p.numel() for p in head.parameters()))}
+
+
+def clip_head(head: Optional[nn.Module], max_norm: float) -> Optional[torch.Tensor]:
+    """Clip each head part separately; return their combined norm (CPU scalar).
+
+    A part that got no gradient this step (the pixel head on a batch with no
+    DTD / clean sample) reports a CPU zero while the others are on the GPU, so
+    the norms are combined on the CPU (job 163739 failed on exactly that)."""
+    norms = [torch.nn.utils.clip_grad_norm_(ps, max_norm) for ps in head_parts(head)]
+    if not norms:
+        return None
+    return torch.stack([n.detach().float().cpu() for n in norms]).norm()
