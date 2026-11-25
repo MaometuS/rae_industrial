@@ -765,10 +765,7 @@ def _train_scope(
         grad_norm = torch.nn.utils.clip_grad_norm_(trainable, max_norm)
         # own clip per head part: never rescales the DiT, and a pixel head never
         # rescales the token head
-        disc_norms = [torch.nn.utils.clip_grad_norm_(ps, max_norm)
-                      for ps in DS.head_parts(disc)]
-        disc_norm = (torch.stack([n.float() for n in disc_norms]).norm()
-                     if disc_norms else None)
+        disc_norm = DS.clip_head(disc, max_norm)
         # Non-finite guard: clip_grad_norm_ turns one inf/NaN gradient into NaN for
         # every element, and a single such update writes NaN into all weights for
         # good (seen on the image-L1 arms, job 152307). Skip that update instead.

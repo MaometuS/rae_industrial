@@ -610,7 +610,7 @@ texture paste, J5 mix, K5 mix + adaptor (20 runs × 2 category models: carpet as
 the texture, screw as the object; `CATS="..."` restores the 5 pilot categories). DTD is read
 from `DTD_ROOT` (default `../latent_draem/data/dtd`, downloaded once if empty).
 
-**`PLAN=loco`: MVTec LOCO AD** (submitted; results pending). The question: does J5, which restores the whole
+**`PLAN=loco`: MVTec LOCO AD** (job 161056, results below). The question: does J5, which restores the whole
 token grid with global attention, catch *logical* anomalies (missing, extra or misplaced
 parts that look normal patch by patch) better than per-patch methods, while staying
 comparable on *structural* ones? Arms: J5 (split over two GPUs), A, J3 (token swap only:
@@ -640,6 +640,29 @@ is not helping.
   `/po1/rakhimov/training/rae_dit_iad_loco`: never mixed with the MVTec AD runs (same exp
   ids). Queue entries `J5:<cats>` split one arm over GPUs (`KEEP_RESULTS=1`); `knn` runs
   the control.
+
+Job 161056 (seed 0, 5 LOCO categories, means; image AUROC per type = that type vs the good
+test images, `max` aggregation; sPRO@0.05 is the 256 px approximation):
+
+| arm / score | image AUROC | logical | structural | pixel AUROC | sPRO | sPRO logical | sPRO structural |
+|---|---|---|---|---|---|---|---|
+| kNN frozen tokens | 0.746 | **0.704** | 0.806 | **0.809** | 0.583 | **0.557** | 0.608 |
+| J5 latent_cos | **0.766** | 0.689 | **0.866** | 0.714 | **0.624** | 0.525 | **0.770** |
+| J5 disc | 0.717 | 0.694 | 0.751 | 0.696 | 0.493 | 0.469 | 0.532 |
+| J3 latent_cos | 0.723 | 0.684 | 0.778 | 0.665 | 0.510 | 0.461 | 0.593 |
+| A latent_cos | 0.675 | 0.629 | 0.737 | 0.758 | 0.494 | 0.436 | 0.570 |
+| any arm, pixel | 0.556-0.570 | | | 0.54-0.55 | 0.18-0.20 | | |
+
+* The pre-registered hypothesis fails: J5's *logical* AUROC is not above kNN's (0.689 vs
+  0.704; `mean` aggregation 0.739 vs 0.749), let alone by 0.05. Global attention over the
+  token grid does not, on average, turn into logical-anomaly detection.
+* J5's gain over the frozen tokens is on *structural* anomalies (0.866 vs 0.806, sPRO
+  0.770 vs 0.608), the same kind of gain as on MVTec AD.
+* Per category the logical picture splits: J5 wins on the counting categories
+  (pushpins 0.604 vs 0.517, screw_bag 0.637 vs 0.521) and loses where kNN is strong
+  (breakfast_box 0.684 vs 0.844, juice_bottle 0.772 vs 0.827, splicing_connectors 0.750
+  vs 0.812). One seed: the counting-category gains need seeds 1-2 before they count.
+* The decoder pixel score is near chance everywhere (pixel AUROC ~0.55), as on MVTec AD.
 
 **Next (`PLAN=loc`, the SLURM default): the localization ablation.** J5's image AUROC is
 0.973 over the 15 MVTec categories but its pixel AUROC is 0.939, and the worst categories

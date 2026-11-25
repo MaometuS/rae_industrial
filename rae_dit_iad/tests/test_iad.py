@@ -1513,6 +1513,13 @@ def test_t_pixel_head_starts_at_token_map_and_keeps_token_head():
     assert px.shape == (2, 1, 32, 32) and torch.allclose(px, up, atol=1e-6)
     with pytest.raises(ValueError):
         DS.disc_cfg({"pixel": True, "pixel_ch": 12})
+    # clipping: a part with no gradient this step still combines (job 163739)
+    assert DS.clip_head(None, 1.0) is None
+    both.zero_grad(set_to_none=True)
+    both(za, r).sum().backward()                     # token head only: pix has no grads
+    n = DS.clip_head(both, 1.0)
+    assert n.device.type == "cpu" and torch.isfinite(n) and float(n) > 0
+    assert all(p.grad is None for p in both.pix.parameters())
 
 
 def test_t_pixel_head_loss_leaves_dit_and_token_head_unchanged():
