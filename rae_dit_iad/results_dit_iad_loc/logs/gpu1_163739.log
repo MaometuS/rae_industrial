@@ -1,0 +1,38 @@
+[gpu 1] start J5_pixel_head 10:02:14
+torch 2.8.0+cu128 NVIDIA RTX A6000
+scope: per_category
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=J5_pixel_head seed=0 cats=metal_nut ===
+[iad] DTD texture bank: 1000 crops from /po1/rakhimov/training/dtd
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, token grid): 5422146 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True, 'pixel': True, 'pixel_ch': 32, 'w_pix': 1.0}
+[iad/metal_nut] 200 train / 20 val normal images (cats: metal_nut)
+[iad/metal_nut] batch 2 x 4 accumulation = effective 8
+[iad/metal_nut] decoder offloaded to CPU (loss=latent never decodes)
+[iad/metal_nut] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-06, base_lr=2e-05, warmup_from_zero=True
+[iad/metal_nut] Optimizer: AdamW with lr=2e-05, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + discriminator(5422146 params)
+[iad/metal_nut] step 50/4000 loss_lat=0.2655 loss_total=0.2655 loss_seg=0.0454 loss_pix=0.0538 lr_dit=0.0000 (1.27s/step)
+[iad/metal_nut] step 100/4000 loss_lat=0.1390 loss_total=0.1390 loss_seg=0.0303 loss_pix=0.0411 lr_dit=0.0000 (1.27s/step)
+[iad/metal_nut] step 150/4000 loss_lat=0.1019 loss_total=0.1019 loss_seg=0.0287 loss_pix=0.0434 lr_dit=0.0000 (1.27s/step)
+[iad/metal_nut] step 200/4000 loss_lat=0.0694 loss_total=0.0694 loss_seg=0.0254 loss_pix=0.0351 lr_dit=0.0000 (1.26s/step)
+[iad/metal_nut] step 250/4000 loss_lat=0.0628 loss_total=0.0628 loss_seg=0.0228 loss_pix=0.0385 lr_dit=0.0000 (1.27s/step)
+[iad/metal_nut] step 250 val_lat=0.3665 val_total=0.3665 val_seg=0.0257 val_pix=0.0309
+[iad/metal_nut] new best val_lat=0.3665 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/J5_pixel_head/metal_nut_best.pt
+[iad/metal_nut] step 300/4000 loss_lat=0.0579 loss_total=0.0579 loss_seg=0.0255 loss_pix=0.0352 lr_dit=0.0000 (1.48s/step)
+Traceback (most recent call last):
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 1003, in <module>
+    main()
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 995, in main
+    cmd_train(args)
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/rae_dit_iad.py", line 173, in cmd_train
+    summary = T.train(
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/iad/train.py", line 552, in train
+    s = _train_scope(
+  File "/home/rakhimov/rae_industrial/rae_dit_iad/iad/train.py", line 770, in _train_scope
+    disc_norm = (torch.stack([n.float() for n in disc_norms]).norm()
+RuntimeError: Expected all tensors to be on the same device, but got tensors is on cpu, different from other tensors on cuda:0 (when checking argument in method wrapper_CUDA_cat)
+[gpu 1] FAILED J5_pixel_head 10:12:41
