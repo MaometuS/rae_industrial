@@ -664,7 +664,7 @@ test images, `max` aggregation; sPRO@0.05 is the 256 px approximation):
   vs 0.812). One seed: the counting-category gains need seeds 1-2 before they count.
 * The decoder pixel score is near chance everywhere (pixel AUROC ~0.55), as on MVTec AD.
 
-**Next (`PLAN=loc`, the SLURM default): the localization ablation.** J5's image AUROC is
+**`PLAN=loc`: the localization ablation** (jobs 163739 + 181990, results at the end). J5's image AUROC is
 0.973 over the 15 MVTec categories but its pixel AUROC is 0.939, and the worst categories
 are the ones with thin or fine structure (metal_nut 0.862, tile 0.866, transistor 0.891,
 wood 0.892, cable 0.904). Every J5 score is a 16x16 token map upsampled bilinearly, so a
@@ -693,3 +693,46 @@ checkpoints without the head) x `LOC_BLURS` before it is deleted. Reading the re
   (or 1 and 4, which approximate a finer grid cheaply) is the fix.
 * `+gf`, `fuse_*` and the blur sweep are free at test time: if one of them closes most of
   the gap, it becomes the default score for every arm.
+
+Jobs 163739 (J5, J5_grid32) + 181990 (J5_pixel_head rerun after the grad-norm fix), seed 0,
+means over metal_nut, tile, transistor, wood, cable:
+
+| arm / score (blur) | pixel AUROC | AUPRO | image AUROC (max) |
+|---|---|---|---|
+| oracle16 (0) | 0.999 | 0.971 | 1.000 |
+| oracle32 (0) | 1.000 | 0.992 | 1.000 |
+| J5 latent_cos (4), the current score | 0.883 | 0.780 | 0.974 |
+| J5 disc (4) | 0.899 | 0.799 | 0.920 |
+| J5 fuse_disc (8) | 0.920 | 0.824 | 0.965 |
+| J5 dec_diff (4) / pixel (4) | 0.802 / 0.565 | 0.724 / 0.318 | 0.902 / 0.621 |
+| J5 latent_cos+s4 (4) | 0.838 | 0.714 | 0.915 |
+| J5_pixel_head pxhead (4) | 0.913 | 0.851 | 0.947 |
+| J5_grid32 latent_cos (4) | 0.879 | 0.773 | 0.974 |
+| J5_grid32 disc (4) | 0.906 | 0.867 | 0.970 |
+| J5_grid32 disc+gf (8) | **0.924** | 0.865 | 0.961 |
+| J5_grid32 fuse_disc (8) | 0.910 | 0.842 | **0.980** |
+
+* Sanity: the retrained J5 reproduces job 159148 on these categories (latent_cos pixel
+  AUROC 0.883 both times), and every score J5_pixel_head shares with J5 is identical to
+  the last digit (the detached head changes nothing else).
+* **The 16x16 grid is not the bottleneck.** A perfect 16x16 map reaches 0.999 pixel AUROC
+  and 0.971 AUPRO; J5 is at 0.883 / 0.780. The gap is the quality of the token scores, not
+  their resolution, and J5_grid32 confirms it: 4x the tokens leaves latent_cos unchanged
+  (0.879 / 0.773).
+* What helps is a *learned* map. The DRAEM head, the pixel head and the 32x32 head all beat
+  the restoration residual on pixel AUROC and AUPRO (best AUPRO: grid32 disc 0.867, pixel
+  head 0.851, vs 0.780). The finer grid helps the head (+0.07 AUPRO, +0.05 image AUROC
+  over 16x16 disc) but not the residual.
+* Free at test time: `fuse_disc` (disc x dec_diff) at blur 8 takes J5 from 0.883 / 0.780
+  to 0.920 / 0.824 at -0.009 image AUROC. Learned maps prefer blur 8; latent_cos does not
+  care. `dec_diff` repairs the decoder score (pixel AUROC 0.565 -> 0.802) but stays below
+  the token scores; `+gf` adds +0.01-0.02 pixel AUROC to disc, mixed on AUPRO.
+* The heads trade categories: they lose on transistor (pixel AUROC 0.73-0.79 vs latent_cos
+  0.889; its defects are misplaced or missing parts, unlike the synthetic DTD / Perlin
+  pastes they learn from) and the 16x16 disc has false positives on wood (image AUROC
+  0.778). The image score stays latent_cos (0.974) except grid32 fuse_disc (0.980).
+* Shift TTA hurts (image AUROC 0.974 -> 0.915). The drop is in the `max` aggregation
+  (`mean`: 0.966 -> 0.953), which points to the reflect-padded strip a shift adds at the
+  border showing up as an anomaly on normal images, not to shifting itself. Not tested
+  further: the checkpoints were deleted (KEEP_CKPT=0); a fix would average each pixel only
+  over the shifts where it is real content.
