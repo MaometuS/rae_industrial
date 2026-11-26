@@ -1,4 +1,4 @@
-"""Dataset layouts: MVTec AD and MVTec LOCO AD (torch-free).
+"""Dataset layouts: MVTec AD, MVTec LOCO AD and MVTec AD 2 (torch-free).
 
 The layout is detected per category from the folders, so every command takes the
 dataset root through the same ``--mvtec-root`` flag.
@@ -16,6 +16,14 @@ MVTec LOCO AD::
     <cat>/test/{good,logical_anomalies,structural_anomalies}/*.png
     <cat>/ground_truth/<type>/<stem>/000.png, 001.png, ...   one file per defect
     <cat>/defects_config.json             per-defect sPRO saturation thresholds
+
+MVTec AD 2::
+
+    <cat>/train/good/*.png
+    <cat>/validation/good/*.png           official normal validation split
+    <cat>/test_public/{good,bad}/*.png    the only test split with labels
+    <cat>/test_public/ground_truth/bad/<stem>_mask.png
+    <cat>/test_private[_mixed]/*.png      unlabeled (evaluation server): not used
 
 A test entry is ``(path, defect_type, masks)`` where ``masks`` is ``None`` (normal),
 one ``Path`` (MVTec AD) or a list of ``Path`` (LOCO, one per defect).
@@ -36,6 +44,10 @@ LOCO_CATEGORIES = ["breakfast_box", "juice_bottle", "pushpins", "screw_bag",
 LOCO_TYPES = ("logical_anomalies", "structural_anomalies")
 LOCO_SHORT = {"logical_anomalies": "logical", "structural_anomalies": "structural"}
 
+AD2_CATEGORIES = ["can", "fabric", "fruit_jelly", "rice", "sheet_metal", "vial",
+                  "wallplugs", "walnuts"]
+AD2_TEST = "test_public"
+
 MaskSpec = Union[None, Path, List[Path]]
 TestEntry = Tuple[Path, str, MaskSpec]
 
@@ -52,11 +64,31 @@ def is_loco(root: Path, cat: str) -> bool:
         (c / "test" / t).is_dir() for t in LOCO_TYPES)
 
 
+def is_ad2(root: Path, cat: str) -> bool:
+    return (Path(root) / cat / AD2_TEST).is_dir()
+
+
+def _ad2_mask(c: Path, stem: str) -> Path:
+    gt = c / AD2_TEST / "ground_truth" / "bad"
+    for name in (f"{stem}_mask.png", f"{stem}.png"):
+        if (gt / name).is_file():
+            return gt / name
+    # a defective image without a mask would be scored as all-normal pixels
+    raise FileNotFoundError(f"MVTec AD 2: no mask for {stem} under {gt}")
+
+
 def split(root: Path, cat: str) -> Tuple[List[Path], Optional[List[Path]], List[TestEntry]]:
     """``(train, val, test)``. ``val`` is the official normal validation split
     (LOCO), or ``None`` when the dataset has none (MVTec AD: carve it from train)."""
     root = Path(root)
     c = root / cat
+    if is_ad2(root, cat):
+        test_ad2: List[TestEntry] = []
+        for d in ("good", "bad"):
+            for p in list_images(c / AD2_TEST / d):
+                test_ad2.append((p, d, None if d == "good" else _ad2_mask(c, p.stem)))
+        return (list_images(c / "train" / "good"), list_images(c / "validation" / "good"),
+                test_ad2)
     if not is_loco(root, cat):
         train = list_images(c / "train" / "good")
         test: List[TestEntry] = []

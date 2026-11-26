@@ -53,7 +53,7 @@ _LATENT_DRAEM_DIR = HERE.parent / "latent_draem"
 if str(_LATENT_DRAEM_DIR) not in sys.path:
     sys.path.insert(0, str(_LATENT_DRAEM_DIR))
 
-from latent_draem import PILOT_CATEGORIES, evaluate_maps, load_rgb, seed_all  # noqa: E402
+from latent_draem import PILOT_CATEGORIES, aupro, evaluate_maps, load_rgb, seed_all  # noqa: E402
 from iad import datasets as DSET  # noqa: E402
 from iad import adaptor as A  # noqa: E402
 from iad import disc as DS  # noqa: E402
@@ -99,6 +99,8 @@ def _parse_categories(spec) -> List[str]:
                 out.extend(PILOT_CATEGORIES)
             elif tok == "loco":
                 out.extend(DSET.LOCO_CATEGORIES)
+            elif tok == "ad2":
+                out.extend(DSET.AD2_CATEGORIES)
             else:
                 out.append(tok)
     return list(dict.fromkeys(out))  # dedupe, keep order
@@ -532,12 +534,7 @@ def cmd_knn(args: argparse.Namespace) -> None:
         )[:, 0].cpu().numpy()
         masks = np.stack([DSET.load_mask_any(m, size) for _p, _d, m in test_entries])
         labels = np.array([int(d != "good") for _p, d, _m in test_entries])
-        loco = None
-        if DSET.is_loco(Path(args.mvtec_root), cat):
-            loco = dict(types=np.array([d for _p, d, _m in test_entries]),
-                        defects=DSET.loco_defects([m for _p, _d, m in test_entries], size,
-                                                  DSET.loco_defects_config(
-                                                      Path(args.mvtec_root), cat)))
+        loco = _dataset_extras(Path(args.mvtec_root), cat, test_entries, size)
         row = _score_setting(maps_np, masks, labels, size, blur_sigma, loco=loco)
         row.update(exp=exp_id, cat=cat, seed=0, ckpt="none", ema=0, mode="knn", t=0.0,
                    reps=1, score="knn", n_images=len(paths))
@@ -551,7 +548,7 @@ def cmd_knn(args: argparse.Namespace) -> None:
               f"P-AUROC={row['px_auroc']:.4f} AUPRO={row['aupro']:.4f}"
               + (f" logical={row.get('img_auroc_max_logical', float('nan')):.4f} "
                  f"structural={row.get('img_auroc_max_structural', float('nan')):.4f}"
-                 if loco else ""), flush=True)
+                 if loco and "types" in loco else ""), flush=True)
     if new_rows:
         _append_rows(results_csv, new_rows)
     write_report(results_csv, out / "report.md", exp_id)
@@ -570,12 +567,19 @@ def _test_set(root: Path, cat: str, esize: int):
     masks = (np.stack([DSET.load_mask_any(m, esize) for _p, _d, m in entries])
              if entries else np.zeros((0, esize, esize), bool))
     labels = np.array([int(d != "good") for _p, d, _m in entries])
-    loco = None  # MVTec LOCO: per-type metrics + sPRO on the per-defect masks
+    return paths, masks, labels, _dataset_extras(root, cat, entries, esize), entries
+
+
+def _dataset_extras(root: Path, cat: str, entries, esize: int) -> Optional[Dict[str, Any]]:
+    """Dataset-specific metric inputs for ``_score_setting``: MVTec LOCO -> per-type
+    metrics + sPRO on the per-defect masks; MVTec AD 2 -> AUPRO@0.05 + pixel F1-max."""
+    if DSET.is_ad2(root, cat):
+        return dict(ad2=True)
     if DSET.is_loco(root, cat):
-        loco = dict(types=np.array([d for _p, d, _m in entries]),
+        return dict(types=np.array([d for _p, d, _m in entries]),
                     defects=DSET.loco_defects([m for _p, _d, m in entries], esize,
                                               DSET.loco_defects_config(root, cat)))
-    return paths, masks, labels, loco, entries
+    return None
 
 
 def _resize_maps(maps_np: np.ndarray, esize: int) -> np.ndarray:
@@ -654,7 +658,8 @@ def _eval_multi(rae, dit, adaptor, disc, cfg, args, spec_strs, *, cat, ckpt_path
             done.add(key(sp, b))
             print(f"[eval/{cat}] {sp['spec']:<22} blur={b:<4g} "
                   f"I-AUROC(max)={row['img_auroc_max']:.4f} P-AUROC={row['px_auroc']:.4f} "
-                  f"AUPRO={row['aupro']:.4f}" + (f" sPRO={row['spro']:.4f}" if loco else ""),
+                  f"AUPRO={row['aupro']:.4f}" + (f" sPRO={row['spro']:.4f}" if loco and "spro" in row else "")
+                  + (f" AUPRO@0.05={row['aupro_005']:.4f} F1max={row.get('px_f1max', float('nan')):.4f}" if "aupro_005" in row else ""),
                   flush=True)
             if args.save_maps and b == float(blur_sigma):
                 md = Path(args.save_maps) / f"{exp_id}_seed{seed}_{sp['spec']}"
@@ -707,7 +712,7 @@ def _eval_setting(rae, dit, paths, masks, labels, size, blur_sigma, *, mode, t, 
 def _score_setting(maps_np: np.ndarray, masks: np.ndarray, labels: np.ndarray,
                    size: int, blur_sigma: float,
                    loco: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """Metrics of one setting. ``loco`` (MVTec LOCO: ``types``, ``defects``) adds
+    """Metrics of one setting. ``loco`` (``_dataset_extras``; MVTec LOCO: ``types``, ``defects``) adds
     image AUROC per anomaly type (each type vs the good images) and sPRO@0.05."""
     from sklearn.metrics import average_precision_score, roc_auc_score
 
@@ -725,7 +730,15 @@ def _score_setting(maps_np: np.ndarray, masks: np.ndarray, labels: np.ndarray,
         scores = I.image_score(blurred, agg)
         row[f"img_auroc_{agg}"] = float(roc_auc_score(labels, scores)) if two else float("nan")
         row[f"img_ap_{agg}"] = float(average_precision_score(labels, scores)) if two else float("nan")
-    if loco is not None:
+    if loco is not None and loco.get("ad2"):
+        # MVTec AD 2 reports AU-PRO up to FPR 0.05; F1-max is the threshold-free
+        # stand-in for its SegF1 (whose threshold comes from the evaluation server)
+        from sklearn.metrics import precision_recall_curve
+        row["aupro_005"] = float(aupro(masks, blurred, max_fpr=0.05))
+        if masks.any():
+            pr, rc, _ = precision_recall_curve(masks.ravel(), blurred.ravel())
+            row["px_f1max"] = float(np.max(2 * pr * rc / np.maximum(pr + rc, 1e-12)))
+    if loco is not None and "types" in loco:
         types, defects = loco["types"], loco["defects"]
         row["spro"] = DSET.spro(blurred, labels, defects)
         for full, short in DSET.LOCO_SHORT.items():
@@ -749,7 +762,7 @@ RESULT_FIELDS = [
     "blur_sigma", "n_images", "img_auroc_mean", "img_auroc_max", "img_auroc_top1",
     "img_ap_mean", "img_ap_max", "img_ap_top1", "px_auroc", "px_ap", "aupro",
     "img_auroc_max_logical", "img_auroc_max_structural", "spro", "spro_logical",
-    "spro_structural",
+    "spro_structural", "aupro_005", "px_f1max",
     "infer_s_per_img", "dit_passes_per_img",
 ]
 
@@ -825,7 +838,7 @@ def write_report(csv_path: Path, report_path: Path, exp_id: str) -> None:
                "px_auroc", "px_ap", "aupro"]
     loco_metrics = ["img_auroc_max_logical", "img_auroc_max_structural",
                     "img_auroc_mean_logical", "img_auroc_mean_structural",
-                    "spro", "spro_logical", "spro_structural"]
+                    "spro", "spro_logical", "spro_structural", "aupro_005", "px_f1max"]
     metrics += [m for m in loco_metrics if any(r.get(m) not in (None, "") for r in rows)]
     def ckpt_kind(name: Optional[str]) -> str:
         # per-category runs have one checkpoint per category (carpet_best.pt,

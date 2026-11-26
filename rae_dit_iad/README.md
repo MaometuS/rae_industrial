@@ -736,3 +736,38 @@ means over metal_nut, tile, transistor, wood, cable:
   border showing up as an anomaly on normal images, not to shifting itself. Not tested
   further: the checkpoints were deleted (KEEP_CKPT=0); a fix would average each pixel only
   over the shifts where it is real content.
+
+**`PLAN=ad2`: MVTec AD 2** (the default plan now; not run yet). The question: does the best
+configuration so far transfer to a harder benchmark (small, low-contrast defects, high
+resolution, transparent and reflective objects) with no tuning? It is the localization
+winner from above, run on all 8 categories, seed 0, the same hyperparameters (lr 2e-5,
+4000 steps, batch 8):
+
+* Arms: **J5** (one GPU, all 8 categories), **J5_grid32** (three GPUs) and the frozen-token
+  **kNN** control. No A and no LOCO-style arm search: this tests the recipe, not the matrix.
+* Scores (`AD2_SCORES`, one DiT pass per checkpoint): `latent_cos` (image score),
+  `disc`, `fuse_disc`, `disc+gf`, `fuse_disc+gf` (map scores), `dec_diff` (the fusion's
+  ingredient), `oracle16` / `oracle32`. Blur sweep 0, 2, 4, 8 (`AD2_BLURS`). Shift TTA is
+  left out until the padding bug is fixed.
+* The oracles matter more here than on MVTec AD: AD 2 defects are often a few pixels at
+  native resolution, so the ceiling of a 16x16 / 32x32 map at 256 px eval may be well
+  below 1. If oracle16 falls far, resolution *is* the bottleneck on AD 2 and grid32
+  should win clearly; if it stays near 1, the result on MVTec AD carries over.
+* Data: `AD2_ROOT` (default `/po1/rakhimov/datasets/mvtec_ad_2/mvtec_ad_2`). The layout
+  is detected per category (`iad/datasets.is_ad2`: a `test_public/` folder). Training uses
+  all of `train/good`, checkpoints are selected on the official `validation/good`, and
+  testing uses `test_public/{good,bad}` with masks from
+  `test_public/ground_truth/bad/<stem>_mask.png`. The private test splits have no labels
+  (MVTec's evaluation server) and are not read. A `bad` image without a mask is an error,
+  and the job checks the layout and prints per-category counts before using any GPU.
+* Images and masks are resized (squashed) to 256 x 256 for metrics, 448 for grid32
+  input, as everywhere else.
+* New columns (AD 2 rows only): `aupro_005` (AUPRO up to FPR 0.05, the AD 2 paper's
+  AU-PRO_0.05) and `px_f1max` (pixel F1 at the best threshold). The paper's headline SegF1
+  uses a threshold fixed without test labels, so `px_f1max` is an upper bound on it, not
+  the same number.
+* Results go to `results_dit_iad_ad2/`, checkpoints to `/po1/rakhimov/training/rae_dit_iad_ad2`
+  (deleted after scoring, `KEEP_CKPT=0`).
+* Expected, if the recipe transfers: J5 latent_cos above kNN on image AUROC, grid32
+  disc / fuse_disc ahead of J5 on AUPRO@0.05, and both well below the MVTec AD numbers.
+  Run `PLAN=ad2 sbatch slurm_dit_iad.sh` (or plain `sbatch slurm_dit_iad.sh`).

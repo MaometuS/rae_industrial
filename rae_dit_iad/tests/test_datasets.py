@@ -118,3 +118,42 @@ def test_save_native_maps(loco: Path, tmp_path: Path):
     f = tmp_path / "maps" / "pushpins" / "test" / "logical_anomalies" / "000.tiff"
     with Image.open(f) as im:
         assert im.size == (W, H) and im.mode == "F"
+
+
+# ---------------------------------------------------------------------------
+# MVTec AD 2
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def ad2(tmp_path: Path) -> Path:
+    c = tmp_path / "walnuts"
+    for i in range(3):
+        _png(c / "train" / "good" / f"{i:03d}_regular.png", _rgb())
+    for i in range(2):
+        _png(c / "validation" / "good" / f"{i:03d}_regular.png", _rgb())
+    _png(c / "test_public" / "good" / "000_regular.png", _rgb())
+    _png(c / "test_public" / "bad" / "000_regular.png", _rgb())
+    _png(c / "test_public" / "bad" / "001_regular.png", _rgb())
+    m = np.zeros((H, W)); m[0:10, 0:10] = 255
+    _png(c / "test_public" / "ground_truth" / "bad" / "000_regular_mask.png", m)
+    _png(c / "test_public" / "ground_truth" / "bad" / "001_regular_mask.png", m)
+    _png(c / "test_private" / "000_regular.png", _rgb())  # unlabeled: never listed
+    return tmp_path
+
+
+def test_ad2_split(ad2: Path):
+    assert D.is_ad2(ad2, "walnuts") and not D.is_loco(ad2, "walnuts")
+    train, val, test = D.split(ad2, "walnuts")
+    assert len(train) == 3 and len(val) == 2
+    assert [(p.parent.name, d) for p, d, _m in test] == [
+        ("good", "good"), ("bad", "bad"), ("bad", "bad")]
+    assert test[0][2] is None
+    assert test[1][2].name == "000_regular_mask.png"
+    mask = D.load_mask_any(test[1][2], 20)
+    assert mask.any() and not mask.all()
+
+
+def test_ad2_missing_mask_fails(ad2: Path):
+    (ad2 / "walnuts" / "test_public" / "ground_truth" / "bad" / "001_regular_mask.png").unlink()
+    with pytest.raises(FileNotFoundError):
+        D.split(ad2, "walnuts")

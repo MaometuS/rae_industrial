@@ -10,8 +10,9 @@
 #SBATCH --error=RAE_DIT_IAD_%j.err
 #SBATCH -v
 #
-# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=locpx): the pixel-head arm of PLAN=loc
-# again (job 163739 lost it). PLAN=loc: localization ablation on 5 MVTec
+# RAE-DiT IAD runs on one 4-GPU node. Default (PLAN=ad2): the best configuration (J5,
+# J5 on a 32x32 grid) and the kNN control on MVTec AD 2. PLAN=locpx: the pixel-head arm of
+# PLAN=loc again (job 163739 lost it). PLAN=loc: localization ablation on 5 MVTec
 # categories (J5, J5 + pixel head, J5 on a 32x32 grid). PLAN=loco: MVTec LOCO (J5, A, J3, kNN). PLAN=all: every experiment, one
 # DiT per category. PLAN=structured: J3-J5, K5 (+ A, J2). PLAN=next: J2, K2, A@1, A@2.
 # PLAN=matrix: the 9 arms (A-G, J, K) + 3 noise ablations = 12 runs.
@@ -19,7 +20,8 @@
 # each GPU gets its own queue of experiments and works through it with run_dit_iad.sh
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
-#   sbatch slurm_dit_iad.sh                           # PLAN=locpx: J5_pixel_head rerun
+#   sbatch slurm_dit_iad.sh                           # PLAN=ad2: MVTec AD 2, J5 J5_grid32 kNN
+#   PLAN=locpx sbatch slurm_dit_iad.sh                # J5_pixel_head rerun
 #   PLAN=loc sbatch slurm_dit_iad.sh                  # localization ablation
 #   PLAN=loco sbatch slurm_dit_iad.sh                 # MVTec LOCO, J5 A J3 + kNN
 #   PLAN=full sbatch slurm_dit_iad.sh                 # J5, K5 on all 15 MVTec categories
@@ -61,7 +63,13 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 # An entry is an experiment (letter or config basename), optionally with @SEED to
 # run that entry at one seed only (overrides SEEDS), e.g. "A@1", and/or with :CATS to
 # run it on its own comma-separated categories (overrides CATS), e.g. "J5:tile,wood".
-#   PLAN=locpx  (default) J5_pixel_head of PLAN=loc again, split over 3 GPUs: job 163739
+#   PLAN=ad2    (default) MVTec AD 2 (8 categories, AD2_ROOT; test_public only, the
+#               private splits have no labels): J5 (one GPU, all 8), J5_grid32 (split over
+#               three GPUs) and the frozen-token kNN control. Each checkpoint is scored with
+#               AD2_SCORES at AD2_BLURS before it is deleted. Rows add AUPRO@0.05 and pixel
+#               F1-max (MVTec AD 2's AU-PRO_0.05 / SegF1 counterparts). Results in
+#               results_dit_iad_ad2/, checkpoints in CKPT_ROOT/../rae_dit_iad_ad2.
+#   PLAN=locpx  J5_pixel_head of PLAN=loc again, split over 3 GPUs: job 163739
 #               stopped it on a device mismatch in the head's grad-norm (fixed); J5 and
 #               J5_grid32 finished there and keep their results (same results_dit_iad_loc/)
 #   PLAN=loc    localization ablation on the 5 MVTec AD categories where J5
@@ -93,13 +101,25 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 #   PLAN=matrix the full A-K matrix + noise ablations of job 152776
 # MVTec categories: one texture (carpet) + one object (screw) by default
 export CATS=${CATS:-"carpet screw"}
-PLAN=${PLAN:-locpx}
+PLAN=${PLAN:-ad2}
 # localization ablation (PLAN=loc): every spec is one row per blur sigma, from shared
 # DiT passes (iad/infer.py score_maps). Specs a checkpoint cannot compute (pxhead
 # without a pixel head) are skipped with a message.
 LOC_SCORES=${LOC_SCORES:-"latent_cos,disc,pixel,dec_diff,fuse_dec,fuse_pixel,fuse_disc,oracle16,oracle32,oracle16+gf,latent_cos+s4,latent_cos+s16,disc+s4,disc+s16,fuse_dec+s4,latent_cos+gf,disc+gf,fuse_dec+gf,disc+s4+gf,pxhead,pxhead+s4"}
 LOC_BLURS=${LOC_BLURS:-"0,1,2,4,8"}
+# MVTec AD 2 (PLAN=ad2): the winners of PLAN=loc (latent_cos for images; fuse_disc, disc,
+# disc+gf for maps), dec_diff as their ingredient, and the oracles as the resolution ceiling
+AD2_SCORES=${AD2_SCORES:-"latent_cos,disc,dec_diff,fuse_disc,disc+gf,fuse_disc+gf,oracle16,oracle32"}
+AD2_BLURS=${AD2_BLURS:-"0,2,4,8"}
 case "$PLAN" in
+  ad2)        QUEUES=("J5" "J5_grid32:can,fabric,fruit_jelly" "J5_grid32:rice,sheet_metal,vial"
+                      "J5_grid32:wallplugs,walnuts knn")
+              export MVTEC_ROOT=${AD2_ROOT:-/po1/rakhimov/datasets/mvtec_ad_2/mvtec_ad_2}
+              export OUT=${OUT_AD2:-$HERE/results_dit_iad_ad2}
+              export CKPT_ROOT=${CKPT_ROOT:-/po1/rakhimov/training/rae_dit_iad_ad2}
+              CATS="can fabric fruit_jelly rice sheet_metal vial wallplugs walnuts"
+              export SCORES=$AD2_SCORES BLUR_SWEEP=$AD2_BLURS
+              export KEEP_RESULTS=1 ;;
   locpx)      QUEUES=("J5_pixel_head:metal_nut,tile" "J5_pixel_head:transistor,wood" "J5_pixel_head:cable")
               export OUT=${OUT_LOC:-$HERE/results_dit_iad_loc}
               CATS="metal_nut tile transistor wood cable"
@@ -129,7 +149,7 @@ case "$PLAN" in
   structured) QUEUES=("J3 A" "J4 J2" "J5" "K5") ;;
   next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
   matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
-  *) echo "unknown PLAN '$PLAN' (locpx | loc | loco | full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
+  *) echo "unknown PLAN '$PLAN' (ad2 | locpx | loc | loco | full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
 esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------
@@ -325,6 +345,22 @@ for c in $CATS; do
   [ -d "$MVTEC_ROOT/$c/train/good" ] || {
     echo "MVTec category '$c' not found under $MVTEC_ROOT (set MVTEC_ROOT)"; exit 1; }
 done
+if [ "$PLAN" = ad2 ]; then  # layout + masks check before any GPU time is spent
+  python - "$MVTEC_ROOT" $CATS <<'PYAD2' || { echo "MVTec AD 2 layout check failed; nothing was run"; exit 1; }
+import sys
+from pathlib import Path
+from iad import datasets as D
+root = Path(sys.argv[1])
+for cat in sys.argv[2:]:
+    if not D.is_ad2(root, cat):
+        sys.exit(f"{cat}: no {D.AD2_TEST}/ under {root}")
+    tr, va, te = D.split(root, cat)
+    bad = sum(d != "good" for _p, d, _m in te)
+    print(f"AD2 {cat}: train {len(tr)}  val {len(va)}  test_public {len(te)} ({bad} bad)")
+    if not tr or not bad or bad == len(te):
+        sys.exit(f"{cat}: empty train split or test_public without both good and bad images")
+PYAD2
+fi
 mkdir -p "$OUT/logs"
 echo "job $SLURM_JOB_ID on $(hostname)  env=$ENV_NAME  out=$OUT  seeds=$SEEDS  cats=$CATS"
 nvidia-smi --query-gpu=index,name,memory.total --format=csv
