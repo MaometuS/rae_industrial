@@ -1,0 +1,97 @@
+# DR_draem_lat: exact DRAEM (Zavrtanik et al., ICCV 2021) with the RAE DiT as the
+# reconstructive network.
+#
+# Why: no earlier arm ran DRAEM as published. B-G used a pixel loss but SimpleNet's
+# near-identity latent noise; J4/J5 paste DTD textures but train in latent space with a
+# token-grid head. Here every DRAEM component is present:
+#   anomaly    Perlin mask filled with a DTD texture in the image (half the samples clean)
+#   restorer   E(x_aug) -> DiT -> D(z^), loss L2 + (1 - SSIM) against the clean image,
+#              gradients through the frozen decoder into the DiT
+#   segmenter  DRAEM's U-Net on [x_aug, D(z^)], focal loss vs the pixel mask, trained
+#              jointly (not detached)
+#   score      the U-Net's map (--score draem); image score = its max after blur
+# Deviations: GroupNorm in the U-Net (micro-batch 2), a sigmoid logit instead of a 2-way
+# softmax, no imgaug colour augmentation of the textures, 4000 steps at batch 8 instead of
+# DRAEM's 700 epochs at batch 8, RAE's encoder/decoder in place of DRAEM's autoencoder.
+# DR_draem_lat = DR_draem + the latent restore term (lambda_latent 1.0). Without it the
+# image-only arms let z^ drift where the decoder does not care (latent_cos inverted in
+# B, C, F, G); this keeps the DiT a latent restorer and makes latent_cos comparable.
+# The question: does the learned U-Net see through the RAE decoder's reconstruction error
+# (PSNR ~ 20), where the raw pixel residual could not (0.565 pixel AUROC)?
+#
+experiment:
+  id: DR_draem_lat
+  loss: draem              # L2 + (1 - SSIM) between D(z^) and the clean image (DRAEM)
+  lambda_fm: 0.0
+  lambda_latent: 1.0       # + weighted token MSE to the clean latent (corrupted x5)
+  decoder_finetune: false  # frozen RAE decoder; gradients pass through it into the DiT
+  corruption: simplenet
+  clamp_recon: false
+  best_metric: total       # val_total = the reconstructive objective
+
+discriminator:   # DRAEM's discriminative sub-network, image space (iad/disc.py DraemUNet)
+  enabled: true
+  type: unet      # U-Net on [augmented image, D(z^)], one logit per pixel
+  unet_base: 64   # DRAEM's width
+  w_seg: 1.0      # weight of the focal segmentation loss (DRAEM: 1)
+  gamma: 2.0      # focal-loss focusing (DRAEM)
+  detach: false   # DRAEM trains both networks jointly: the focal loss reaches the DiT
+
+rae_config: configs/stage2/training/ImageNet256/DiTDH-XL_DINOv2-B.yaml
+rae_config_overrides:
+  stage_2:
+    ckpt: "models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt"
+
+noise:
+  # Default SimpleNet-style corruption (iad.core.SIMPLENET_DEFAULTS), identical to B-G.
+  sigma: [0.5, 1.5]   # U(lo, hi) per sample; test conditions on the midpoint (1.0)
+  kind: dtd       # DRAEM: a DTD texture pasted in the image inside a Perlin mask
+  kinds: [dtd]
+  beta: [0.2, 1.0]  # texture opacity: DRAEM keeps beta ~ U(0, 0.8) of the image
+  dtd_bank: 1000    # DTD crops preloaded once; DTD_ROOT or latent_draem/data/dtd
+  mask: perlin    # perlin | all
+  p_clean: 0.5     # DRAEM: half the samples carry no anomaly
+  w_anom: 5.0     # latent-loss up-weight on corrupted tokens
+  mask_thr: 0.5
+
+size: 256
+seed: 42
+scope: per_category  # one DiT per category (standard one-class setting); joint = multi-class
+
+training:
+  steps: 4000
+  batch_size: 2        # micro-batch (DiT-XL + decoder must fit in GPU memory)
+  grad_accum_steps: 4  # effective batch = 2 x 4 = 8
+  precision: fp32
+  clip_grad: 1.0
+  log_every: 50
+  val_every: 250
+  save_every: 500
+  n_val: 20
+  use_ema: true
+  ema_decay: 0.9995
+  # --- memory/speed knobs: defaults are the fastest (full-speed) settings ---
+  grad_checkpoint: false  # true = recompute activations in backward (slower step, much less VRAM)
+  ema_device: cuda        # cuda = fastest; cpu = keeps EMA off the GPU (frees ~4 bytes/param)
+  cache_latents: true
+  decoder_lr_ratio: 0.1  # unused while decoder_finetune=false
+  optimizer:
+    lr: 2.0e-5         # official 2e-4 @ batch 1024 -> sqrt-scaled to batch 8 (no QK-norm: 1e-4 blew up)
+    betas: [0.9, 0.95]
+    weight_decay: 0.0
+    eps: 1.0e-8
+  scheduler:
+    type: linear
+    base_lr: 2.0e-5
+    final_lr: 2.0e-6
+    warmup_steps: 400  # linear ramp from 0 to base_lr (10% of steps)
+    decay_end_steps: 4000
+    warmup_from_zero: true   # false = official "warmup" holds the full lr from step 1
+
+inference:
+  mode: single      # deterministic: no test-time noise
+  t: 1.0            # = midpoint of noise.sigma; eval uses the checkpoint's sigma when --t is omitted
+  score: draem      # the U-Net's map (DRAEM's score); latent_cos / pixel for comparison
+  reps: 1
+  ode_steps: 50
+  blur_sigma: 4.0

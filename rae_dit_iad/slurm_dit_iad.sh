@@ -21,6 +21,7 @@
 # (train + eval, both pixel and latent_cos scores). Submit from rae_dit_iad/:
 #
 #   sbatch slurm_dit_iad.sh                           # PLAN=ad2: MVTec AD 2, J5 J5_grid32 kNN
+#   PLAN=draem sbatch slurm_dit_iad.sh                # exact DRAEM on the 5 loc categories
 #   PLAN=locpx sbatch slurm_dit_iad.sh                # J5_pixel_head rerun
 #   PLAN=loc sbatch slurm_dit_iad.sh                  # localization ablation
 #   PLAN=loco sbatch slurm_dit_iad.sh                 # MVTec LOCO, J5 A J3 + kNN
@@ -69,6 +70,9 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 #               AD2_SCORES at AD2_BLURS before it is deleted. Rows add AUPRO@0.05 and pixel
 #               F1-max (MVTec AD 2's AU-PRO_0.05 / SegF1 counterparts). Results in
 #               results_dit_iad_ad2/, checkpoints in CKPT_ROOT/../rae_dit_iad_ad2.
+#   PLAN=draem  exact DRAEM with the RAE DiT as restorer (DR_draem; DR_draem_lat adds
+#               the latent term) on the 5 localization categories, scored with DRAEM_SCORES
+#               at LOC_BLURS; results join results_dit_iad_loc/ next to J5 and J5_grid32.
 #   PLAN=locpx  J5_pixel_head of PLAN=loc again, split over 3 GPUs: job 163739
 #               stopped it on a device mismatch in the head's grad-norm (fixed); J5 and
 #               J5_grid32 finished there and keep their results (same results_dit_iad_loc/)
@@ -111,7 +115,15 @@ LOC_BLURS=${LOC_BLURS:-"0,1,2,4,8"}
 # disc+gf for maps), dec_diff as their ingredient, and the oracles as the resolution ceiling
 AD2_SCORES=${AD2_SCORES:-"latent_cos,disc,dec_diff,fuse_disc,disc+gf,fuse_disc+gf,oracle16,oracle32"}
 AD2_BLURS=${AD2_BLURS:-"0,2,4,8"}
+# exact DRAEM (PLAN=draem): the U-Net's map, and the restoration read the usual ways
+DRAEM_SCORES=${DRAEM_SCORES:-"draem,draem+gf,latent_cos,pixel,dec_diff,oracle16"}
 case "$PLAN" in
+  draem)      QUEUES=("DR_draem:metal_nut,tile,transistor" "DR_draem:wood,cable"
+                      "DR_draem_lat:metal_nut,tile,transistor" "DR_draem_lat:wood,cable")
+              export OUT=${OUT_LOC:-$HERE/results_dit_iad_loc}
+              CATS="metal_nut tile transistor wood cable"
+              export SCORES=$DRAEM_SCORES BLUR_SWEEP=$LOC_BLURS
+              export KEEP_RESULTS=1 ;;
   ad2)        QUEUES=("J5" "J5_grid32:can,fabric,fruit_jelly" "J5_grid32:rice,sheet_metal,vial"
                       "J5_grid32:wallplugs,walnuts knn")
               export MVTEC_ROOT=${AD2_ROOT:-/po1/rakhimov/datasets/mvtec_ad_2/mvtec_ad_2}
@@ -149,7 +161,7 @@ case "$PLAN" in
   structured) QUEUES=("J3 A" "J4 J2" "J5" "K5") ;;
   next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
   matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
-  *) echo "unknown PLAN '$PLAN' (ad2 | locpx | loc | loco | full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
+  *) echo "unknown PLAN '$PLAN' (ad2 | draem | locpx | loc | loco | full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
 esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------
@@ -333,7 +345,7 @@ sys.exit(0 if n else 1)
 PYDTD
   )
 }
-if [[ " ${QUEUES[*]} " =~ [[:space:]](J4|J5|K5|J5_[a-z0-9_]+)(@[0-9]+)?(:[^[:space:]]*)?[[:space:]] ]]; then
+if [[ " ${QUEUES[*]} " =~ [[:space:]](J4|J5|K5|J5_[a-z0-9_]+|DR_[a-z0-9_]+)(@[0-9]+)?(:[^[:space:]]*)?[[:space:]] ]]; then
   with_lock ensure_dtd || { echo "DTD setup failed (set DTD_ROOT); nothing was run"; exit 1; }
 fi
 set -u

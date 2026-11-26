@@ -737,6 +737,39 @@ means over metal_nut, tile, transistor, wood, cable:
   further: the checkpoints were deleted (KEEP_CKPT=0); a fix would average each pixel only
   over the shifts where it is real content.
 
+**`PLAN=draem`: exact DRAEM with the RAE DiT as the reconstructive network** (not run
+yet). No earlier arm ran DRAEM as published: B–G used a pixel loss but SimpleNet's
+near-identity latent noise, and J4/J5 paste DTD textures but train in latent space with a
+token-grid head. The open question from the localization ablation: the raw pixel residual
+fails because the RAE decoder is lossy (PSNR ≈ 20, pixel AUROC 0.565), but DRAEM's
+discriminator exists to learn which reconstruction differences are defects. Can it see
+through the decoder's error?
+
+| DRAEM component | DR_draem |
+|---|---|
+| anomaly | Perlin mask filled with a DTD texture in the image, opacity U(0.2, 1), half the samples clean (`noise.kind: dtd`, `p_clean: 0.5`) |
+| reconstruction | E(x_aug) → DiT → D(ẑ); loss L2 + (1 − SSIM) against the clean image (`loss: draem`), gradients through the frozen decoder into the DiT |
+| discriminator | DRAEM's U-Net (`iad/disc.py DraemUNet`, base 64, six stages, skip decoder) on [x_aug, D(ẑ)] at 256 px; focal loss against the pixel mask; trained jointly (`detach: false`) |
+| score | the U-Net's sigmoid map (`--score draem`); image score = its max after blur |
+
+* Deviations: GroupNorm instead of BatchNorm (micro-batch 2), one sigmoid logit instead
+  of a 2-way softmax, no imgaug colour augmentation of the textures, 4000 steps at batch
+  8 (DRAEM: 700 epochs), and of course RAE's encoder/decoder in place of DRAEM's
+  autoencoder.
+* Two arms: `DR_draem` (exact, no latent term) and `DR_draem_lat` (+ the J latent restore
+  term, `lambda_latent: 1`). Without it, the image-only arms let ẑ drift where the decoder
+  does not care (latent_cos was inverted in B, C, F, G).
+* Scores (`DRAEM_SCORES`): `draem`, `draem+gf`, `latent_cos`, `pixel`, `dec_diff`,
+  `oracle16`; blur sweep `LOC_BLURS`. Same 5 categories and seed as `PLAN=loc`, results
+  join `results_dit_iad_loc/`, so the comparison is direct: J5 `fuse_disc` (0.920 / 0.824)
+  and J5_grid32 `disc` (0.906 / 0.867).
+* Reading it: `draem` well above `pixel` means the U-Net learns past the decoder's
+  error; if it also beats J5's learned token maps, pixel-space DRAEM is the better
+  segmenter on RAE. If `draem` stays near `pixel`, the decoder loses the defect information
+  for good and latent-space heads are the right design.
+* Cost: every step decodes and backpropagates through the decoder and the U-Net, like the
+  B–G arms; `MEM=low` covers a 24 GB card.
+
 **`PLAN=ad2`: MVTec AD 2** (the default plan now; not run yet). The question: does the best
 configuration so far transfer to a harder benchmark (small, low-contrast defects, high
 resolution, transparent and reflective objects) with no tuning? It is the localization

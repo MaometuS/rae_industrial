@@ -1672,3 +1672,116 @@ def test_t_eval_multi_rows_on_a_synthetic_category(tmp_path):
     rows2, _ = R._eval_multi(TinyRAE(), _ShiftDiT(), None, None, cfg, args, specs, **kw)
     assert rows2 == []
     assert R._resize_maps(np.zeros((2, 32, 32), np.float32), 24).shape == (2, 24, 24)
+
+
+# ---------------------------------------------------------------------------
+# U. exact DRAEM: SSIM, the image-space U-Net, loss='draem', score 'draem'
+# ---------------------------------------------------------------------------
+
+_UNET = {"enabled": True, "type": "unet", "unet_base": 8, "detach": False}
+
+
+def test_u_ssim_and_reconstruction_loss():
+    x = _batch(2, 32, seed=81)
+    assert float(core.ssim(x, x)) == pytest.approx(1.0, abs=1e-5)
+    noisy = (x + 0.3 * torch.randn_like(x)).clamp(0, 1)
+    assert float(core.ssim(x, noisy)) < 0.9
+    tot, l2, ss = core.draem_reconstruction_loss(x, x)
+    assert float(tot) == pytest.approx(0.0, abs=1e-5)
+    tot, l2, ss = core.draem_reconstruction_loss(noisy, x)
+    assert float(l2) > 0 and float(ss) > 0 and torch.allclose(tot, l2 + ss)
+
+
+def test_u_unet_shapes_and_guards():
+    from iad import disc as DS
+    head = DS.build_discriminator(_UNET, dim=3, seed=0)
+    assert DS.is_unet(head) and not DS.is_unet(None)
+    assert len(DS.head_parts(head)) == 1
+    x, r = _batch(2, 32, seed=82), _batch(2, 32, seed=83)
+    assert head(x, r).shape == (2, 1, 32, 32)
+    with pytest.raises(ValueError):
+        head(_batch(1, 48), _batch(1, 48))                     # side not divisible by 32
+    with pytest.raises(ValueError):
+        DS.disc_cfg({"type": "unet", "pixel": True})
+    with pytest.raises(ValueError):
+        DS.disc_cfg({"type": "patch"})
+    again = DS.build_discriminator(_UNET, dim=3, seed=0)        # forked RNG: reproducible
+    assert all(torch.equal(a, b) for a, b in zip(head.parameters(), again.parameters()))
+
+
+def test_u_draem_loss_trains_both_networks_and_guards():
+    from iad import disc as DS
+    rae, dit = TinyRAE(), TinyDiT()
+    core.set_texture_bank(torch.rand(6, 3, 32, 32).half())
+    try:
+        x = _batch(4, 32, seed=84)
+        z0 = rae.encode(x).detach()
+        y = torch.full((4,), 1000, dtype=torch.long)
+        kw = dict(loss_type="draem", noise_cfg=_q_noise("dtd", p_clean=0.25, beta=[0.2, 1.0]),
+                  lambda_fm=0.0, y=y, corruption="simplenet", size=32)
+        grads = {}
+        for name, cfg in (("none", None), ("joint", _UNET), ("detached", {**_UNET, "detach": True})):
+            head = DS.build_discriminator(cfg, dim=3, seed=0) if cfg else None
+            for p in dit.parameters():
+                p.grad = None
+            seed_all(85)
+            tot, terms, _, _ = core.compute_losses(rae, dit, None, x, z0, disc=head,
+                                                   disc_cfg=cfg, **kw)
+            assert math.isfinite(float(tot)) and {"img", "ssim", "total"} <= set(terms)
+            if head is not None:
+                assert "seg" in terms and float(tot) > terms["total"]   # seg kept out of total
+            tot.backward()
+            grads[name] = [p.grad.clone() for p in dit.parameters()]
+            if head is not None:
+                assert any(p.grad is not None and p.grad.abs().sum() > 0
+                           for p in head.parameters())
+        assert any(g.abs().sum() > 0 for g in grads["none"])
+        # detached: the U-Net never changes the DiT's gradients; joint (DRAEM): it does
+        assert all(torch.allclose(a, b) for a, b in zip(grads["none"], grads["detached"]))
+        assert not all(torch.allclose(a, b) for a, b in zip(grads["none"], grads["joint"]))
+        # + latent term (DR_draem_lat)
+        seed_all(85)
+        _, terms, _, _ = core.compute_losses(rae, dit, None, x, z0, lambda_latent=1.0, **kw)
+        assert "lat" in terms
+        with pytest.raises(ValueError):                       # anomaly must be in the image
+            core.compute_losses(rae, dit, None, x, z0, **{**kw, "noise_cfg": _q_noise("mix")})
+        head = DS.build_discriminator(_UNET, dim=3, seed=0)
+        with pytest.raises(ValueError):                       # the U-Net reads D(z^)
+            core.compute_losses(rae, dit, None, x, z0, disc=head, disc_cfg=_UNET,
+                                **{**kw, "loss_type": "latent"})
+    finally:
+        core.set_texture_bank(None)
+
+
+def test_u_score_maps_draem():
+    from iad import disc as DS
+    rae, dit = TinyRAE(), TinyDiT()
+    head = DS.build_discriminator(_UNET, dim=3, seed=0).eval()
+    x = _batch(2, 32, seed=86)
+    specs = [I.parse_score_spec(s) for s in ("draem", "draem+gf", "latent_cos", "pixel")]
+    xh, maps = I.score_maps(rae, dit, x, specs, t=1.0, disc=head, patch_px=8)
+    assert set(maps) == {s["spec"] for s in specs}
+    for m in maps.values():
+        assert m.shape == (2, 32, 32) and torch.isfinite(m).all()
+    assert float(maps["draem"].min()) >= 0 and float(maps["draem"].max()) <= 1
+    ref = torch.sigmoid(head(x, xh))[:, 0]
+    assert torch.allclose(maps["draem"], ref, atol=1e-5)
+    with pytest.raises(ValueError):                            # no U-Net
+        I.score_maps(rae, dit, x, [I.parse_score_spec("draem")], t=1.0)
+    with pytest.raises(ValueError):                            # token score on a U-Net
+        I.score_maps(rae, dit, x, [I.parse_score_spec("disc")], t=1.0, disc=head)
+
+
+@pytest.mark.parametrize("name", ["DR_draem", "DR_draem_lat"])
+def test_u_draem_configs_parse(name):
+    from iad import disc as DS
+    omegaconf = pytest.importorskip("omegaconf")
+    cfg = omegaconf.OmegaConf.to_container(omegaconf.OmegaConf.load(
+        str(Path(__file__).resolve().parents[1] / "configs" / f"{name}.yaml")))
+    assert cfg["experiment"]["id"] == name and cfg["experiment"]["loss"] == "draem"
+    dc = DS.disc_cfg(cfg["discriminator"])
+    assert dc["type"] == "unet" and dc["enabled"] and not dc["detach"]
+    sn = core.simplenet_cfg(cfg["noise"])
+    assert sn["kind"] == "dtd" and sn["p_clean"] == 0.5
+    assert cfg["inference"]["score"] == "draem"
+    assert float(cfg["experiment"]["lambda_latent"]) == (1.0 if name.endswith("lat") else 0.0)

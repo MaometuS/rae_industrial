@@ -374,7 +374,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
             new_rows.extend(rows_m)
             per_image_rows.extend(pi_m)
             continue
-        if cat_score == "disc" and disc is None:
+        if cat_score == "disc" and (disc is None or DS.is_unet(disc)):
             print(f"[eval/{cat}] score=disc skipped: {ckpt_path.name} has no discriminator "
                   f"(flow-path arm A, or discriminator disabled)", flush=True)
             del rae, dit, adaptor
@@ -609,6 +609,12 @@ def _eval_multi(rae, dit, adaptor, disc, cfg, args, spec_strs, *, cat, ckpt_path
         elif "pxhead" in sp["needs"] and getattr(disc, "pix", None) is None:
             print(f"[eval/{cat}] {sp['spec']} skipped: {ckpt_path.name} has no pixel head",
                   flush=True)
+        elif "draem" in sp["needs"] and not DS.is_unet(disc):
+            print(f"[eval/{cat}] {sp['spec']} skipped: {ckpt_path.name} has no DRAEM U-Net",
+                  flush=True)
+        elif ({"disc", "pxhead"} & set(sp["needs"])) and DS.is_unet(disc):
+            print(f"[eval/{cat}] {sp['spec']} skipped: {ckpt_path.name} has the DRAEM U-Net, "
+                  "not a token head", flush=True)
         else:
             keep.append(sp)
     specs = keep

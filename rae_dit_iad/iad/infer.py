@@ -312,6 +312,7 @@ def save_viz(
 #   dec_diff     mean_c |D(z) - D(z^)|: the decoder's own error cancels
 #   latent_cos / latent_l2 / disc   as in ``reconstruct``
 #   pxhead       the pixel-resolution segmentation head (``discriminator.pixel``)
+#   draem        DRAEM's U-Net on [x, D(z^)] (``discriminator.type: unet``, loss draem)
 #   fuse_dec     latent_cos * dec_diff     (coarse "where" x sharper "what")
 #   fuse_pixel   latent_cos * pixel
 #   fuse_disc    disc * dec_diff
@@ -324,7 +325,7 @@ def save_viz(
 #   gf           guided-filter upsampling with the input image as guide (radius =
 #                one token, eps 1e-3: the map's edges snap to the image's edges)
 
-PASS_BASES = ("pixel", "dec_diff", "latent_cos", "latent_l2", "disc", "pxhead")
+PASS_BASES = ("pixel", "dec_diff", "latent_cos", "latent_l2", "disc", "pxhead", "draem")
 FUSED_BASES = {"fuse_dec": ("latent_cos", "dec_diff"),
                "fuse_pixel": ("latent_cos", "pixel"),
                "fuse_disc": ("disc", "dec_diff")}
@@ -433,6 +434,11 @@ def score_maps(
         raise ValueError("disc / pxhead / fuse_disc scores need a discriminator")
     if "pxhead" in bases and getattr(disc, "pix", None) is None:
         raise ValueError("pxhead needs a checkpoint trained with discriminator.pixel: true")
+    unet = bool(getattr(disc, "is_unet", False))
+    if "draem" in bases and not unet:
+        raise ValueError("draem needs a checkpoint trained with discriminator.type: unet")
+    if unet and ({"disc", "pxhead"} & set(bases)):
+        raise ValueError("disc / pxhead / fuse_disc need a token-grid head, not the U-Net")
     kmax = max(s["shifts"] for s in specs)
     if patch_px is None:  # input pixels per token
         g = (latent_grid(rae) if hasattr(rae, "encoder_input_size")
@@ -459,7 +465,7 @@ def score_maps(
         hw = tuple(xs.shape[-2:])
         got: Dict[str, torch.Tensor] = {}
         xh = None
-        if {"pixel", "dec_diff"} & set(bases) or (dy, dx) == (0, 0):
+        if {"pixel", "dec_diff", "draem"} & set(bases) or (dy, dx) == (0, 0):
             xh = decode_latent(rae, adaptor.invert(zhat) if anchored else zhat)
             if xh.shape[-2:] != hw:
                 xh = F.interpolate(xh, size=hw, mode="bilinear", align_corners=False)
@@ -476,6 +482,8 @@ def score_maps(
         for b in ("latent_cos", "latent_l2"):
             if b in bases:
                 got[b] = latent_anomaly_map(z0, zhat, b, hw)
+        if "draem" in bases:
+            got["draem"] = torch.sigmoid(disc(xs, xh.to(xs.dtype))).float()[:, 0]
         if "disc" in bases or "pxhead" in bases:
             logit = disc(z0, zhat)
             if "disc" in bases:

@@ -625,6 +625,35 @@ def image_reconstruction_loss(
     return loss, recon
 
 
+def ssim(a: torch.Tensor, b: torch.Tensor, window: int = 11, sigma: float = 1.5) -> torch.Tensor:
+    """Mean SSIM (Gaussian window, per channel, as in DRAEM's ``SSIM`` loss);
+    inputs in [0, 1], ``(B, C, H, W)``."""
+    c = a.shape[1]
+    g = torch.arange(window, device=a.device, dtype=a.dtype) - (window - 1) / 2.0
+    g = torch.exp(-g.pow(2) / (2 * sigma * sigma))
+    g = g / g.sum()
+    k = (g[:, None] * g[None, :]).expand(c, 1, window, window).contiguous()
+    pad = window // 2
+    conv = lambda t: F.conv2d(t, k, padding=pad, groups=c)  # noqa: E731
+    mu_a, mu_b = conv(a), conv(b)
+    s_aa = conv(a * a) - mu_a.pow(2)
+    s_bb = conv(b * b) - mu_b.pow(2)
+    s_ab = conv(a * b) - mu_a * mu_b
+    c1, c2 = 0.01 ** 2, 0.03 ** 2
+    m = ((2 * mu_a * mu_b + c1) * (2 * s_ab + c2)) / (
+        (mu_a.pow(2) + mu_b.pow(2) + c1) * (s_aa + s_bb + c2))
+    return m.mean()
+
+
+def draem_reconstruction_loss(recon: torch.Tensor, images: torch.Tensor
+                              ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """DRAEM's reconstructive objective ``L2 + (1 - SSIM)`` against the clean image.
+    Returns ``(total, l2, ssim_loss)``."""
+    l2 = F.mse_loss(recon, images)
+    ss = 1.0 - ssim(recon.float(), images.float())
+    return l2 + ss, l2, ss
+
+
 def compute_losses(
     rae: torch.nn.Module,
     dit: torch.nn.Module,
@@ -683,9 +712,19 @@ def compute_losses(
     anchored = bool(getattr(adaptor, "is_anchored", False))
     if adaptor is not None:
         z0 = adaptor(z0)
-    if corruption == "simplenet" and loss_type not in ("image_l1", "latent"):
-        raise ValueError("corruption='simplenet' needs loss='image_l1' or 'latent': flow "
-                         "matching and the hybrid need the linear flow path")
+    if corruption == "simplenet" and loss_type not in ("image_l1", "latent", "draem"):
+        raise ValueError("corruption='simplenet' needs loss='image_l1', 'latent' or 'draem': "
+                         "flow matching and the hybrid need the linear flow path")
+    from iad.disc import is_unet as _is_unet
+    if loss_type == "draem":
+        sn0 = simplenet_cfg(noise_cfg)
+        if corruption != "simplenet" or sn0["kind"] != "dtd":
+            raise ValueError("loss='draem' (exact DRAEM) needs corruption='simplenet' with "
+                             "noise.kind 'dtd': the anomaly must be pasted in the image")
+        if adaptor is not None:
+            raise ValueError("loss='draem' does not support a feature adaptor")
+    if _is_unet(disc) and loss_type != "draem":
+        raise ValueError("discriminator.type 'unet' needs loss='draem' (it reads D(z^))")
     if loss_type == "latent" and adaptor is not None and not anchored and any(
             p.requires_grad for p in adaptor.parameters()):
         raise ValueError("loss='latent' with a plain trainable adaptor is degenerate: "
@@ -696,7 +735,9 @@ def compute_losses(
         raise ValueError("the discriminator needs synthetic-anomaly masks: it requires "
                          "corruption='simplenet' (the flow path has no mask)")
     aux: Optional[Dict[str, Any]] = None  # pixel head inputs/targets (structured_corrupt)
-    if disc is not None:
+    if loss_type == "draem":
+        aux = {}
+    elif disc is not None:
         from iad.disc import disc_cfg as _dcfg
         if _dcfg(disc_cfg)["pixel"]:
             sn_kind = simplenet_cfg(noise_cfg)["kind"]
@@ -758,6 +799,16 @@ def compute_losses(
         total = loss_img + float(lambda_fm) * loss_fm
     elif loss_type == "image_l1":
         total = loss_img
+    elif loss_type == "draem":
+        # exact DRAEM reconstructive objective: L2 + SSIM between D(z^) and the clean
+        # image, gradients through the frozen decoder into the DiT
+        from iad.models import decode_latent
+        recon = decode_latent(rae, zhat)
+        if recon.shape[-2:] != images.shape[-2:]:
+            recon = F.interpolate(recon, size=images.shape[-2:], mode="bilinear",
+                                  align_corners=False)
+        total, l2, ss = draem_reconstruction_loss(recon, images)
+        terms["img"], terms["ssim"] = float(l2.detach()), float(ss.detach())
     elif loss_type == "latent":
         # decoder-free (experiment J): restore the clean latent directly; the
         # decoder is never called
@@ -782,6 +833,23 @@ def compute_losses(
         total = total + adaptor.lambda_inv * loss_inv
 
     terms["total"] = float(total.detach())  # the restorer objective (no seg term)
+
+    if disc is not None and _is_unet(disc):
+        # DRAEM's own discriminative sub-network on [augmented image, D(z^)],
+        # focal loss against the pixel Perlin mask (empty for clean samples)
+        from iad.disc import disc_cfg as _disc_cfg, seg_loss as _seg_loss
+        dc = _disc_cfg(disc_cfg)
+        rec = recon.clamp(0.0, 1.0)  # what the U-Net sees at test time (score_maps)
+        x_in = aux["x_in"]
+        if dc["detach"]:
+            rec, x_in = rec.detach(), x_in.detach()
+        px_logit = disc(x_in, rec)
+        tgt = aux["pmask"].to(px_logit.dtype)
+        if tgt.shape[-2:] != px_logit.shape[-2:]:
+            tgt = F.interpolate(tgt, size=px_logit.shape[-2:], mode="nearest")
+        loss_seg = _seg_loss(px_logit, tgt, dc["gamma"])
+        terms["seg"] = float(loss_seg.detach())
+        return total + dc["w_seg"] * loss_seg, terms, zt, zhat
 
     if disc is not None:
         # DRAEM's discriminative sub-network: predict the synthetic-anomaly mask

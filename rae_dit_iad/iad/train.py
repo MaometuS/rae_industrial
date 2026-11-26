@@ -468,8 +468,8 @@ def train(
     if loss_type == "hybrid" and corruption != "flow":
         raise ValueError("hybrid loss requires corruption='flow'")
     if corruption == "simplenet":
-        if loss_type not in ("image_l1", "latent"):
-            raise ValueError("corruption='simplenet' needs loss='image_l1' or 'latent' "
+        if loss_type not in ("image_l1", "latent", "draem"):
+            raise ValueError("corruption='simplenet' needs loss='image_l1', 'latent' or 'draem' "
                              "(plus optional experiment.lambda_latent for image_l1)")
         core.simplenet_cfg(cfg["noise"])  # validate the noise block before any work
     if DS.disc_cfg(cfg.get("discriminator"))["enabled"] and corruption != "simplenet":
@@ -527,7 +527,8 @@ def train(
                                   dim=M.latent_dim_from_misc(misc, cfg), device=device, seed=seed)
     init_disc_state = copy.deepcopy(disc.state_dict()) if disc is not None else None
     if disc is not None:
-        print(f"[iad] discriminator (DRAEM segmentation head, token grid): "
+        print(f"[iad] discriminator (DRAEM segmentation head, "
+              f"{'image-space U-Net' if DS.is_unet(disc) else 'token grid'}): "
               f"{M.count_params(disc)} params, cfg={DS.disc_cfg(cfg.get('discriminator'))}",
               flush=True)
 
