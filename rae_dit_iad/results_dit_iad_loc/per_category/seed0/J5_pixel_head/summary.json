@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "tile",
+      "steps": 4000,
+      "best_val": 0.0606269771233201,
+      "skipped_dit_steps": 2,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/J5_pixel_head/tile_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/J5_pixel_head/tile_best.pt"
+    }
+  ]
+}
