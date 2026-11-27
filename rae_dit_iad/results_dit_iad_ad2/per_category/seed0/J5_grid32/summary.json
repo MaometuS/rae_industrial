@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "scope": "vial",
+      "steps": 4000,
+      "best_val": 0.03689219112995835,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/vial_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/vial_best.pt"
+    }
+  ]
+}

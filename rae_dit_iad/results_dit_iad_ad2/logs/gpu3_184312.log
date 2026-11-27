@@ -1,0 +1,394 @@
+[gpu 3] start J5_grid32:wallplugs,walnuts 15:49:41
+torch 2.8.0+cu128 NVIDIA RTX A6000
+scope: per_category
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=J5_grid32 seed=0 cats=wallplugs ===
+[iad] DTD texture bank: 1000 crops from /po1/rakhimov/training/dtd
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[iad] encoder input 448 px -> 32x32 latent grid (decoder stays 16x16)
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] DiT re-gridded 16x16 -> 32x32 (pos_embed resized, RoPE interpolated)
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True, 'pixel': False, 'pixel_ch': 32, 'w_pix': 1.0, 'type': 'token', 'unet_base': 64}
+[iad/wallplugs] 293 train / 33 val normal images (cats: wallplugs)
+[iad/wallplugs] batch 2 x 4 accumulation = effective 8
+[iad/wallplugs] decoder offloaded to CPU (loss=latent never decodes)
+[iad/wallplugs] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-06, base_lr=2e-05, warmup_from_zero=True
+[iad/wallplugs] Optimizer: AdamW with lr=2e-05, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + discriminator(5315841 params)
+[iad/wallplugs] step 50/4000 loss_lat=0.2391 loss_total=0.2391 loss_seg=0.0492 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 100/4000 loss_lat=0.1337 loss_total=0.1337 loss_seg=0.0366 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 150/4000 loss_lat=0.1041 loss_total=0.1041 loss_seg=0.0344 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 200/4000 loss_lat=0.0789 loss_total=0.0789 loss_seg=0.0291 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 250/4000 loss_lat=0.0774 loss_total=0.0774 loss_seg=0.0249 lr_dit=0.0000 (3.40s/step)
+[iad/wallplugs] step 250 val_lat=0.4165 val_total=0.4165 val_seg=0.0287
+[iad/wallplugs] new best val_lat=0.4165 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 300/4000 loss_lat=0.0672 loss_total=0.0672 loss_seg=0.0261 lr_dit=0.0000 (3.71s/step)
+[iad/wallplugs] step 350/4000 loss_lat=0.0602 loss_total=0.0602 loss_seg=0.0222 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 400/4000 loss_lat=0.0619 loss_total=0.0619 loss_seg=0.0193 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 450/4000 loss_lat=0.0573 loss_total=0.0573 loss_seg=0.0172 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 500/4000 loss_lat=0.0574 loss_total=0.0574 loss_seg=0.0178 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 500 val_lat=0.3547 val_total=0.3547 val_seg=0.0234
+[iad/wallplugs] new best val_lat=0.3547 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 550/4000 loss_lat=0.0510 loss_total=0.0510 loss_seg=0.0156 lr_dit=0.0000 (3.72s/step)
+[iad/wallplugs] step 600/4000 loss_lat=0.0503 loss_total=0.0503 loss_seg=0.0157 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 650/4000 loss_lat=0.0449 loss_total=0.0449 loss_seg=0.0138 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 700/4000 loss_lat=0.0460 loss_total=0.0460 loss_seg=0.0143 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 750/4000 loss_lat=0.0429 loss_total=0.0429 loss_seg=0.0129 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 750 val_lat=0.3007 val_total=0.3007 val_seg=0.0193
+[iad/wallplugs] new best val_lat=0.3007 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 800/4000 loss_lat=0.0420 loss_total=0.0420 loss_seg=0.0126 lr_dit=0.0000 (3.72s/step)
+[iad/wallplugs] step 850/4000 loss_lat=0.0422 loss_total=0.0422 loss_seg=0.0125 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 900/4000 loss_lat=0.0401 loss_total=0.0401 loss_seg=0.0117 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 950/4000 loss_lat=0.0412 loss_total=0.0412 loss_seg=0.0122 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 1000/4000 loss_lat=0.0376 loss_total=0.0376 loss_seg=0.0121 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 1000 val_lat=0.2539 val_total=0.2539 val_seg=0.0165
+[iad/wallplugs] new best val_lat=0.2539 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 1050/4000 loss_lat=0.0375 loss_total=0.0375 loss_seg=0.0117 lr_dit=0.0000 (3.72s/step)
+[iad/wallplugs] step 1100/4000 loss_lat=0.0402 loss_total=0.0402 loss_seg=0.0119 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 1150/4000 loss_lat=20.1533 loss_total=20.1533 loss_seg=0.0118 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 1200/4000 loss_lat=0.0398 loss_total=0.0398 loss_seg=0.0123 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 1250/4000 loss_lat=0.0365 loss_total=0.0365 loss_seg=0.0109 lr_dit=0.0000 (3.40s/step)
+[iad/wallplugs] step 1250 val_lat=0.2133 val_total=0.2133 val_seg=0.0145
+[iad/wallplugs] new best val_lat=0.2133 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 1300/4000 loss_lat=0.0411 loss_total=0.0411 loss_seg=0.0108 lr_dit=0.0000 (3.74s/step)
+[iad/wallplugs] step 1350/4000 loss_lat=0.0371 loss_total=0.0371 loss_seg=0.0106 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 1400/4000 loss_lat=0.0366 loss_total=0.0366 loss_seg=0.0105 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 1450/4000 loss_lat=0.0402 loss_total=0.0402 loss_seg=0.0113 lr_dit=0.0000 (3.35s/step)
+[iad/wallplugs] step 1500/4000 loss_lat=0.0438 loss_total=0.0438 loss_seg=0.0111 lr_dit=0.0000 (3.36s/step)
+[iad/wallplugs] step 1500 val_lat=0.1779 val_total=0.1779 val_seg=0.0127
+[iad/wallplugs] new best val_lat=0.1779 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 1550/4000 loss_lat=0.0387 loss_total=0.0387 loss_seg=0.0100 lr_dit=0.0000 (3.69s/step)
+[iad/wallplugs] step 1600/4000 loss_lat=0.0354 loss_total=0.0354 loss_seg=0.0098 lr_dit=0.0000 (3.36s/step)
+[iad/wallplugs] step 1650/4000 loss_lat=0.0386 loss_total=0.0386 loss_seg=0.0111 lr_dit=0.0000 (3.41s/step)
+[iad/wallplugs] step 1700/4000 loss_lat=0.0372 loss_total=0.0372 loss_seg=0.0105 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 1750/4000 loss_lat=0.0330 loss_total=0.0330 loss_seg=0.0101 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 1750 val_lat=0.1479 val_total=0.1479 val_seg=0.0117
+[iad/wallplugs] new best val_lat=0.1479 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 1800/4000 loss_lat=0.0359 loss_total=0.0359 loss_seg=0.0108 lr_dit=0.0000 (3.72s/step)
+[iad/wallplugs] step 1850/4000 loss_lat=0.0316 loss_total=0.0316 loss_seg=0.0096 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 1900/4000 loss_lat=0.0331 loss_total=0.0331 loss_seg=0.0100 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 1950/4000 loss_lat=0.0324 loss_total=0.0324 loss_seg=0.0098 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 2000/4000 loss_lat=0.0331 loss_total=0.0331 loss_seg=0.0102 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 2000 val_lat=0.1238 val_total=0.1238 val_seg=0.0110
+[iad/wallplugs] new best val_lat=0.1238 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 2050/4000 loss_lat=0.0315 loss_total=0.0315 loss_seg=0.0093 lr_dit=0.0000 (3.72s/step)
+[iad/wallplugs] step 2100/4000 loss_lat=0.0304 loss_total=0.0304 loss_seg=0.0099 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 2150/4000 loss_lat=0.0386 loss_total=0.0386 loss_seg=0.0095 lr_dit=0.0000 (3.40s/step)
+[iad/wallplugs] step 2200/4000 loss_lat=0.0352 loss_total=0.0352 loss_seg=0.0099 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 2250/4000 loss_lat=0.0310 loss_total=0.0310 loss_seg=0.0096 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 2250 val_lat=0.1052 val_total=0.1052 val_seg=0.0104
+[iad/wallplugs] new best val_lat=0.1052 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 2300/4000 loss_lat=0.0361 loss_total=0.0361 loss_seg=0.0094 lr_dit=0.0000 (3.72s/step)
+[iad/wallplugs] step 2350/4000 loss_lat=0.0294 loss_total=0.0294 loss_seg=0.0094 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 2400/4000 loss_lat=0.0333 loss_total=0.0333 loss_seg=0.0098 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 2450/4000 loss_lat=0.0315 loss_total=0.0315 loss_seg=0.0093 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 2500/4000 loss_lat=0.0315 loss_total=0.0315 loss_seg=0.0100 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 2500 val_lat=0.0911 val_total=0.0911 val_seg=0.0099
+[iad/wallplugs] new best val_lat=0.0911 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 2550/4000 loss_lat=0.0361 loss_total=0.0361 loss_seg=0.0095 lr_dit=0.0000 (3.72s/step)
+[iad/wallplugs] step 2600/4000 loss_lat=0.0351 loss_total=0.0351 loss_seg=0.0096 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 2650/4000 loss_lat=0.0305 loss_total=0.0305 loss_seg=0.0091 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 2700/4000 loss_lat=0.0303 loss_total=0.0303 loss_seg=0.0094 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 2750/4000 loss_lat=0.0329 loss_total=0.0329 loss_seg=0.0094 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 2750 val_lat=0.0807 val_total=0.0807 val_seg=0.0096
+[iad/wallplugs] new best val_lat=0.0807 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 2800/4000 loss_lat=0.0358 loss_total=0.0358 loss_seg=0.0090 lr_dit=0.0000 (3.72s/step)
+[iad/wallplugs] step 2850/4000 loss_lat=0.0370 loss_total=0.0370 loss_seg=0.0097 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 2900/4000 loss_lat=0.0315 loss_total=0.0315 loss_seg=0.0094 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 2950/4000 loss_lat=0.0362 loss_total=0.0362 loss_seg=0.0089 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 3000/4000 loss_lat=0.0327 loss_total=0.0327 loss_seg=0.0094 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 3000 val_lat=0.0730 val_total=0.0730 val_seg=0.0094
+[iad/wallplugs] new best val_lat=0.0730 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 3050/4000 loss_lat=0.0307 loss_total=0.0307 loss_seg=0.0088 lr_dit=0.0000 (3.71s/step)
+[iad/wallplugs] step 3100/4000 loss_lat=0.0322 loss_total=0.0322 loss_seg=0.0092 lr_dit=0.0000 (3.35s/step)
+[iad/wallplugs] step 3150/4000 loss_lat=0.0320 loss_total=0.0320 loss_seg=0.0089 lr_dit=0.0000 (3.36s/step)
+[iad/wallplugs] step 3200/4000 loss_lat=0.0292 loss_total=0.0292 loss_seg=0.0086 lr_dit=0.0000 (3.37s/step)
+[iad/wallplugs] step 3250/4000 loss_lat=0.0314 loss_total=0.0314 loss_seg=0.0095 lr_dit=0.0000 (3.34s/step)
+[iad/wallplugs] step 3250 val_lat=0.0673 val_total=0.0673 val_seg=0.0093
+[iad/wallplugs] new best val_lat=0.0673 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 3300/4000 loss_lat=0.0300 loss_total=0.0300 loss_seg=0.0089 lr_dit=0.0000 (3.72s/step)
+[iad/wallplugs] step 3350/4000 loss_lat=0.0312 loss_total=0.0312 loss_seg=0.0092 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 3400/4000 loss_lat=0.0311 loss_total=0.0311 loss_seg=0.0089 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 3450/4000 loss_lat=0.0306 loss_total=0.0306 loss_seg=0.0092 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 3500/4000 loss_lat=0.0294 loss_total=0.0294 loss_seg=0.0089 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 3500 val_lat=0.0630 val_total=0.0630 val_seg=0.0092
+[iad/wallplugs] new best val_lat=0.0630 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 3550/4000 loss_lat=0.0329 loss_total=0.0329 loss_seg=0.0093 lr_dit=0.0000 (3.73s/step)
+[iad/wallplugs] step 3600/4000 loss_lat=0.0314 loss_total=0.0314 loss_seg=0.0087 lr_dit=0.0000 (3.40s/step)
+[iad/wallplugs] step 3650/4000 loss_lat=0.0310 loss_total=0.0310 loss_seg=0.0087 lr_dit=0.0000 (3.40s/step)
+[iad/wallplugs] step 3700/4000 loss_lat=0.0324 loss_total=0.0324 loss_seg=0.0090 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 3750/4000 loss_lat=0.0314 loss_total=0.0314 loss_seg=0.0092 lr_dit=0.0000 (3.39s/step)
+[iad/wallplugs] step 3750 val_lat=0.0596 val_total=0.0596 val_seg=0.0091
+[iad/wallplugs] new best val_lat=0.0596 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] step 3800/4000 loss_lat=0.0325 loss_total=0.0325 loss_seg=0.0095 lr_dit=0.0000 (3.71s/step)
+[iad/wallplugs] step 3850/4000 loss_lat=0.0324 loss_total=0.0324 loss_seg=0.0101 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 3900/4000 loss_lat=0.0286 loss_total=0.0286 loss_seg=0.0095 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 3950/4000 loss_lat=0.0295 loss_total=0.0295 loss_seg=0.0095 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 4000/4000 loss_lat=0.0279 loss_total=0.0279 loss_seg=0.0084 lr_dit=0.0000 (3.38s/step)
+[iad/wallplugs] step 4000 val_lat=0.0570 val_total=0.0570 val_seg=0.0090
+[iad/wallplugs] new best val_lat=0.0570 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt
+[iad/wallplugs] done at step 4000; encoder_frozen=True; decoder_finetune=False; adaptor=None; best_lat=0.057045260033405876
+[iad/wallplugs] eval-only checkpoint wallplugs_best.pt: 3.4 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "wallplugs",
+      "steps": 4000,
+      "best_val": 0.057045260033405876,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/wallplugs_best.pt"
+    }
+  ]
+}
+=== eval exp=J5_grid32 seed=0 (mode=single t=trained sigma score=latent_cos,disc,dec_diff,fuse_disc,disc+gf,fuse_disc+gf,oracle16,oracle32) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[iad] encoder input 448 px -> 32x32 latent grid (decoder stays 16x16)
+[iad] DiT re-gridded 16x16 -> 32x32 (pos_embed resized, RoPE interpolated)
+[eval/wallplugs] latent_cos             blur=0    I-AUROC(max)=0.5048 P-AUROC=0.8021 AUPRO=0.3209 AUPRO@0.05=0.1220 F1max=0.2998
+[eval/wallplugs] latent_cos             blur=2    I-AUROC(max)=0.4930 P-AUROC=0.8013 AUPRO=0.3049 AUPRO@0.05=0.1133 F1max=0.3037
+[eval/wallplugs] latent_cos             blur=4    I-AUROC(max)=0.4828 P-AUROC=0.7965 AUPRO=0.2754 AUPRO@0.05=0.0945 F1max=0.2991
+[eval/wallplugs] latent_cos             blur=8    I-AUROC(max)=0.4876 P-AUROC=0.7783 AUPRO=0.2237 AUPRO@0.05=0.0787 F1max=0.2699
+[eval/wallplugs] disc                   blur=0    I-AUROC(max)=0.5202 P-AUROC=0.7964 AUPRO=0.2213 AUPRO@0.05=0.0641 F1max=0.0968
+[eval/wallplugs] disc                   blur=2    I-AUROC(max)=0.5056 P-AUROC=0.7994 AUPRO=0.2158 AUPRO@0.05=0.0613 F1max=0.0933
+[eval/wallplugs] disc                   blur=4    I-AUROC(max)=0.4793 P-AUROC=0.8046 AUPRO=0.2046 AUPRO@0.05=0.0586 F1max=0.0832
+[eval/wallplugs] disc                   blur=8    I-AUROC(max)=0.4565 P-AUROC=0.8104 AUPRO=0.1842 AUPRO@0.05=0.0541 F1max=0.0539
+[eval/wallplugs] dec_diff               blur=0    I-AUROC(max)=0.5543 P-AUROC=0.7896 AUPRO=0.3328 AUPRO@0.05=0.0755 F1max=0.0586
+[eval/wallplugs] dec_diff               blur=2    I-AUROC(max)=0.6017 P-AUROC=0.8097 AUPRO=0.3538 AUPRO@0.05=0.0911 F1max=0.1167
+[eval/wallplugs] dec_diff               blur=4    I-AUROC(max)=0.6281 P-AUROC=0.8065 AUPRO=0.3431 AUPRO@0.05=0.0907 F1max=0.1468
+[eval/wallplugs] dec_diff               blur=8    I-AUROC(max)=0.6170 P-AUROC=0.7834 AUPRO=0.2781 AUPRO@0.05=0.0738 F1max=0.1466
+[eval/wallplugs] fuse_disc              blur=0    I-AUROC(max)=0.5515 P-AUROC=0.8358 AUPRO=0.3481 AUPRO@0.05=0.1536 F1max=0.3476
+[eval/wallplugs] fuse_disc              blur=2    I-AUROC(max)=0.5700 P-AUROC=0.8549 AUPRO=0.4340 AUPRO@0.05=0.1712 F1max=0.4328
+[eval/wallplugs] fuse_disc              blur=4    I-AUROC(max)=0.5393 P-AUROC=0.8610 AUPRO=0.4244 AUPRO@0.05=0.1578 F1max=0.4422
+[eval/wallplugs] fuse_disc              blur=8    I-AUROC(max)=0.5231 P-AUROC=0.8577 AUPRO=0.3534 AUPRO@0.05=0.1161 F1max=0.4094
+[eval/wallplugs] disc+gf                blur=0    I-AUROC(max)=0.4800 P-AUROC=0.8059 AUPRO=0.1902 AUPRO@0.05=0.0577 F1max=0.1181
+[eval/wallplugs] disc+gf                blur=2    I-AUROC(max)=0.4739 P-AUROC=0.8070 AUPRO=0.1877 AUPRO@0.05=0.0567 F1max=0.0992
+[eval/wallplugs] disc+gf                blur=4    I-AUROC(max)=0.4635 P-AUROC=0.8086 AUPRO=0.1847 AUPRO@0.05=0.0557 F1max=0.0764
+[eval/wallplugs] disc+gf                blur=8    I-AUROC(max)=0.4541 P-AUROC=0.8081 AUPRO=0.1743 AUPRO@0.05=0.0519 F1max=0.0478
+[eval/wallplugs] fuse_disc+gf           blur=0    I-AUROC(max)=0.5061 P-AUROC=0.8714 AUPRO=0.3902 AUPRO@0.05=0.1409 F1max=0.4620
+[eval/wallplugs] fuse_disc+gf           blur=2    I-AUROC(max)=0.5076 P-AUROC=0.8704 AUPRO=0.4099 AUPRO@0.05=0.1455 F1max=0.4487
+[eval/wallplugs] fuse_disc+gf           blur=4    I-AUROC(max)=0.5033 P-AUROC=0.8673 AUPRO=0.3958 AUPRO@0.05=0.1370 F1max=0.4343
+[eval/wallplugs] fuse_disc+gf           blur=8    I-AUROC(max)=0.5157 P-AUROC=0.8533 AUPRO=0.3427 AUPRO@0.05=0.1128 F1max=0.4048
+[eval/wallplugs] oracle16               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9994 AUPRO=0.9305 AUPRO@0.05=0.8616 F1max=0.7400
+[eval/wallplugs] oracle16               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9993 AUPRO=0.9300 AUPRO@0.05=0.8583 F1max=0.7384
+[eval/wallplugs] oracle16               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9993 AUPRO=0.9282 AUPRO@0.05=0.8482 F1max=0.7284
+[eval/wallplugs] oracle16               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9989 AUPRO=0.9204 AUPRO@0.05=0.8037 F1max=0.6847
+[eval/wallplugs] oracle32               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9999 AUPRO=0.9957 AUPRO@0.05=0.9741 F1max=0.8955
+[eval/wallplugs] oracle32               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9999 AUPRO=0.9947 AUPRO@0.05=0.9685 F1max=0.8869
+[eval/wallplugs] oracle32               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9998 AUPRO=0.9921 AUPRO@0.05=0.9525 F1max=0.8581
+[eval/wallplugs] oracle32               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9994 AUPRO=0.9281 AUPRO@0.05=0.8481 F1max=0.7552
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed0/J5_grid32/results.csv (32 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed0/J5_grid32/report.md
+=== deleted checkpoints of exp=J5_grid32 seed=0 cats=wallplugs (KEEP_CKPT=0) ===
+=== train exp=J5_grid32 seed=0 cats=walnuts ===
+[iad] DTD texture bank: 1000 crops from /po1/rakhimov/training/dtd
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[iad] encoder input 448 px -> 32x32 latent grid (decoder stays 16x16)
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] DiT re-gridded 16x16 -> 32x32 (pos_embed resized, RoPE interpolated)
+[iad] discriminator (DRAEM segmentation head, token grid): 5315841 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': True, 'pixel': False, 'pixel_ch': 32, 'w_pix': 1.0, 'type': 'token', 'unet_base': 64}
+[iad/walnuts] 432 train / 48 val normal images (cats: walnuts)
+[iad/walnuts] batch 2 x 4 accumulation = effective 8
+[iad/walnuts] decoder offloaded to CPU (loss=latent never decodes)
+[iad/walnuts] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-06, base_lr=2e-05, warmup_from_zero=True
+[iad/walnuts] Optimizer: AdamW with lr=2e-05, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + discriminator(5315841 params)
+[iad/walnuts] step 50/4000 loss_lat=0.2590 loss_total=0.2590 loss_seg=0.0545 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 100/4000 loss_lat=0.1339 loss_total=0.1339 loss_seg=0.0373 lr_dit=0.0000 (3.38s/step)
+[iad/walnuts] step 150/4000 loss_lat=0.0985 loss_total=0.0985 loss_seg=0.0349 lr_dit=0.0000 (3.56s/step)
+[iad/walnuts] step 200/4000 loss_lat=0.0749 loss_total=0.0749 loss_seg=0.0297 lr_dit=0.0000 (3.46s/step)
+[iad/walnuts] step 250/4000 loss_lat=0.0746 loss_total=0.0746 loss_seg=0.0251 lr_dit=0.0000 (3.41s/step)
+[iad/walnuts] step 250 val_lat=0.4308 val_total=0.4308 val_seg=0.0290
+[iad/walnuts] new best val_lat=0.4308 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 300/4000 loss_lat=0.0642 loss_total=0.0642 loss_seg=0.0265 lr_dit=0.0000 (3.76s/step)
+[iad/walnuts] step 350/4000 loss_lat=0.0573 loss_total=0.0573 loss_seg=0.0219 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 400/4000 loss_lat=0.0611 loss_total=0.0611 loss_seg=0.0202 lr_dit=0.0000 (3.41s/step)
+[iad/walnuts] step 450/4000 loss_lat=0.0559 loss_total=0.0559 loss_seg=0.0180 lr_dit=0.0000 (3.38s/step)
+[iad/walnuts] step 500/4000 loss_lat=0.0557 loss_total=0.0557 loss_seg=0.0176 lr_dit=0.0000 (3.35s/step)
+[iad/walnuts] step 500 val_lat=0.3691 val_total=0.3691 val_seg=0.0244
+[iad/walnuts] new best val_lat=0.3691 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 550/4000 loss_lat=0.0496 loss_total=0.0496 loss_seg=0.0166 lr_dit=0.0000 (3.75s/step)
+[iad/walnuts] step 600/4000 loss_lat=0.0609 loss_total=0.0609 loss_seg=0.0174 lr_dit=0.0000 (3.36s/step)
+[iad/walnuts] step 650/4000 loss_lat=0.0458 loss_total=0.0458 loss_seg=0.0150 lr_dit=0.0000 (3.46s/step)
+[iad/walnuts] step 700/4000 loss_lat=0.0464 loss_total=0.0464 loss_seg=0.0150 lr_dit=0.0000 (3.37s/step)
+[iad/walnuts] step 750/4000 loss_lat=0.0441 loss_total=0.0441 loss_seg=0.0142 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 750 val_lat=0.3142 val_total=0.3142 val_seg=0.0241
+[iad/walnuts] new best val_lat=0.3142 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 800/4000 loss_lat=0.0412 loss_total=0.0412 loss_seg=0.0133 lr_dit=0.0000 (3.79s/step)
+[iad/walnuts] step 850/4000 loss_lat=0.0427 loss_total=0.0427 loss_seg=0.0129 lr_dit=0.0000 (3.41s/step)
+[iad/walnuts] step 900/4000 loss_lat=0.0407 loss_total=0.0407 loss_seg=0.0124 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 950/4000 loss_lat=0.0406 loss_total=0.0406 loss_seg=0.0126 lr_dit=0.0000 (3.42s/step)
+[iad/walnuts] step 1000/4000 loss_lat=0.0368 loss_total=0.0368 loss_seg=0.0131 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 1000 val_lat=0.2648 val_total=0.2648 val_seg=0.0248
+[iad/walnuts] new best val_lat=0.2648 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 1050/4000 loss_lat=0.0384 loss_total=0.0384 loss_seg=0.0121 lr_dit=0.0000 (3.80s/step)
+[iad/walnuts] step 1100/4000 loss_lat=0.0446 loss_total=0.0446 loss_seg=0.0125 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 1150/4000 loss_lat=0.0401 loss_total=0.0401 loss_seg=0.0117 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 1200/4000 loss_lat=0.0384 loss_total=0.0384 loss_seg=0.0122 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 1250/4000 loss_lat=0.0378 loss_total=0.0378 loss_seg=0.0112 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 1250 val_lat=0.2202 val_total=0.2202 val_seg=0.0220
+[iad/walnuts] new best val_lat=0.2202 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 1300/4000 loss_lat=0.0410 loss_total=0.0410 loss_seg=0.0112 lr_dit=0.0000 (3.80s/step)
+[iad/walnuts] step 1350/4000 loss_lat=0.0382 loss_total=0.0382 loss_seg=0.0107 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 1400/4000 loss_lat=0.0375 loss_total=0.0375 loss_seg=0.0110 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 1450/4000 loss_lat=0.0414 loss_total=0.0414 loss_seg=0.0115 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 1500/4000 loss_lat=0.0459 loss_total=0.0459 loss_seg=0.0118 lr_dit=0.0000 (3.42s/step)
+[iad/walnuts] step 1500 val_lat=0.1801 val_total=0.1801 val_seg=0.0171
+[iad/walnuts] new best val_lat=0.1801 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 1550/4000 loss_lat=0.0387 loss_total=0.0387 loss_seg=0.0102 lr_dit=0.0000 (3.80s/step)
+[iad/walnuts] step 1600/4000 loss_lat=0.0366 loss_total=0.0366 loss_seg=0.0102 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 1650/4000 loss_lat=0.0386 loss_total=0.0386 loss_seg=0.0108 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 1700/4000 loss_lat=0.0386 loss_total=0.0386 loss_seg=0.0106 lr_dit=0.0000 (3.41s/step)
+[iad/walnuts] step 1750/4000 loss_lat=0.0345 loss_total=0.0345 loss_seg=0.0102 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 1750 val_lat=0.1461 val_total=0.1461 val_seg=0.0137
+[iad/walnuts] new best val_lat=0.1461 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 1800/4000 loss_lat=0.0372 loss_total=0.0372 loss_seg=0.0108 lr_dit=0.0000 (3.80s/step)
+[iad/walnuts] step 1850/4000 loss_lat=0.0321 loss_total=0.0321 loss_seg=0.0100 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 1900/4000 loss_lat=0.0334 loss_total=0.0334 loss_seg=0.0100 lr_dit=0.0000 (3.38s/step)
+[iad/walnuts] step 1950/4000 loss_lat=0.0334 loss_total=0.0334 loss_seg=0.0104 lr_dit=0.0000 (3.38s/step)
+[iad/walnuts] step 2000/4000 loss_lat=0.0350 loss_total=0.0350 loss_seg=0.0104 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 2000 val_lat=0.1209 val_total=0.1209 val_seg=0.0121
+[iad/walnuts] new best val_lat=0.1209 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 2050/4000 loss_lat=0.0328 loss_total=0.0328 loss_seg=0.0095 lr_dit=0.0000 (3.78s/step)
+[iad/walnuts] step 2100/4000 loss_lat=0.0303 loss_total=0.0303 loss_seg=0.0102 lr_dit=0.0000 (3.34s/step)
+[iad/walnuts] step 2150/4000 loss_lat=0.0410 loss_total=0.0410 loss_seg=0.0098 lr_dit=0.0000 (3.37s/step)
+[iad/walnuts] step 2200/4000 loss_lat=0.0356 loss_total=0.0356 loss_seg=0.0104 lr_dit=0.0000 (3.34s/step)
+[iad/walnuts] step 2250/4000 loss_lat=0.0306 loss_total=0.0306 loss_seg=0.0099 lr_dit=0.0000 (3.35s/step)
+[iad/walnuts] step 2250 val_lat=0.1033 val_total=0.1033 val_seg=0.0113
+[iad/walnuts] new best val_lat=0.1033 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 2300/4000 loss_lat=0.0372 loss_total=0.0372 loss_seg=0.0096 lr_dit=0.0000 (3.86s/step)
+[iad/walnuts] step 2350/4000 loss_lat=0.0295 loss_total=0.0295 loss_seg=0.0099 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 2400/4000 loss_lat=0.0351 loss_total=0.0351 loss_seg=0.0102 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 2450/4000 loss_lat=0.0328 loss_total=0.0328 loss_seg=0.0094 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 2500/4000 loss_lat=0.0322 loss_total=0.0322 loss_seg=0.0103 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 2500 val_lat=0.0900 val_total=0.0900 val_seg=0.0109
+[iad/walnuts] new best val_lat=0.0900 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 2550/4000 loss_lat=0.0375 loss_total=0.0375 loss_seg=0.0096 lr_dit=0.0000 (3.77s/step)
+[iad/walnuts] step 2600/4000 loss_lat=0.0356 loss_total=0.0356 loss_seg=0.0098 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 2650/4000 loss_lat=0.0320 loss_total=0.0320 loss_seg=0.0094 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 2700/4000 loss_lat=0.0313 loss_total=0.0313 loss_seg=0.0099 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 2750/4000 loss_lat=0.0335 loss_total=0.0335 loss_seg=0.0097 lr_dit=0.0000 (3.37s/step)
+[iad/walnuts] step 2750 val_lat=0.0801 val_total=0.0801 val_seg=0.0105
+[iad/walnuts] new best val_lat=0.0801 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 2800/4000 loss_lat=0.0390 loss_total=0.0390 loss_seg=0.0092 lr_dit=0.0000 (3.79s/step)
+[iad/walnuts] step 2850/4000 loss_lat=0.0368 loss_total=0.0368 loss_seg=0.0096 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 2900/4000 loss_lat=0.0333 loss_total=0.0333 loss_seg=0.0095 lr_dit=0.0000 (3.38s/step)
+[iad/walnuts] step 2950/4000 loss_lat=1.1782 loss_total=1.1782 loss_seg=0.0093 lr_dit=0.0000 (3.38s/step)
+[iad/walnuts] step 3000/4000 loss_lat=0.0337 loss_total=0.0337 loss_seg=0.0095 lr_dit=0.0000 (3.38s/step)
+[iad/walnuts] step 3000 val_lat=0.0726 val_total=0.0726 val_seg=0.0103
+[iad/walnuts] new best val_lat=0.0726 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 3050/4000 loss_lat=0.0310 loss_total=0.0310 loss_seg=0.0089 lr_dit=0.0000 (3.77s/step)
+[iad/walnuts] step 3100/4000 loss_lat=0.0344 loss_total=0.0344 loss_seg=0.0095 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 3150/4000 loss_lat=0.0334 loss_total=0.0334 loss_seg=0.0092 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 3200/4000 loss_lat=0.0306 loss_total=0.0306 loss_seg=0.0088 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 3250/4000 loss_lat=0.0319 loss_total=0.0319 loss_seg=0.0100 lr_dit=0.0000 (3.38s/step)
+[iad/walnuts] step 3250 val_lat=0.0666 val_total=0.0666 val_seg=0.0101
+[iad/walnuts] new best val_lat=0.0666 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 3300/4000 loss_lat=0.0317 loss_total=0.0317 loss_seg=0.0089 lr_dit=0.0000 (3.78s/step)
+[iad/walnuts] step 3350/4000 loss_lat=0.0324 loss_total=0.0324 loss_seg=0.0093 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 3400/4000 loss_lat=0.0332 loss_total=0.0332 loss_seg=0.0091 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 3450/4000 loss_lat=0.0323 loss_total=0.0323 loss_seg=0.0094 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 3500/4000 loss_lat=0.0306 loss_total=0.0306 loss_seg=0.0090 lr_dit=0.0000 (3.39s/step)
+[iad/walnuts] step 3500 val_lat=0.0617 val_total=0.0617 val_seg=0.0099
+[iad/walnuts] new best val_lat=0.0617 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 3550/4000 loss_lat=0.0353 loss_total=0.0353 loss_seg=0.0099 lr_dit=0.0000 (3.76s/step)
+[iad/walnuts] step 3600/4000 loss_lat=0.0312 loss_total=0.0312 loss_seg=0.0085 lr_dit=0.0000 (3.40s/step)
+[iad/walnuts] step 3650/4000 loss_lat=0.0330 loss_total=0.0330 loss_seg=0.0089 lr_dit=0.0000 (3.38s/step)
+[iad/walnuts] step 3700/4000 loss_lat=0.0335 loss_total=0.0335 loss_seg=0.0091 lr_dit=0.0000 (3.36s/step)
+[iad/walnuts] step 3750/4000 loss_lat=0.0334 loss_total=0.0334 loss_seg=0.0093 lr_dit=0.0000 (3.35s/step)
+[iad/walnuts] step 3750 val_lat=0.0581 val_total=0.0581 val_seg=0.0097
+[iad/walnuts] new best val_lat=0.0581 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] step 3800/4000 loss_lat=0.0357 loss_total=0.0357 loss_seg=0.0095 lr_dit=0.0000 (3.72s/step)
+[iad/walnuts] step 3850/4000 loss_lat=0.0354 loss_total=0.0354 loss_seg=0.0101 lr_dit=0.0000 (3.34s/step)
+[iad/walnuts] step 3900/4000 loss_lat=0.0295 loss_total=0.0295 loss_seg=0.0096 lr_dit=0.0000 (3.33s/step)
+[iad/walnuts] step 3950/4000 loss_lat=0.0302 loss_total=0.0302 loss_seg=0.0096 lr_dit=0.0000 (3.33s/step)
+[iad/walnuts] step 4000/4000 loss_lat=0.0299 loss_total=0.0299 loss_seg=0.0085 lr_dit=0.0000 (3.33s/step)
+[iad/walnuts] step 4000 val_lat=0.0555 val_total=0.0555 val_seg=0.0096
+[iad/walnuts] new best val_lat=0.0555 -> /po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt
+[iad/walnuts] done at step 4000; encoder_frozen=True; decoder_finetune=False; adaptor=None; best_lat=0.05548760040740793
+[iad/walnuts] eval-only checkpoint walnuts_best.pt: 3.4 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "walnuts",
+      "steps": 4000,
+      "best_val": 0.05548760040740793,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad_ad2/per_category/seed0/J5_grid32/walnuts_best.pt"
+    }
+  ]
+}
+=== eval exp=J5_grid32 seed=0 (mode=single t=trained sigma score=latent_cos,disc,dec_diff,fuse_disc,disc+gf,fuse_disc+gf,oracle16,oracle32) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[iad] encoder input 448 px -> 32x32 latent grid (decoder stays 16x16)
+[iad] DiT re-gridded 16x16 -> 32x32 (pos_embed resized, RoPE interpolated)
+[eval/walnuts] latent_cos             blur=0    I-AUROC(max)=0.7904 P-AUROC=0.9429 AUPRO=0.5350 AUPRO@0.05=0.1827 F1max=0.4039
+[eval/walnuts] latent_cos             blur=2    I-AUROC(max)=0.7804 P-AUROC=0.9446 AUPRO=0.5304 AUPRO@0.05=0.1745 F1max=0.4128
+[eval/walnuts] latent_cos             blur=4    I-AUROC(max)=0.7791 P-AUROC=0.9465 AUPRO=0.5129 AUPRO@0.05=0.1565 F1max=0.4283
+[eval/walnuts] latent_cos             blur=8    I-AUROC(max)=0.7893 P-AUROC=0.9433 AUPRO=0.4590 AUPRO@0.05=0.1245 F1max=0.4328
+[eval/walnuts] disc                   blur=0    I-AUROC(max)=0.6650 P-AUROC=0.8927 AUPRO=0.2679 AUPRO@0.05=0.0807 F1max=0.3120
+[eval/walnuts] disc                   blur=2    I-AUROC(max)=0.6581 P-AUROC=0.8950 AUPRO=0.2657 AUPRO@0.05=0.0782 F1max=0.3132
+[eval/walnuts] disc                   blur=4    I-AUROC(max)=0.6537 P-AUROC=0.8966 AUPRO=0.2571 AUPRO@0.05=0.0733 F1max=0.3146
+[eval/walnuts] disc                   blur=8    I-AUROC(max)=0.6637 P-AUROC=0.8914 AUPRO=0.2281 AUPRO@0.05=0.0679 F1max=0.3174
+[eval/walnuts] dec_diff               blur=0    I-AUROC(max)=0.8167 P-AUROC=0.8666 AUPRO=0.5176 AUPRO@0.05=0.2145 F1max=0.2537
+[eval/walnuts] dec_diff               blur=2    I-AUROC(max)=0.8278 P-AUROC=0.9152 AUPRO=0.5894 AUPRO@0.05=0.2643 F1max=0.3389
+[eval/walnuts] dec_diff               blur=4    I-AUROC(max)=0.8093 P-AUROC=0.9306 AUPRO=0.6223 AUPRO@0.05=0.2771 F1max=0.3689
+[eval/walnuts] dec_diff               blur=8    I-AUROC(max)=0.8126 P-AUROC=0.9353 AUPRO=0.6373 AUPRO@0.05=0.2690 F1max=0.3836
+[eval/walnuts] fuse_disc              blur=0    I-AUROC(max)=0.8424 P-AUROC=0.9305 AUPRO=0.3016 AUPRO@0.05=0.1855 F1max=0.5250
+[eval/walnuts] fuse_disc              blur=2    I-AUROC(max)=0.8624 P-AUROC=0.9470 AUPRO=0.4339 AUPRO@0.05=0.2456 F1max=0.6136
+[eval/walnuts] fuse_disc              blur=4    I-AUROC(max)=0.8639 P-AUROC=0.9496 AUPRO=0.5155 AUPRO@0.05=0.2337 F1max=0.6312
+[eval/walnuts] fuse_disc              blur=8    I-AUROC(max)=0.8630 P-AUROC=0.9451 AUPRO=0.5360 AUPRO@0.05=0.1808 F1max=0.6041
+[eval/walnuts] disc+gf                blur=0    I-AUROC(max)=0.6952 P-AUROC=0.8961 AUPRO=0.2429 AUPRO@0.05=0.0722 F1max=0.3304
+[eval/walnuts] disc+gf                blur=2    I-AUROC(max)=0.6739 P-AUROC=0.8957 AUPRO=0.2423 AUPRO@0.05=0.0709 F1max=0.3268
+[eval/walnuts] disc+gf                blur=4    I-AUROC(max)=0.6706 P-AUROC=0.8938 AUPRO=0.2356 AUPRO@0.05=0.0693 F1max=0.3244
+[eval/walnuts] disc+gf                blur=8    I-AUROC(max)=0.6683 P-AUROC=0.8865 AUPRO=0.2124 AUPRO@0.05=0.0650 F1max=0.3214
+[eval/walnuts] fuse_disc+gf           blur=0    I-AUROC(max)=0.8674 P-AUROC=0.9491 AUPRO=0.4881 AUPRO@0.05=0.1952 F1max=0.6486
+[eval/walnuts] fuse_disc+gf           blur=2    I-AUROC(max)=0.8615 P-AUROC=0.9497 AUPRO=0.5235 AUPRO@0.05=0.2038 F1max=0.6434
+[eval/walnuts] fuse_disc+gf           blur=4    I-AUROC(max)=0.8661 P-AUROC=0.9484 AUPRO=0.5328 AUPRO@0.05=0.1906 F1max=0.6292
+[eval/walnuts] fuse_disc+gf           blur=8    I-AUROC(max)=0.8648 P-AUROC=0.9429 AUPRO=0.5223 AUPRO@0.05=0.1634 F1max=0.5886
+[eval/walnuts] oracle16               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9985 AUPRO=0.9222 AUPRO@0.05=0.5738 F1max=0.8667
+[eval/walnuts] oracle16               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9984 AUPRO=0.9198 AUPRO@0.05=0.5591 F1max=0.8663
+[eval/walnuts] oracle16               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9982 AUPRO=0.9125 AUPRO@0.05=0.5174 F1max=0.8660
+[eval/walnuts] oracle16               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9975 AUPRO=0.8846 AUPRO@0.05=0.4002 F1max=0.8483
+[eval/walnuts] oracle32               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9995 AUPRO=0.9696 AUPRO@0.05=0.8177 F1max=0.9226
+[eval/walnuts] oracle32               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9995 AUPRO=0.9656 AUPRO@0.05=0.7939 F1max=0.9216
+[eval/walnuts] oracle32               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9993 AUPRO=0.9551 AUPRO@0.05=0.7306 F1max=0.9140
+[eval/walnuts] oracle32               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9984 AUPRO=0.9226 AUPRO@0.05=0.5383 F1max=0.8834
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed0/J5_grid32/results.csv (32 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed0/J5_grid32/report.md
+=== deleted checkpoints of exp=J5_grid32 seed=0 cats=walnuts (KEEP_CKPT=0) ===
+Reports: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed*/**/report.md   CSVs: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed*/**/results.csv   Grids: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed*/**/viz/
+[gpu 3] done  J5_grid32:wallplugs,walnuts 00:12:59
+[gpu 3] start knn 00:12:59
+torch 2.8.0+cu128 NVIDIA RTX A6000
+scope: per_category
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== knn control cats=can fabric fruit_jelly rice sheet_metal vial wallplugs walnuts ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[knn/can] bank 412 images  I-AUROC(max)=0.5392 P-AUROC=0.6255 AUPRO=0.2219
+[knn/fabric] bank 387 images  I-AUROC(max)=0.5513 P-AUROC=0.9732 AUPRO=0.1804
+[knn/fruit_jelly] bank 263 images  I-AUROC(max)=0.6275 P-AUROC=0.9302 AUPRO=0.6202
+[knn/rice] bank 313 images  I-AUROC(max)=0.7651 P-AUROC=0.9152 AUPRO=0.6549
+[knn/sheet_metal] bank 137 images  I-AUROC(max)=0.5556 P-AUROC=0.8296 AUPRO=0.1840
+[knn/vial] bank 291 images  I-AUROC(max)=0.8574 P-AUROC=0.9039 AUPRO=0.8057
+[knn/wallplugs] bank 293 images  I-AUROC(max)=0.4265 P-AUROC=0.7458 AUPRO=0.1742
+[knn/walnuts] bank 432 images  I-AUROC(max)=0.7191 P-AUROC=0.9018 AUPRO=0.4007
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/knn/knn_frozen/results.csv (8 new rows)
+Reports: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed*/**/report.md   CSVs: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed*/**/results.csv   Grids: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_ad2/per_category/seed*/**/viz/
+[gpu 3] done  knn 00:25:28
