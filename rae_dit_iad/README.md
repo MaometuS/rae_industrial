@@ -737,8 +737,8 @@ means over metal_nut, tile, transistor, wood, cable:
   further: the checkpoints were deleted (KEEP_CKPT=0); a fix would average each pixel only
   over the shifts where it is real content.
 
-**`PLAN=draem`: exact DRAEM with the RAE DiT as the reconstructive network** (not run
-yet). No earlier arm ran DRAEM as published: B–G used a pixel loss but SimpleNet's
+**`PLAN=draem`: exact DRAEM with the RAE DiT as the reconstructive network** (job
+184325, results below). No earlier arm ran DRAEM as published: B–G used a pixel loss but SimpleNet's
 near-identity latent noise, and J4/J5 paste DTD textures but train in latent space with a
 token-grid head. The open question from the localization ablation: the raw pixel residual
 fails because the RAE decoder is lossy (PSNR ≈ 20, pixel AUROC 0.565), but DRAEM's
@@ -769,6 +769,53 @@ through the decoder's error?
   for good and latent-space heads are the right design.
 * Cost: every step decodes and backpropagates through the decoder and the U-Net, like the
   B–G arms; `MEM=low` covers a 24 GB card.
+
+**Job 184325 (`PLAN=draem`, seed 0).** Image AUROC / pixel AUROC / AUPRO, blur σ = 4.
+DR_draem's transistor run diverged (non-finite DiT gradients from step 765; stopped at
+201 skipped steps of 968), so its means are over the other 4 categories, and every row
+is shown on those 4 for a like-for-like comparison:
+
+| Arm · score | 4 categories (no transistor) | all 5 |
+|---|---|---|
+| DR_draem · draem | 0.963 / 0.930 / **0.913** | (transistor diverged) |
+| DR_draem · draem+gf, σ = 2 | 0.959 / 0.947 / 0.878 | |
+| DR_draem_lat · draem | 0.943 / 0.887 / 0.887 | 0.931 / 0.846 / 0.831 |
+| DR_draem_lat · latent_cos | 0.923 / 0.886 / 0.817 | 0.862 / 0.882 / 0.791 |
+| J5 · latent_cos | **0.978** / 0.882 / 0.795 | 0.974 / 0.883 / 0.780 |
+| J5 · fuse_disc, σ = 8 | 0.974 / 0.940 / 0.845 | 0.965 / 0.920 / 0.824 |
+| J5_pixel_head · pxhead | 0.979 / 0.947 / 0.908 | 0.947 / 0.913 / 0.851 |
+| J5_grid32 · disc | 0.974 / 0.950 / **0.916** | 0.970 / 0.906 / 0.867 |
+
+* The U-Net does see through the decoder: `draem` reaches 0.913 AUPRO where `pixel` and
+  `dec_diff` stay at 0.51 and 0.33. It ties the best latent-space maps (J5_grid32 `disc`
+  0.916, `pxhead` 0.908) but does not beat them, and its image AUROC is below J5's
+  `latent_cos` (0.963 vs 0.978).
+* Exact DRAEM leaves `latent_cos` near chance (0.611 image AUROC, 4 categories): with no
+  latent term ẑ drifts wherever the frozen decoder does not care, as in B, C, F, G.
+* The latent term (DR_draem_lat) restores `latent_cos` (0.862 on 5) and kept transistor
+  stable, but costs the U-Net map (AUPRO 0.913 → 0.887 on 4).
+* Transistor: the J5 lr (2e-5, no QK-norm) is at the edge of stability once the loss runs
+  through the decoder and a jointly trained U-Net.
+
+**`PLAN=draemdec`: the same two arms with the decoder fine-tuned** (not run yet):
+`DR_draem_dec` and `DR_draem_lat_dec`, which differ from their `PLAN=draem` pairs only in
+`decoder_finetune: true` (decoder lr = 0.1 × DiT lr = 2e-6, as in C, E, G). Together with
+job 184325 this is a 2×2: latent term on/off × decoder frozen/fine-tuned.
+
+* Why: the frozen decoder caps the reconstruction (normal MVTec PSNR ≈ 20, SSIM 0.56,
+  `rae_fidelity`). With it frozen, the only way to lower L2 + (1 − SSIM) is to move ẑ off
+  the encoder's latents, and the U-Net must look through image-wide decoder error. A
+  trainable decoder can absorb that pressure, as DRAEM's own autoencoder does. In the
+  first run decoder fine-tuning raised the decoded pixel AUROC B → C 0.752 → 0.795 and
+  D → E 0.736 → 0.812, though at σ = 0.1.
+* The fine-tuned decoder is saved in each checkpoint and used for every decoded score, so
+  `dec_diff` still cancels the (new) decoder's own error.
+* Reading it: `draem` up and `latent_cos` unchanged in DR_draem_dec means the decoder was
+  the bottleneck; `latent_cos` recovering without the latent term would mean the decoder
+  took over the drift. Watch transistor: the decoder's gradients join the same clipped
+  norm, so divergence may get worse; if it does, the lever is a lower DiT lr for these arms.
+* Cost: as `PLAN=draem` plus the decoder's gradients and AdamW state; `MEM=low` if a
+  card runs out.
 
 **`PLAN=ad2`: MVTec AD 2** (the default plan now; not run yet). The question: does the best
 configuration so far transfer to a harder benchmark (small, low-contrast defects, high

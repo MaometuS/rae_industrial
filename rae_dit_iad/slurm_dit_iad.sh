@@ -22,6 +22,7 @@
 #
 #   sbatch slurm_dit_iad.sh                           # PLAN=ad2: MVTec AD 2, J5 J5_grid32 kNN
 #   PLAN=draem sbatch slurm_dit_iad.sh                # exact DRAEM on the 5 loc categories
+#   PLAN=draemdec sbatch slurm_dit_iad.sh             # the same with the decoder fine-tuned
 #   PLAN=locpx sbatch slurm_dit_iad.sh                # J5_pixel_head rerun
 #   PLAN=loc sbatch slurm_dit_iad.sh                  # localization ablation
 #   PLAN=loco sbatch slurm_dit_iad.sh                 # MVTec LOCO, J5 A J3 + kNN
@@ -73,6 +74,10 @@ export STEPS=${STEPS:-""}                        # empty = config default (4000)
 #   PLAN=draem  exact DRAEM with the RAE DiT as restorer (DR_draem; DR_draem_lat adds
 #               the latent term) on the 5 localization categories, scored with DRAEM_SCORES
 #               at LOC_BLURS; results join results_dit_iad_loc/ next to J5 and J5_grid32.
+#   PLAN=draemdec  PLAN=draem with the RAE decoder fine-tuned (DR_draem_dec,
+#               DR_draem_lat_dec; decoder lr = 0.1 x DiT lr). With PLAN=draem's results
+#               this completes latent term on/off x decoder frozen/fine-tuned; same
+#               categories, scores, blurs and results_dit_iad_loc/.
 #   PLAN=locpx  J5_pixel_head of PLAN=loc again, split over 3 GPUs: job 163739
 #               stopped it on a device mismatch in the head's grad-norm (fixed); J5 and
 #               J5_grid32 finished there and keep their results (same results_dit_iad_loc/)
@@ -124,6 +129,12 @@ case "$PLAN" in
               CATS="metal_nut tile transistor wood cable"
               export SCORES=$DRAEM_SCORES BLUR_SWEEP=$LOC_BLURS
               export KEEP_RESULTS=1 ;;
+  draemdec)   QUEUES=("DR_draem_dec:metal_nut,tile,transistor" "DR_draem_dec:wood,cable"
+                      "DR_draem_lat_dec:metal_nut,tile,transistor" "DR_draem_lat_dec:wood,cable")
+              export OUT=${OUT_LOC:-$HERE/results_dit_iad_loc}
+              CATS="metal_nut tile transistor wood cable"
+              export SCORES=$DRAEM_SCORES BLUR_SWEEP=$LOC_BLURS
+              export KEEP_RESULTS=1 ;;
   ad2)        QUEUES=("J5" "J5_grid32:can,fabric,fruit_jelly" "J5_grid32:rice,sheet_metal,vial"
                       "J5_grid32:wallplugs,walnuts knn")
               export MVTEC_ROOT=${AD2_ROOT:-/po1/rakhimov/datasets/mvtec_ad_2/mvtec_ad_2}
@@ -161,7 +172,7 @@ case "$PLAN" in
   structured) QUEUES=("J3 A" "J4 J2" "J5" "K5") ;;
   next)       QUEUES=("J2" "K2" "A@1" "A@2") ;;
   matrix)     QUEUES=("A B noise_sigma005" "C D noise_sigma02" "E F noise_mask_all" "G J K") ;;
-  *) echo "unknown PLAN '$PLAN' (ad2 | draem | locpx | loc | loco | full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
+  *) echo "unknown PLAN '$PLAN' (ad2 | draem | draemdec | locpx | loc | loco | full | seeds | samelr | retry | all | structured | next | matrix)"; exit 1 ;;
 esac
 
 # ---- conda env: use it if complete, otherwise create / complete it -----------

@@ -1772,7 +1772,7 @@ def test_u_score_maps_draem():
         I.score_maps(rae, dit, x, [I.parse_score_spec("disc")], t=1.0, disc=head)
 
 
-@pytest.mark.parametrize("name", ["DR_draem", "DR_draem_lat"])
+@pytest.mark.parametrize("name", ["DR_draem", "DR_draem_lat", "DR_draem_dec", "DR_draem_lat_dec"])
 def test_u_draem_configs_parse(name):
     from iad import disc as DS
     omegaconf = pytest.importorskip("omegaconf")
@@ -1784,4 +1784,6 @@ def test_u_draem_configs_parse(name):
     sn = core.simplenet_cfg(cfg["noise"])
     assert sn["kind"] == "dtd" and sn["p_clean"] == 0.5
     assert cfg["inference"]["score"] == "draem"
-    assert float(cfg["experiment"]["lambda_latent"]) == (1.0 if name.endswith("lat") else 0.0)
+    lat = name.startswith("DR_draem_lat")
+    assert float(cfg["experiment"]["lambda_latent"]) == (1.0 if lat else 0.0)
+    assert bool(cfg["experiment"]["decoder_finetune"]) == name.endswith("_dec")
