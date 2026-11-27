@@ -1,0 +1,360 @@
+[gpu 1] start DR_draem:wood,cable 04:45:57
+torch 2.8.0+cu128 NVIDIA RTX A6000
+scope: per_category
+memory preset: MEM=full (grad_checkpoint=off, ema_device=cuda)
+=== train exp=DR_draem seed=0 cats=wood ===
+[iad] DTD texture bank: 1000 crops from /po1/rakhimov/training/dtd
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, image-space U-Net): 28373569 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': False, 'pixel': False, 'pixel_ch': 32, 'w_pix': 1.0, 'type': 'unet', 'unet_base': 64}
+[iad/wood] 227 train / 20 val normal images (cats: wood)
+[iad/wood] batch 2 x 4 accumulation = effective 8
+[iad/wood] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-06, base_lr=2e-05, warmup_from_zero=True
+[iad/wood] Optimizer: AdamW with lr=2e-05, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + discriminator(28373569 params)
+[iad/wood] step 50/4000 loss_img=0.0051 loss_ssim=0.4776 loss_total=0.4827 loss_seg=0.0819 lr_dit=0.0000 (1.77s/step)
+[iad/wood] step 100/4000 loss_img=0.0038 loss_ssim=0.4428 loss_total=0.4466 loss_seg=0.0337 lr_dit=0.0000 (1.84s/step)
+[iad/wood] step 150/4000 loss_img=0.0032 loss_ssim=0.4267 loss_total=0.4299 loss_seg=0.0251 lr_dit=0.0000 (1.85s/step)
+[iad/wood] step 200/4000 loss_img=0.0028 loss_ssim=0.4148 loss_total=0.4175 loss_seg=0.0163 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 250/4000 loss_img=0.0026 loss_ssim=0.4081 loss_total=0.4107 loss_seg=0.0140 lr_dit=0.0000 (1.79s/step)
+[iad/wood] step 250 val_img=0.0098 val_ssim=0.5634 val_total=0.5732 val_seg=0.0256
+[iad/wood] new best val_total=0.5732 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 300/4000 loss_img=0.0028 loss_ssim=0.4021 loss_total=0.4048 loss_seg=0.0137 lr_dit=0.0000 (2.08s/step)
+[iad/wood] step 350/4000 loss_img=0.0027 loss_ssim=0.3960 loss_total=0.3987 loss_seg=0.0100 lr_dit=0.0000 (1.83s/step)
+[iad/wood] step 400/4000 loss_img=0.0027 loss_ssim=0.3931 loss_total=0.3958 loss_seg=0.0093 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 450/4000 loss_img=0.0024 loss_ssim=0.3873 loss_total=0.3897 loss_seg=0.0079 lr_dit=0.0000 (1.84s/step)
+[iad/wood] step 500/4000 loss_img=0.0025 loss_ssim=0.3834 loss_total=0.3859 loss_seg=0.0071 lr_dit=0.0000 (1.79s/step)
+[iad/wood] step 500 val_img=0.0071 val_ssim=0.5142 val_total=0.5213 val_seg=0.0258
+[iad/wood] new best val_total=0.5213 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 550/4000 loss_img=0.0023 loss_ssim=0.3815 loss_total=0.3838 loss_seg=0.0061 lr_dit=0.0000 (2.06s/step)
+[iad/wood] step 600/4000 loss_img=0.0022 loss_ssim=0.3712 loss_total=0.3734 loss_seg=0.0057 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 650/4000 loss_img=0.0024 loss_ssim=0.3723 loss_total=0.3747 loss_seg=0.0054 lr_dit=0.0000 (1.83s/step)
+[iad/wood] step 700/4000 loss_img=0.0022 loss_ssim=0.3712 loss_total=0.3734 loss_seg=0.0054 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 750/4000 loss_img=0.0021 loss_ssim=0.3670 loss_total=0.3692 loss_seg=0.0053 lr_dit=0.0000 (1.78s/step)
+[iad/wood] step 750 val_img=0.0052 val_ssim=0.4736 val_total=0.4788 val_seg=0.0235
+[iad/wood] new best val_total=0.4788 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 800/4000 loss_img=0.0021 loss_ssim=0.3643 loss_total=0.3664 loss_seg=0.0041 lr_dit=0.0000 (2.05s/step)
+[iad/wood] step 850/4000 loss_img=0.0021 loss_ssim=0.3592 loss_total=0.3612 loss_seg=0.0047 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 900/4000 loss_img=0.0021 loss_ssim=0.3524 loss_total=0.3544 loss_seg=0.0036 lr_dit=0.0000 (1.79s/step)
+[iad/wood] step 950/4000 loss_img=0.0019 loss_ssim=0.3517 loss_total=0.3536 loss_seg=0.0046 lr_dit=0.0000 (1.83s/step)
+[iad/wood] step 1000/4000 loss_img=0.0019 loss_ssim=0.3536 loss_total=0.3555 loss_seg=0.0040 lr_dit=0.0000 (1.79s/step)
+[iad/wood] step 1000 val_img=0.0040 val_ssim=0.4451 val_total=0.4491 val_seg=0.0188
+[iad/wood] new best val_total=0.4491 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 1050/4000 loss_img=0.0020 loss_ssim=0.3570 loss_total=0.3590 loss_seg=0.0044 lr_dit=0.0000 (2.05s/step)
+[iad/wood] step 1100/4000 loss_img=0.0020 loss_ssim=0.3540 loss_total=0.3559 loss_seg=0.0042 lr_dit=0.0000 (1.83s/step)
+[iad/wood] step 1150/4000 loss_img=0.0020 loss_ssim=0.3483 loss_total=0.3502 loss_seg=0.0044 lr_dit=0.0000 (1.83s/step)
+[iad/wood] step 1200/4000 loss_img=0.0021 loss_ssim=0.3551 loss_total=0.3572 loss_seg=0.0033 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 1250/4000 loss_img=0.0019 loss_ssim=0.3415 loss_total=0.3433 loss_seg=0.0037 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 1250 val_img=0.0033 val_ssim=0.4255 val_total=0.4289 val_seg=0.0161
+[iad/wood] new best val_total=0.4289 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 1300/4000 loss_img=0.0020 loss_ssim=0.3449 loss_total=0.3469 loss_seg=0.0040 lr_dit=0.0000 (2.06s/step)
+[iad/wood] step 1350/4000 loss_img=0.0018 loss_ssim=0.3324 loss_total=0.3342 loss_seg=0.0034 lr_dit=0.0000 (1.85s/step)
+[iad/wood] step 1400/4000 loss_img=0.0019 loss_ssim=0.3399 loss_total=0.3418 loss_seg=0.0034 lr_dit=0.0000 (1.80s/step)
+[iad/wood] step 1450/4000 loss_img=0.0019 loss_ssim=0.3390 loss_total=0.3408 loss_seg=0.0037 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 1500/4000 loss_img=0.0018 loss_ssim=0.3400 loss_total=0.3418 loss_seg=0.0034 lr_dit=0.0000 (1.80s/step)
+[iad/wood] step 1500 val_img=0.0029 val_ssim=0.4125 val_total=0.4155 val_seg=0.0127
+[iad/wood] new best val_total=0.4155 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 1550/4000 loss_img=0.0018 loss_ssim=0.3356 loss_total=0.3374 loss_seg=0.0028 lr_dit=0.0000 (2.08s/step)
+[iad/wood] step 1600/4000 loss_img=0.0018 loss_ssim=0.3373 loss_total=0.3391 loss_seg=0.0029 lr_dit=0.0000 (1.83s/step)
+[iad/wood] step 1650/4000 loss_img=0.0018 loss_ssim=0.3349 loss_total=0.3367 loss_seg=0.0025 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 1700/4000 loss_img=0.0019 loss_ssim=0.3410 loss_total=0.3428 loss_seg=0.0034 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 1750/4000 loss_img=0.0018 loss_ssim=0.3357 loss_total=0.3375 loss_seg=0.0027 lr_dit=0.0000 (1.80s/step)
+[iad/wood] step 1750 val_img=0.0027 val_ssim=0.4040 val_total=0.4067 val_seg=0.0094
+[iad/wood] new best val_total=0.4067 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 1800/4000 loss_img=0.0017 loss_ssim=0.3287 loss_total=0.3305 loss_seg=0.0033 lr_dit=0.0000 (2.07s/step)
+[iad/wood] step 1850/4000 loss_img=0.0017 loss_ssim=0.3288 loss_total=0.3305 loss_seg=0.0025 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 1900/4000 loss_img=0.0017 loss_ssim=0.3258 loss_total=0.3275 loss_seg=0.0028 lr_dit=0.0000 (1.80s/step)
+[iad/wood] step 1950/4000 loss_img=0.0017 loss_ssim=0.3269 loss_total=0.3285 loss_seg=0.0033 lr_dit=0.0000 (1.80s/step)
+[iad/wood] step 2000/4000 loss_img=0.0018 loss_ssim=0.3350 loss_total=0.3369 loss_seg=0.0021 lr_dit=0.0000 (1.79s/step)
+[iad/wood] step 2000 val_img=0.0026 val_ssim=0.3980 val_total=0.4006 val_seg=0.0068
+[iad/wood] new best val_total=0.4006 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 2050/4000 loss_img=0.0017 loss_ssim=0.3240 loss_total=0.3257 loss_seg=0.0023 lr_dit=0.0000 (2.07s/step)
+[iad/wood] step 2100/4000 loss_img=0.0017 loss_ssim=0.3336 loss_total=0.3353 loss_seg=0.0033 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 2150/4000 loss_img=0.0017 loss_ssim=0.3227 loss_total=0.3243 loss_seg=0.0030 lr_dit=0.0000 (1.83s/step)
+[iad/wood] step 2200/4000 loss_img=0.0017 loss_ssim=0.3241 loss_total=0.3258 loss_seg=0.0025 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 2250/4000 loss_img=0.0017 loss_ssim=0.3215 loss_total=0.3232 loss_seg=0.0026 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 2250 val_img=0.0024 val_ssim=0.3936 val_total=0.3961 val_seg=0.0052
+[iad/wood] new best val_total=0.3961 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 2300/4000 loss_img=0.0016 loss_ssim=0.3184 loss_total=0.3200 loss_seg=0.0019 lr_dit=0.0000 (2.05s/step)
+[iad/wood] step 2350/4000 loss_img=0.0017 loss_ssim=0.3224 loss_total=0.3241 loss_seg=0.0027 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 2400/4000 loss_img=0.0016 loss_ssim=0.3198 loss_total=0.3214 loss_seg=0.0017 lr_dit=0.0000 (1.79s/step)
+[iad/wood] step 2450/4000 loss_img=0.0017 loss_ssim=0.3214 loss_total=0.3230 loss_seg=0.0018 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 2500/4000 loss_img=0.0017 loss_ssim=0.3225 loss_total=0.3242 loss_seg=0.0024 lr_dit=0.0000 (1.80s/step)
+[iad/wood] step 2500 val_img=0.0024 val_ssim=0.3904 val_total=0.3928 val_seg=0.0042
+[iad/wood] new best val_total=0.3928 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 2550/4000 loss_img=0.0016 loss_ssim=0.3174 loss_total=0.3190 loss_seg=0.0021 lr_dit=0.0000 (2.07s/step)
+[iad/wood] step 2600/4000 loss_img=0.0016 loss_ssim=0.3151 loss_total=0.3167 loss_seg=0.0024 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 2650/4000 loss_img=0.0016 loss_ssim=0.3187 loss_total=0.3203 loss_seg=0.0020 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 2700/4000 loss_img=0.0016 loss_ssim=0.3199 loss_total=0.3215 loss_seg=0.0020 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 2750/4000 loss_img=0.0017 loss_ssim=0.3279 loss_total=0.3296 loss_seg=0.0019 lr_dit=0.0000 (1.79s/step)
+[iad/wood] step 2750 val_img=0.0023 val_ssim=0.3883 val_total=0.3906 val_seg=0.0037
+[iad/wood] new best val_total=0.3906 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 2800/4000 loss_img=0.0017 loss_ssim=0.3256 loss_total=0.3273 loss_seg=0.0028 lr_dit=0.0000 (2.03s/step)
+[iad/wood] step 2850/4000 loss_img=0.0016 loss_ssim=0.3152 loss_total=0.3169 loss_seg=0.0020 lr_dit=0.0000 (1.79s/step)
+[iad/wood] step 2900/4000 loss_img=0.0016 loss_ssim=0.3150 loss_total=0.3165 loss_seg=0.0021 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 2950/4000 loss_img=0.0015 loss_ssim=0.3077 loss_total=0.3092 loss_seg=0.0020 lr_dit=0.0000 (1.80s/step)
+[iad/wood] step 3000/4000 loss_img=0.0015 loss_ssim=0.3096 loss_total=0.3112 loss_seg=0.0021 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 3000 val_img=0.0023 val_ssim=0.3871 val_total=0.3894 val_seg=0.0032
+[iad/wood] new best val_total=0.3894 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 3050/4000 loss_img=0.0016 loss_ssim=0.3094 loss_total=0.3110 loss_seg=0.0018 lr_dit=0.0000 (2.04s/step)
+[iad/wood] step 3100/4000 loss_img=0.0015 loss_ssim=0.3070 loss_total=0.3085 loss_seg=0.0020 lr_dit=0.0000 (1.83s/step)
+[iad/wood] step 3150/4000 loss_img=0.0015 loss_ssim=0.3103 loss_total=0.3119 loss_seg=0.0022 lr_dit=0.0000 (1.80s/step)
+[iad/wood] step 3200/4000 loss_img=0.0015 loss_ssim=0.3046 loss_total=0.3061 loss_seg=0.0016 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 3250/4000 loss_img=0.0016 loss_ssim=0.3086 loss_total=0.3102 loss_seg=0.0016 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 3250 val_img=0.0022 val_ssim=0.3864 val_total=0.3886 val_seg=0.0030
+[iad/wood] new best val_total=0.3886 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 3300/4000 loss_img=0.0016 loss_ssim=0.3105 loss_total=0.3121 loss_seg=0.0017 lr_dit=0.0000 (2.07s/step)
+[iad/wood] step 3350/4000 loss_img=0.0015 loss_ssim=0.3023 loss_total=0.3038 loss_seg=0.0019 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 3400/4000 loss_img=0.0016 loss_ssim=0.3099 loss_total=0.3115 loss_seg=0.0015 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 3450/4000 loss_img=0.0015 loss_ssim=0.3088 loss_total=0.3104 loss_seg=0.0017 lr_dit=0.0000 (1.78s/step)
+[iad/wood] step 3500/4000 loss_img=0.0015 loss_ssim=0.3021 loss_total=0.3036 loss_seg=0.0015 lr_dit=0.0000 (1.79s/step)
+[iad/wood] step 3500 val_img=0.0022 val_ssim=0.3860 val_total=0.3882 val_seg=0.0029
+[iad/wood] new best val_total=0.3882 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 3550/4000 loss_img=0.0015 loss_ssim=0.3098 loss_total=0.3113 loss_seg=0.0020 lr_dit=0.0000 (2.05s/step)
+[iad/wood] step 3600/4000 loss_img=0.0015 loss_ssim=0.3095 loss_total=0.3110 loss_seg=0.0025 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 3650/4000 loss_img=0.0015 loss_ssim=0.3017 loss_total=0.3032 loss_seg=0.0013 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 3700/4000 loss_img=0.0015 loss_ssim=0.3048 loss_total=0.3063 loss_seg=0.0015 lr_dit=0.0000 (1.81s/step)
+[iad/wood] step 3750/4000 loss_img=0.0015 loss_ssim=0.2972 loss_total=0.2987 loss_seg=0.0017 lr_dit=0.0000 (1.82s/step)
+[iad/wood] step 3750 val_img=0.0022 val_ssim=0.3857 val_total=0.3879 val_seg=0.0028
+[iad/wood] new best val_total=0.3879 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] step 3800/4000 loss_img=0.0015 loss_ssim=0.3045 loss_total=0.3060 loss_seg=0.0016 lr_dit=0.0000 (2.06s/step)
+[iad/wood] step 3850/4000 loss_img=0.0014 loss_ssim=0.3017 loss_total=0.3032 loss_seg=0.0015 lr_dit=0.0000 (1.84s/step)
+[iad/wood] step 3900/4000 loss_img=0.0015 loss_ssim=0.3060 loss_total=0.3075 loss_seg=0.0021 lr_dit=0.0000 (1.78s/step)
+[iad/wood] step 3950/4000 loss_img=0.0015 loss_ssim=0.3094 loss_total=0.3109 loss_seg=0.0019 lr_dit=0.0000 (1.69s/step)
+[iad/wood] step 4000/4000 loss_img=0.0015 loss_ssim=0.3040 loss_total=0.3055 loss_seg=0.0016 lr_dit=0.0000 (1.66s/step)
+[iad/wood] step 4000 val_img=0.0022 val_ssim=0.3855 val_total=0.3877 val_seg=0.0027
+[iad/wood] new best val_total=0.3877 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt
+[iad/wood] done at step 4000; encoder_frozen=True; decoder_finetune=False; adaptor=None; best_total=0.38770518004894255
+[iad/wood] eval-only checkpoint wood_best.pt: 3.6 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "wood",
+      "steps": 4000,
+      "best_val": 0.38770518004894255,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/wood_best.pt"
+    }
+  ]
+}
+=== eval exp=DR_draem seed=0 (mode=single t=trained sigma score=draem,draem+gf,latent_cos,pixel,dec_diff,oracle16) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/wood] draem                  blur=0    I-AUROC(max)=0.9921 P-AUROC=0.9685 AUPRO=0.9139
+[eval/wood] draem                  blur=1    I-AUROC(max)=0.9921 P-AUROC=0.9757 AUPRO=0.9444
+[eval/wood] draem                  blur=2    I-AUROC(max)=0.9807 P-AUROC=0.9813 AUPRO=0.9606
+[eval/wood] draem                  blur=4    I-AUROC(max)=0.9649 P-AUROC=0.9862 AUPRO=0.9602
+[eval/wood] draem                  blur=8    I-AUROC(max)=0.9404 P-AUROC=0.9850 AUPRO=0.9137
+[eval/wood] draem+gf               blur=0    I-AUROC(max)=0.9754 P-AUROC=0.9648 AUPRO=0.8010
+[eval/wood] draem+gf               blur=1    I-AUROC(max)=0.9658 P-AUROC=0.9751 AUPRO=0.8222
+[eval/wood] draem+gf               blur=2    I-AUROC(max)=0.9535 P-AUROC=0.9790 AUPRO=0.8332
+[eval/wood] draem+gf               blur=4    I-AUROC(max)=0.9360 P-AUROC=0.9796 AUPRO=0.8230
+[eval/wood] draem+gf               blur=8    I-AUROC(max)=0.9044 P-AUROC=0.9750 AUPRO=0.7661
+[eval/wood] latent_cos             blur=0    I-AUROC(max)=0.7202 P-AUROC=0.8499 AUPRO=0.7670
+[eval/wood] latent_cos             blur=1    I-AUROC(max)=0.7307 P-AUROC=0.8502 AUPRO=0.7673
+[eval/wood] latent_cos             blur=2    I-AUROC(max)=0.7351 P-AUROC=0.8512 AUPRO=0.7679
+[eval/wood] latent_cos             blur=4    I-AUROC(max)=0.7246 P-AUROC=0.8540 AUPRO=0.7661
+[eval/wood] latent_cos             blur=8    I-AUROC(max)=0.7184 P-AUROC=0.8583 AUPRO=0.7456
+[eval/wood] pixel                  blur=0    I-AUROC(max)=0.9316 P-AUROC=0.6731 AUPRO=0.4164
+[eval/wood] pixel                  blur=1    I-AUROC(max)=0.9596 P-AUROC=0.7335 AUPRO=0.4986
+[eval/wood] pixel                  blur=2    I-AUROC(max)=0.9500 P-AUROC=0.7621 AUPRO=0.5396
+[eval/wood] pixel                  blur=4    I-AUROC(max)=0.9140 P-AUROC=0.7865 AUPRO=0.5484
+[eval/wood] pixel                  blur=8    I-AUROC(max)=0.8553 P-AUROC=0.7937 AUPRO=0.4595
+[eval/wood] dec_diff               blur=0    I-AUROC(max)=0.8833 P-AUROC=0.5581 AUPRO=0.3396
+[eval/wood] dec_diff               blur=1    I-AUROC(max)=0.8702 P-AUROC=0.5914 AUPRO=0.3745
+[eval/wood] dec_diff               blur=2    I-AUROC(max)=0.8746 P-AUROC=0.6076 AUPRO=0.4095
+[eval/wood] dec_diff               blur=4    I-AUROC(max)=0.8596 P-AUROC=0.6208 AUPRO=0.4091
+[eval/wood] dec_diff               blur=8    I-AUROC(max)=0.7605 P-AUROC=0.6154 AUPRO=0.3159
+[eval/wood] oracle16               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9968 AUPRO=0.9513
+[eval/wood] oracle16               blur=1    I-AUROC(max)=1.0000 P-AUROC=0.9968 AUPRO=0.9510
+[eval/wood] oracle16               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9967 AUPRO=0.9499
+[eval/wood] oracle16               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9964 AUPRO=0.9442
+[eval/wood] oracle16               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9948 AUPRO=0.9183
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem/results.csv (30 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem/report.md
+=== deleted checkpoints of exp=DR_draem seed=0 cats=wood (KEEP_CKPT=0) ===
+=== train exp=DR_draem seed=0 cats=cable ===
+[iad] DTD texture bank: 1000 crops from /po1/rakhimov/training/dtd
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+target stage2.models.DDT.DiTwDDTHead loaded from models/DiTs/Dinov2/wReg_base/ImageNet256/DiTDH-XL/stage2_model.pt
+[iad] discriminator (DRAEM segmentation head, image-space U-Net): 28373569 params, cfg={'enabled': True, 'd': 256, 'blocks': 4, 'w_seg': 1.0, 'gamma': 2.0, 'detach': False, 'pixel': False, 'pixel_ch': 32, 'w_pix': 1.0, 'type': 'unet', 'unet_base': 64}
+[iad/cable] 204 train / 20 val normal images (cats: cable)
+[iad/cable] batch 2 x 4 accumulation = effective 8
+[iad/cable] Scheduler: linear with warmup_steps=400, decay_end_steps=4000, final_lr=2e-06, base_lr=2e-05, warmup_from_zero=True
+[iad/cable] Optimizer: AdamW with lr=2e-05, betas=(0.9, 0.95), weight_decay=0.0, eps=1e-08 + discriminator(28373569 params)
+[iad/cable] step 50/4000 loss_img=0.0240 loss_ssim=0.4458 loss_total=0.4699 loss_seg=0.0888 lr_dit=0.0000 (1.88s/step)
+[iad/cable] step 100/4000 loss_img=0.0104 loss_ssim=0.3662 loss_total=0.3765 loss_seg=0.0420 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 150/4000 loss_img=0.0081 loss_ssim=0.3402 loss_total=0.3482 loss_seg=0.0371 lr_dit=0.0000 (1.84s/step)
+[iad/cable] step 200/4000 loss_img=0.0074 loss_ssim=0.3257 loss_total=0.3331 loss_seg=0.0269 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 250/4000 loss_img=0.0072 loss_ssim=0.3183 loss_total=0.3255 loss_seg=0.0239 lr_dit=0.0000 (1.77s/step)
+[iad/cable] step 250 val_img=0.0267 val_ssim=0.4754 val_total=0.5021 val_seg=0.0325
+[iad/cable] new best val_total=0.5021 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 300/4000 loss_img=0.0068 loss_ssim=0.3106 loss_total=0.3173 loss_seg=0.0228 lr_dit=0.0000 (2.05s/step)
+[iad/cable] step 350/4000 loss_img=0.0066 loss_ssim=0.3077 loss_total=0.3143 loss_seg=0.0178 lr_dit=0.0000 (1.82s/step)
+[iad/cable] step 400/4000 loss_img=0.0066 loss_ssim=0.3054 loss_total=0.3120 loss_seg=0.0158 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 450/4000 loss_img=0.0065 loss_ssim=0.3016 loss_total=0.3081 loss_seg=0.0128 lr_dit=0.0000 (1.79s/step)
+[iad/cable] step 500/4000 loss_img=0.0063 loss_ssim=0.2996 loss_total=0.3059 loss_seg=0.0133 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 500 val_img=0.0215 val_ssim=0.4396 val_total=0.4612 val_seg=0.0293
+[iad/cable] new best val_total=0.4612 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 550/4000 loss_img=0.0062 loss_ssim=0.2974 loss_total=0.3036 loss_seg=0.0127 lr_dit=0.0000 (2.03s/step)
+[iad/cable] step 600/4000 loss_img=0.0061 loss_ssim=0.2928 loss_total=0.2989 loss_seg=0.0103 lr_dit=0.0000 (1.79s/step)
+[iad/cable] step 650/4000 loss_img=0.0058 loss_ssim=0.2892 loss_total=0.2950 loss_seg=0.0098 lr_dit=0.0000 (1.78s/step)
+[iad/cable] step 700/4000 loss_img=0.0060 loss_ssim=0.2889 loss_total=0.2949 loss_seg=0.0104 lr_dit=0.0000 (1.82s/step)
+[iad/cable] step 750/4000 loss_img=0.0059 loss_ssim=0.2873 loss_total=0.2931 loss_seg=0.0100 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 750 val_img=0.0168 val_ssim=0.4069 val_total=0.4237 val_seg=0.0270
+[iad/cable] new best val_total=0.4237 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 800/4000 loss_img=0.0057 loss_ssim=0.2835 loss_total=0.2892 loss_seg=0.0084 lr_dit=0.0000 (2.08s/step)
+[iad/cable] step 850/4000 loss_img=0.0057 loss_ssim=0.2809 loss_total=0.2866 loss_seg=0.0090 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 900/4000 loss_img=0.0057 loss_ssim=0.2788 loss_total=0.2845 loss_seg=0.0074 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 950/4000 loss_img=0.0055 loss_ssim=0.2776 loss_total=0.2831 loss_seg=0.0076 lr_dit=0.0000 (1.79s/step)
+[iad/cable] step 1000/4000 loss_img=0.0057 loss_ssim=0.2791 loss_total=0.2848 loss_seg=0.0077 lr_dit=0.0000 (1.79s/step)
+[iad/cable] step 1000 val_img=0.0132 val_ssim=0.3799 val_total=0.3931 val_seg=0.0257
+[iad/cable] new best val_total=0.3931 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 1050/4000 loss_img=0.0056 loss_ssim=0.2747 loss_total=0.2803 loss_seg=0.0086 lr_dit=0.0000 (2.06s/step)
+[iad/cable] step 1100/4000 loss_img=0.0055 loss_ssim=0.2755 loss_total=0.2810 loss_seg=0.0075 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 1150/4000 loss_img=0.0055 loss_ssim=0.2742 loss_total=0.2797 loss_seg=0.0066 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 1200/4000 loss_img=0.0055 loss_ssim=0.2739 loss_total=0.2794 loss_seg=0.0075 lr_dit=0.0000 (1.78s/step)
+[iad/cable] step 1250/4000 loss_img=0.0055 loss_ssim=0.2708 loss_total=0.2763 loss_seg=0.0064 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 1250 val_img=0.0108 val_ssim=0.3589 val_total=0.3697 val_seg=0.0218
+[iad/cable] new best val_total=0.3697 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 1300/4000 loss_img=0.0053 loss_ssim=0.2691 loss_total=0.2744 loss_seg=0.0063 lr_dit=0.0000 (2.08s/step)
+[iad/cable] step 1350/4000 loss_img=0.0052 loss_ssim=0.2670 loss_total=0.2723 loss_seg=0.0062 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 1400/4000 loss_img=0.0054 loss_ssim=0.2681 loss_total=0.2734 loss_seg=0.0073 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 1450/4000 loss_img=0.0054 loss_ssim=0.2659 loss_total=0.2713 loss_seg=0.0066 lr_dit=0.0000 (1.82s/step)
+[iad/cable] step 1500/4000 loss_img=0.0054 loss_ssim=0.2663 loss_total=0.2717 loss_seg=0.0079 lr_dit=0.0000 (1.82s/step)
+[iad/cable] step 1500 val_img=0.0092 val_ssim=0.3430 val_total=0.3522 val_seg=0.0190
+[iad/cable] new best val_total=0.3522 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 1550/4000 loss_img=0.0053 loss_ssim=0.2636 loss_total=0.2688 loss_seg=0.0063 lr_dit=0.0000 (2.06s/step)
+[iad/cable] step 1600/4000 loss_img=0.0054 loss_ssim=0.2649 loss_total=0.2703 loss_seg=0.0076 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 1650/4000 loss_img=0.0052 loss_ssim=0.2624 loss_total=0.2676 loss_seg=0.0055 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 1700/4000 loss_img=0.0053 loss_ssim=0.2629 loss_total=0.2682 loss_seg=0.0063 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 1750/4000 loss_img=0.0052 loss_ssim=0.2617 loss_total=0.2669 loss_seg=0.0051 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 1750 val_img=0.0082 val_ssim=0.3310 val_total=0.3392 val_seg=0.0164
+[iad/cable] new best val_total=0.3392 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 1800/4000 loss_img=0.0052 loss_ssim=0.2584 loss_total=0.2636 loss_seg=0.0063 lr_dit=0.0000 (2.01s/step)
+[iad/cable] step 1850/4000 loss_img=0.0052 loss_ssim=0.2580 loss_total=0.2632 loss_seg=0.0051 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 1900/4000 loss_img=0.0051 loss_ssim=0.2576 loss_total=0.2627 loss_seg=0.0055 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 1950/4000 loss_img=0.0052 loss_ssim=0.2578 loss_total=0.2630 loss_seg=0.0049 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 2000/4000 loss_img=0.0052 loss_ssim=0.2584 loss_total=0.2636 loss_seg=0.0054 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 2000 val_img=0.0076 val_ssim=0.3221 val_total=0.3298 val_seg=0.0144
+[iad/cable] new best val_total=0.3298 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 2050/4000 loss_img=0.0049 loss_ssim=0.2519 loss_total=0.2569 loss_seg=0.0065 lr_dit=0.0000 (2.02s/step)
+[iad/cable] step 2100/4000 loss_img=0.0051 loss_ssim=0.2594 loss_total=0.2644 loss_seg=0.0060 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 2150/4000 loss_img=0.0052 loss_ssim=0.2556 loss_total=0.2607 loss_seg=0.0055 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 2200/4000 loss_img=0.0051 loss_ssim=0.2524 loss_total=0.2575 loss_seg=0.0050 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 2250/4000 loss_img=0.0050 loss_ssim=0.2545 loss_total=0.2595 loss_seg=0.0046 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 2250 val_img=0.0072 val_ssim=0.3157 val_total=0.3229 val_seg=0.0127
+[iad/cable] new best val_total=0.3229 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 2300/4000 loss_img=0.0050 loss_ssim=0.2516 loss_total=0.2566 loss_seg=0.0044 lr_dit=0.0000 (2.06s/step)
+[iad/cable] step 2350/4000 loss_img=0.0051 loss_ssim=0.2544 loss_total=0.2595 loss_seg=0.0049 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 2400/4000 loss_img=0.0049 loss_ssim=0.2512 loss_total=0.2561 loss_seg=0.0050 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 2450/4000 loss_img=0.0051 loss_ssim=0.2537 loss_total=0.2588 loss_seg=0.0053 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 2500/4000 loss_img=0.0049 loss_ssim=0.2502 loss_total=0.2551 loss_seg=0.0058 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 2500 val_img=0.0069 val_ssim=0.3108 val_total=0.3177 val_seg=0.0110
+[iad/cable] new best val_total=0.3177 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 2550/4000 loss_img=0.0049 loss_ssim=0.2484 loss_total=0.2533 loss_seg=0.0041 lr_dit=0.0000 (2.06s/step)
+[iad/cable] step 2600/4000 loss_img=0.0050 loss_ssim=0.2492 loss_total=0.2542 loss_seg=0.0053 lr_dit=0.0000 (1.84s/step)
+[iad/cable] step 2650/4000 loss_img=0.0048 loss_ssim=0.2477 loss_total=0.2525 loss_seg=0.0042 lr_dit=0.0000 (1.84s/step)
+[iad/cable] step 2700/4000 loss_img=0.0049 loss_ssim=0.2488 loss_total=0.2537 loss_seg=0.0052 lr_dit=0.0000 (1.86s/step)
+[iad/cable] step 2750/4000 loss_img=0.0049 loss_ssim=0.2511 loss_total=0.2560 loss_seg=0.0051 lr_dit=0.0000 (1.82s/step)
+[iad/cable] step 2750 val_img=0.0068 val_ssim=0.3070 val_total=0.3137 val_seg=0.0094
+[iad/cable] new best val_total=0.3137 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 2800/4000 loss_img=0.0050 loss_ssim=0.2503 loss_total=0.2552 loss_seg=0.0053 lr_dit=0.0000 (2.02s/step)
+[iad/cable] step 2850/4000 loss_img=0.0050 loss_ssim=0.2473 loss_total=0.2523 loss_seg=0.0053 lr_dit=0.0000 (1.79s/step)
+[iad/cable] step 2900/4000 loss_img=0.0047 loss_ssim=0.2453 loss_total=0.2500 loss_seg=0.0053 lr_dit=0.0000 (1.82s/step)
+[iad/cable] step 2950/4000 loss_img=0.0048 loss_ssim=0.2440 loss_total=0.2488 loss_seg=0.0041 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 3000/4000 loss_img=0.0047 loss_ssim=0.2437 loss_total=0.2485 loss_seg=0.0045 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 3000 val_img=0.0067 val_ssim=0.3042 val_total=0.3108 val_seg=0.0082
+[iad/cable] new best val_total=0.3108 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 3050/4000 loss_img=0.0047 loss_ssim=0.2405 loss_total=0.2451 loss_seg=0.0043 lr_dit=0.0000 (2.07s/step)
+[iad/cable] step 3100/4000 loss_img=0.0047 loss_ssim=0.2420 loss_total=0.2466 loss_seg=0.0046 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 3150/4000 loss_img=0.0047 loss_ssim=0.2429 loss_total=0.2476 loss_seg=0.0042 lr_dit=0.0000 (1.80s/step)
+[iad/cable] step 3200/4000 loss_img=0.0047 loss_ssim=0.2399 loss_total=0.2446 loss_seg=0.0042 lr_dit=0.0000 (1.77s/step)
+[iad/cable] step 3250/4000 loss_img=0.0047 loss_ssim=0.2422 loss_total=0.2469 loss_seg=0.0049 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 3250 val_img=0.0066 val_ssim=0.3021 val_total=0.3087 val_seg=0.0073
+[iad/cable] new best val_total=0.3087 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 3300/4000 loss_img=0.0046 loss_ssim=0.2393 loss_total=0.2438 loss_seg=0.0046 lr_dit=0.0000 (2.04s/step)
+[iad/cable] step 3350/4000 loss_img=0.0047 loss_ssim=0.2389 loss_total=0.2436 loss_seg=0.0035 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 3400/4000 loss_img=0.0046 loss_ssim=0.2410 loss_total=0.2456 loss_seg=0.0048 lr_dit=0.0000 (1.79s/step)
+[iad/cable] step 3450/4000 loss_img=0.0047 loss_ssim=0.2400 loss_total=0.2446 loss_seg=0.0042 lr_dit=0.0000 (1.84s/step)
+[iad/cable] step 3500/4000 loss_img=0.0047 loss_ssim=0.2418 loss_total=0.2465 loss_seg=0.0046 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 3500 val_img=0.0065 val_ssim=0.3005 val_total=0.3070 val_seg=0.0066
+[iad/cable] new best val_total=0.3070 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 3550/4000 loss_img=0.0047 loss_ssim=0.2422 loss_total=0.2469 loss_seg=0.0039 lr_dit=0.0000 (2.06s/step)
+[iad/cable] step 3600/4000 loss_img=0.0047 loss_ssim=0.2414 loss_total=0.2462 loss_seg=0.0035 lr_dit=0.0000 (1.83s/step)
+[iad/cable] step 3650/4000 loss_img=0.0046 loss_ssim=0.2368 loss_total=0.2414 loss_seg=0.0038 lr_dit=0.0000 (1.81s/step)
+[iad/cable] step 3700/4000 loss_img=0.0046 loss_ssim=0.2408 loss_total=0.2454 loss_seg=0.0043 lr_dit=0.0000 (1.82s/step)
+[iad/cable] step 3750/4000 loss_img=0.0046 loss_ssim=0.2361 loss_total=0.2407 loss_seg=0.0039 lr_dit=0.0000 (1.77s/step)
+[iad/cable] step 3750 val_img=0.0065 val_ssim=0.2994 val_total=0.3059 val_seg=0.0060
+[iad/cable] new best val_total=0.3059 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] step 3800/4000 loss_img=0.0047 loss_ssim=0.2403 loss_total=0.2450 loss_seg=0.0041 lr_dit=0.0000 (2.00s/step)
+[iad/cable] step 3850/4000 loss_img=0.0044 loss_ssim=0.2357 loss_total=0.2401 loss_seg=0.0040 lr_dit=0.0000 (1.77s/step)
+[iad/cable] step 3900/4000 loss_img=0.0047 loss_ssim=0.2390 loss_total=0.2437 loss_seg=0.0042 lr_dit=0.0000 (1.69s/step)
+[iad/cable] step 3950/4000 loss_img=0.0047 loss_ssim=0.2405 loss_total=0.2451 loss_seg=0.0045 lr_dit=0.0000 (1.67s/step)
+[iad/cable] step 4000/4000 loss_img=0.0045 loss_ssim=0.2358 loss_total=0.2403 loss_seg=0.0037 lr_dit=0.0000 (1.66s/step)
+[iad/cable] step 4000 val_img=0.0065 val_ssim=0.2986 val_total=0.3051 val_seg=0.0056
+[iad/cable] new best val_total=0.3051 -> /po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt
+[iad/cable] done at step 4000; encoder_frozen=True; decoder_finetune=False; adaptor=None; best_total=0.3050944745540619
+[iad/cable] eval-only checkpoint cable_best.pt: 3.6 GB (not resumable)
+{
+  "runs": [
+    {
+      "scope": "cable",
+      "steps": 4000,
+      "best_val": 0.3050944745540619,
+      "skipped_dit_steps": 0,
+      "skipped_head_steps": 0,
+      "encoder_frozen": true,
+      "last_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_last.pt",
+      "best_ckpt": "/po1/rakhimov/training/rae_dit_iad/per_category/seed0/DR_draem/cable_best.pt"
+    }
+  ]
+}
+=== eval exp=DR_draem seed=0 (mode=single t=trained sigma score=draem,draem+gf,latent_cos,pixel,dec_diff,oracle16) ===
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/cable] draem                  blur=0    I-AUROC(max)=0.8653 P-AUROC=0.8032 AUPRO=0.7395
+[eval/cable] draem                  blur=1    I-AUROC(max)=0.8947 P-AUROC=0.8084 AUPRO=0.7547
+[eval/cable] draem                  blur=2    I-AUROC(max)=0.8936 P-AUROC=0.8167 AUPRO=0.7712
+[eval/cable] draem                  blur=4    I-AUROC(max)=0.8881 P-AUROC=0.8318 AUPRO=0.7901
+[eval/cable] draem                  blur=8    I-AUROC(max)=0.8870 P-AUROC=0.8527 AUPRO=0.8063
+[eval/cable] draem+gf               blur=0    I-AUROC(max)=0.8817 P-AUROC=0.8672 AUPRO=0.8152
+[eval/cable] draem+gf               blur=1    I-AUROC(max)=0.8816 P-AUROC=0.8682 AUPRO=0.8172
+[eval/cable] draem+gf               blur=2    I-AUROC(max)=0.8829 P-AUROC=0.8688 AUPRO=0.8145
+[eval/cable] draem+gf               blur=4    I-AUROC(max)=0.8846 P-AUROC=0.8693 AUPRO=0.8058
+[eval/cable] draem+gf               blur=8    I-AUROC(max)=0.8862 P-AUROC=0.8703 AUPRO=0.7950
+[eval/cable] latent_cos             blur=0    I-AUROC(max)=0.6705 P-AUROC=0.5898 AUPRO=0.5096
+[eval/cable] latent_cos             blur=1    I-AUROC(max)=0.6692 P-AUROC=0.5899 AUPRO=0.5101
+[eval/cable] latent_cos             blur=2    I-AUROC(max)=0.6692 P-AUROC=0.5903 AUPRO=0.5111
+[eval/cable] latent_cos             blur=4    I-AUROC(max)=0.6685 P-AUROC=0.5918 AUPRO=0.5142
+[eval/cable] latent_cos             blur=8    I-AUROC(max)=0.6868 P-AUROC=0.5972 AUPRO=0.5180
+[eval/cable] pixel                  blur=0    I-AUROC(max)=0.4447 P-AUROC=0.5295 AUPRO=0.3908
+[eval/cable] pixel                  blur=1    I-AUROC(max)=0.5557 P-AUROC=0.5371 AUPRO=0.4305
+[eval/cable] pixel                  blur=2    I-AUROC(max)=0.5523 P-AUROC=0.5545 AUPRO=0.4686
+[eval/cable] pixel                  blur=4    I-AUROC(max)=0.5714 P-AUROC=0.5880 AUPRO=0.5029
+[eval/cable] pixel                  blur=8    I-AUROC(max)=0.5315 P-AUROC=0.6274 AUPRO=0.5282
+[eval/cable] dec_diff               blur=0    I-AUROC(max)=0.5041 P-AUROC=0.5823 AUPRO=0.3399
+[eval/cable] dec_diff               blur=1    I-AUROC(max)=0.4843 P-AUROC=0.5943 AUPRO=0.3657
+[eval/cable] dec_diff               blur=2    I-AUROC(max)=0.4775 P-AUROC=0.6057 AUPRO=0.3891
+[eval/cable] dec_diff               blur=4    I-AUROC(max)=0.4644 P-AUROC=0.6219 AUPRO=0.4042
+[eval/cable] dec_diff               blur=8    I-AUROC(max)=0.4582 P-AUROC=0.6363 AUPRO=0.3887
+[eval/cable] oracle16               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9988 AUPRO=0.9775
+[eval/cable] oracle16               blur=1    I-AUROC(max)=1.0000 P-AUROC=0.9988 AUPRO=0.9773
+[eval/cable] oracle16               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9987 AUPRO=0.9769
+[eval/cable] oracle16               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9986 AUPRO=0.9747
+[eval/cable] oracle16               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9981 AUPRO=0.9656
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem/results.csv (30 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem/report.md
+=== deleted checkpoints of exp=DR_draem seed=0 cats=cable (KEEP_CKPT=0) ===
+Reports: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed*/**/report.md   CSVs: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed*/**/results.csv   Grids: /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed*/**/viz/
+[gpu 1] done  DR_draem:wood,cable 09:11:23

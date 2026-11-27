@@ -1,0 +1,175 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/wood] draem                  blur=0    I-AUROC(max)=0.9877 P-AUROC=0.9722 AUPRO=0.9258
+[eval/wood] draem                  blur=1    I-AUROC(max)=0.9825 P-AUROC=0.9778 AUPRO=0.9515
+[eval/wood] draem                  blur=2    I-AUROC(max)=0.9763 P-AUROC=0.9821 AUPRO=0.9630
+[eval/wood] draem                  blur=4    I-AUROC(max)=0.9667 P-AUROC=0.9855 AUPRO=0.9604
+[eval/wood] draem                  blur=8    I-AUROC(max)=0.9561 P-AUROC=0.9840 AUPRO=0.9239
+[eval/wood] draem+gf               blur=0    I-AUROC(max)=0.9789 P-AUROC=0.9663 AUPRO=0.8259
+[eval/wood] draem+gf               blur=1    I-AUROC(max)=0.9754 P-AUROC=0.9761 AUPRO=0.8477
+[eval/wood] draem+gf               blur=2    I-AUROC(max)=0.9711 P-AUROC=0.9798 AUPRO=0.8613
+[eval/wood] draem+gf               blur=4    I-AUROC(max)=0.9596 P-AUROC=0.9803 AUPRO=0.8518
+[eval/wood] draem+gf               blur=8    I-AUROC(max)=0.9447 P-AUROC=0.9765 AUPRO=0.8036
+[eval/wood] latent_cos             blur=0    I-AUROC(max)=0.9860 P-AUROC=0.9345 AUPRO=0.8912
+[eval/wood] latent_cos             blur=1    I-AUROC(max)=0.9877 P-AUROC=0.9346 AUPRO=0.8911
+[eval/wood] latent_cos             blur=2    I-AUROC(max)=0.9921 P-AUROC=0.9348 AUPRO=0.8907
+[eval/wood] latent_cos             blur=4    I-AUROC(max)=0.9939 P-AUROC=0.9350 AUPRO=0.8883
+[eval/wood] latent_cos             blur=8    I-AUROC(max)=0.9939 P-AUROC=0.9333 AUPRO=0.8749
+[eval/wood] pixel                  blur=0    I-AUROC(max)=0.9000 P-AUROC=0.6833 AUPRO=0.4232
+[eval/wood] pixel                  blur=1    I-AUROC(max)=0.9272 P-AUROC=0.7380 AUPRO=0.4958
+[eval/wood] pixel                  blur=2    I-AUROC(max)=0.9456 P-AUROC=0.7651 AUPRO=0.5346
+[eval/wood] pixel                  blur=4    I-AUROC(max)=0.8912 P-AUROC=0.7891 AUPRO=0.5380
+[eval/wood] pixel                  blur=8    I-AUROC(max)=0.8447 P-AUROC=0.7988 AUPRO=0.4460
+[eval/wood] dec_diff               blur=0    I-AUROC(max)=0.9430 P-AUROC=0.5927 AUPRO=0.3985
+[eval/wood] dec_diff               blur=1    I-AUROC(max)=0.9263 P-AUROC=0.6373 AUPRO=0.4556
+[eval/wood] dec_diff               blur=2    I-AUROC(max)=0.9456 P-AUROC=0.6592 AUPRO=0.5037
+[eval/wood] dec_diff               blur=4    I-AUROC(max)=0.9211 P-AUROC=0.6767 AUPRO=0.5151
+[eval/wood] dec_diff               blur=8    I-AUROC(max)=0.8325 P-AUROC=0.6720 AUPRO=0.4040
+[eval/wood] oracle16               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9968 AUPRO=0.9513
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+[eval/wood] oracle16               blur=1    I-AUROC(max)=1.0000 P-AUROC=0.9968 AUPRO=0.9510
+[eval/wood] oracle16               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9967 AUPRO=0.9499
+[eval/wood] oracle16               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9964 AUPRO=0.9442
+[eval/wood] oracle16               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9948 AUPRO=0.9183
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/results.csv (30 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/report.md
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/metal_nut] draem                  blur=0    I-AUROC(max)=0.9897 P-AUROC=0.7167 AUPRO=0.8660
+[eval/metal_nut] draem                  blur=1    I-AUROC(max)=0.9956 P-AUROC=0.7197 AUPRO=0.8687
+[eval/metal_nut] draem                  blur=2    I-AUROC(max)=1.0000 P-AUROC=0.7278 AUPRO=0.8720
+[eval/metal_nut] draem                  blur=4    I-AUROC(max)=1.0000 P-AUROC=0.7508 AUPRO=0.8779
+[eval/metal_nut] draem                  blur=8    I-AUROC(max)=1.0000 P-AUROC=0.7974 AUPRO=0.8866
+[eval/metal_nut] draem+gf               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.8334 AUPRO=0.8942
+[eval/metal_nut] draem+gf               blur=1    I-AUROC(max)=1.0000 P-AUROC=0.8341 AUPRO=0.8944
+[eval/metal_nut] draem+gf               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.8354 AUPRO=0.8937
+[eval/metal_nut] draem+gf               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.8385 AUPRO=0.8921
+[eval/metal_nut] draem+gf               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.8458 AUPRO=0.8868
+[eval/metal_nut] latent_cos             blur=0    I-AUROC(max)=0.9897 P-AUROC=0.8281 AUPRO=0.8384
+[eval/metal_nut] latent_cos             blur=1    I-AUROC(max)=0.9888 P-AUROC=0.8283 AUPRO=0.8390
+[eval/metal_nut] latent_cos             blur=2    I-AUROC(max)=0.9888 P-AUROC=0.8288 AUPRO=0.8397
+[eval/metal_nut] latent_cos             blur=4    I-AUROC(max)=0.9888 P-AUROC=0.8303 AUPRO=0.8397
+[eval/metal_nut] latent_cos             blur=8    I-AUROC(max)=0.9892 P-AUROC=0.8301 AUPRO=0.8340
+[eval/metal_nut] pixel                  blur=0    I-AUROC(max)=0.5293 P-AUROC=0.7920 AUPRO=0.5763
+[eval/metal_nut] pixel                  blur=1    I-AUROC(max)=0.5885 P-AUROC=0.8196 AUPRO=0.6223
+[eval/metal_nut] pixel                  blur=2    I-AUROC(max)=0.7004 P-AUROC=0.8364 AUPRO=0.6578
+[eval/metal_nut] pixel                  blur=4    I-AUROC(max)=0.7092 P-AUROC=0.8554 AUPRO=0.6924
+[eval/metal_nut] pixel                  blur=8    I-AUROC(max)=0.6794 P-AUROC=0.8737 AUPRO=0.7202
+[eval/metal_nut] dec_diff               blur=0    I-AUROC(max)=0.5044 P-AUROC=0.5391 AUPRO=0.3813
+[eval/metal_nut] dec_diff               blur=1    I-AUROC(max)=0.5855 P-AUROC=0.5522 AUPRO=0.4012
+[eval/metal_nut] dec_diff               blur=2    I-AUROC(max)=0.5973 P-AUROC=0.5706 AUPRO=0.4121
+[eval/metal_nut] dec_diff               blur=4    I-AUROC(max)=0.5528 P-AUROC=0.5856 AUPRO=0.4156
+[eval/metal_nut] dec_diff               blur=8    I-AUROC(max)=0.4765 P-AUROC=0.5854 AUPRO=0.4082
+[eval/metal_nut] oracle16               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9993 AUPRO=0.9706
+[eval/metal_nut] oracle16               blur=1    I-AUROC(max)=1.0000 P-AUROC=0.9993 AUPRO=0.9704
+[eval/metal_nut] oracle16               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9993 AUPRO=0.9696
+[eval/metal_nut] oracle16               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9992 AUPRO=0.9660
+[eval/metal_nut] oracle16               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9986 AUPRO=0.9484
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/results.csv (30 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/cable] draem                  blur=0    I-AUROC(max)=0.7736 P-AUROC=0.7944 AUPRO=0.6857
+[eval/cable] draem                  blur=1    I-AUROC(max)=0.8096 P-AUROC=0.7981 AUPRO=0.6980
+[eval/cable] draem                  blur=2    I-AUROC(max)=0.8088 P-AUROC=0.8041 AUPRO=0.7099
+[eval/cable] draem                  blur=4    I-AUROC(max)=0.8055 P-AUROC=0.8158 AUPRO=0.7241
+[eval/cable] draem                  blur=8    I-AUROC(max)=0.8098 P-AUROC=0.8321 AUPRO=0.7296
+[eval/cable] draem+gf               blur=0    I-AUROC(max)=0.7993 P-AUROC=0.8428 AUPRO=0.7450
+[eval/cable] draem+gf               blur=1    I-AUROC(max)=0.7985 P-AUROC=0.8435 AUPRO=0.7454
+[eval/cable] draem+gf               blur=2    I-AUROC(max)=0.8025 P-AUROC=0.8437 AUPRO=0.7402
+[eval/cable] draem+gf               blur=4    I-AUROC(max)=0.8028 P-AUROC=0.8436 AUPRO=0.7274
+[eval/cable] draem+gf               blur=8    I-AUROC(max)=0.8047 P-AUROC=0.8426 AUPRO=0.7078
+[eval/cable] latent_cos             blur=0    I-AUROC(max)=0.7433 P-AUROC=0.8685 AUPRO=0.7502
+[eval/cable] latent_cos             blur=1    I-AUROC(max)=0.7418 P-AUROC=0.8687 AUPRO=0.7509
+[eval/cable] latent_cos             blur=2    I-AUROC(max)=0.7425 P-AUROC=0.8692 AUPRO=0.7522
+[eval/cable] latent_cos             blur=4    I-AUROC(max)=0.7436 P-AUROC=0.8706 AUPRO=0.7531
+[eval/cable] latent_cos             blur=8    I-AUROC(max)=0.7294 P-AUROC=0.8733 AUPRO=0.7481
+[eval/cable] pixel                  blur=0    I-AUROC(max)=0.4610 P-AUROC=0.4950 AUPRO=0.3701
+[eval/cable] pixel                  blur=1    I-AUROC(max)=0.5609 P-AUROC=0.5036 AUPRO=0.4095
+[eval/cable] pixel                  blur=2    I-AUROC(max)=0.5806 P-AUROC=0.5213 AUPRO=0.4492
+[eval/cable] pixel                  blur=4    I-AUROC(max)=0.5290 P-AUROC=0.5536 AUPRO=0.4885
+[eval/cable] pixel                  blur=8    I-AUROC(max)=0.5367 P-AUROC=0.5957 AUPRO=0.5200
+[eval/cable] dec_diff               blur=0    I-AUROC(max)=0.5006 P-AUROC=0.5598 AUPRO=0.3353
+[eval/cable] dec_diff               blur=1    I-AUROC(max)=0.5380 P-AUROC=0.5707 AUPRO=0.3601
+[eval/cable] dec_diff               blur=2    I-AUROC(max)=0.5412 P-AUROC=0.5822 AUPRO=0.3819
+[eval/cable] dec_diff               blur=4    I-AUROC(max)=0.5499 P-AUROC=0.5989 AUPRO=0.3914
+[eval/cable] dec_diff               blur=8    I-AUROC(max)=0.5414 P-AUROC=0.6132 AUPRO=0.3804
+[eval/cable] oracle16               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9988 AUPRO=0.9775
+[eval/cable] oracle16               blur=1    I-AUROC(max)=1.0000 P-AUROC=0.9988 AUPRO=0.9773
+[eval/cable] oracle16               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9987 AUPRO=0.9769
+[eval/cable] oracle16               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9986 AUPRO=0.9747
+[eval/cable] oracle16               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9981 AUPRO=0.9656
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/results.csv (30 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/tile] draem                  blur=0    I-AUROC(max)=0.9993 P-AUROC=0.9909 AUPRO=0.9837
+[eval/tile] draem                  blur=1    I-AUROC(max)=1.0000 P-AUROC=0.9919 AUPRO=0.9851
+[eval/tile] draem                  blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9935 AUPRO=0.9863
+[eval/tile] draem                  blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9954 AUPRO=0.9849
+[eval/tile] draem                  blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9961 AUPRO=0.9723
+[eval/tile] draem+gf               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9953 AUPRO=0.9596
+[eval/tile] draem+gf               blur=1    I-AUROC(max)=1.0000 P-AUROC=0.9957 AUPRO=0.9601
+[eval/tile] draem+gf               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9956 AUPRO=0.9570
+[eval/tile] draem+gf               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9953 AUPRO=0.9500
+[eval/tile] draem+gf               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9943 AUPRO=0.9372
+[eval/tile] latent_cos             blur=0    I-AUROC(max)=0.9776 P-AUROC=0.9058 AUPRO=0.7864
+[eval/tile] latent_cos             blur=1    I-AUROC(max)=0.9755 P-AUROC=0.9059 AUPRO=0.7867
+[eval/tile] latent_cos             blur=2    I-AUROC(max)=0.9711 P-AUROC=0.9061 AUPRO=0.7873
+[eval/tile] latent_cos             blur=4    I-AUROC(max)=0.9668 P-AUROC=0.9066 AUPRO=0.7887
+[eval/tile] latent_cos             blur=8    I-AUROC(max)=0.9711 P-AUROC=0.9070 AUPRO=0.7886
+[eval/tile] pixel                  blur=0    I-AUROC(max)=0.7529 P-AUROC=0.5952 AUPRO=0.2875
+[eval/tile] pixel                  blur=1    I-AUROC(max)=0.5905 P-AUROC=0.6118 AUPRO=0.3126
+[eval/tile] pixel                  blur=2    I-AUROC(max)=0.6519 P-AUROC=0.6186 AUPRO=0.3466
+[eval/tile] pixel                  blur=4    I-AUROC(max)=0.7468 P-AUROC=0.6425 AUPRO=0.4057
+[eval/tile] pixel                  blur=8    I-AUROC(max)=0.7092 P-AUROC=0.6816 AUPRO=0.4678
+[eval/tile] dec_diff               blur=0    I-AUROC(max)=0.5610 P-AUROC=0.6170 AUPRO=0.3125
+[eval/tile] dec_diff               blur=1    I-AUROC(max)=0.4701 P-AUROC=0.6421 AUPRO=0.3446
+[eval/tile] dec_diff               blur=2    I-AUROC(max)=0.5559 P-AUROC=0.6591 AUPRO=0.3845
+[eval/tile] dec_diff               blur=4    I-AUROC(max)=0.6349 P-AUROC=0.6911 AUPRO=0.4447
+[eval/tile] dec_diff               blur=8    I-AUROC(max)=0.7197 P-AUROC=0.7295 AUPRO=0.5027
+[eval/tile] oracle16               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9987 AUPRO=0.9635
+[eval/tile] oracle16               blur=1    I-AUROC(max)=1.0000 P-AUROC=0.9987 AUPRO=0.9632
+[eval/tile] oracle16               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9987 AUPRO=0.9624
+[eval/tile] oracle16               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9985 AUPRO=0.9587
+[eval/tile] oracle16               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9979 AUPRO=0.9447
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/results.csv (30 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/report.md
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+encoder_config_path: facebook/dinov2-with-registers-base
+Loading pretrained decoder from models/decoders/dinov2/wReg_base/ViTXL_n08/model.pt
+Loaded normalization stats from models/stats/dinov2/wReg_base/imagenet1k/stat.pt
+[eval/transistor] draem                  blur=0    I-AUROC(max)=0.8637 P-AUROC=0.6472 AUPRO=0.5773
+[eval/transistor] draem                  blur=1    I-AUROC(max)=0.8771 P-AUROC=0.6503 AUPRO=0.5827
+[eval/transistor] draem                  blur=2    I-AUROC(max)=0.8817 P-AUROC=0.6588 AUPRO=0.5902
+[eval/transistor] draem                  blur=4    I-AUROC(max)=0.8813 P-AUROC=0.6840 AUPRO=0.6057
+[eval/transistor] draem                  blur=8    I-AUROC(max)=0.8704 P-AUROC=0.7390 AUPRO=0.6329
+[eval/transistor] draem+gf               blur=0    I-AUROC(max)=0.9225 P-AUROC=0.7664 AUPRO=0.6485
+[eval/transistor] draem+gf               blur=1    I-AUROC(max)=0.9100 P-AUROC=0.7686 AUPRO=0.6505
+[eval/transistor] draem+gf               blur=2    I-AUROC(max)=0.9042 P-AUROC=0.7720 AUPRO=0.6527
+[eval/transistor] draem+gf               blur=4    I-AUROC(max)=0.8933 P-AUROC=0.7802 AUPRO=0.6566
+[eval/transistor] draem+gf               blur=8    I-AUROC(max)=0.8846 P-AUROC=0.7977 AUPRO=0.6654
+[eval/transistor] latent_cos             blur=0    I-AUROC(max)=0.6233 P-AUROC=0.8617 AUPRO=0.6695
+[eval/transistor] latent_cos             blur=1    I-AUROC(max)=0.6196 P-AUROC=0.8623 AUPRO=0.6721
+[eval/transistor] latent_cos             blur=2    I-AUROC(max)=0.6167 P-AUROC=0.8640 AUPRO=0.6774
+[eval/transistor] latent_cos             blur=4    I-AUROC(max)=0.6158 P-AUROC=0.8690 AUPRO=0.6874
+[eval/transistor] latent_cos             blur=8    I-AUROC(max)=0.6167 P-AUROC=0.8795 AUPRO=0.7000
+[eval/transistor] pixel                  blur=0    I-AUROC(max)=0.6250 P-AUROC=0.6036 AUPRO=0.4119
+[eval/transistor] pixel                  blur=1    I-AUROC(max)=0.5879 P-AUROC=0.6213 AUPRO=0.4539
+[eval/transistor] pixel                  blur=2    I-AUROC(max)=0.5742 P-AUROC=0.6367 AUPRO=0.4851
+[eval/transistor] pixel                  blur=4    I-AUROC(max)=0.5850 P-AUROC=0.6615 AUPRO=0.5164
+[eval/transistor] pixel                  blur=8    I-AUROC(max)=0.6329 P-AUROC=0.6898 AUPRO=0.5233
+[eval/transistor] dec_diff               blur=0    I-AUROC(max)=0.3733 P-AUROC=0.2831 AUPRO=0.0753
+[eval/transistor] dec_diff               blur=1    I-AUROC(max)=0.3338 P-AUROC=0.2755 AUPRO=0.0637
+[eval/transistor] dec_diff               blur=2    I-AUROC(max)=0.2658 P-AUROC=0.2678 AUPRO=0.0551
+[eval/transistor] dec_diff               blur=4    I-AUROC(max)=0.2225 P-AUROC=0.2518 AUPRO=0.0429
+[eval/transistor] dec_diff               blur=8    I-AUROC(max)=0.2483 P-AUROC=0.2268 AUPRO=0.0266
+[eval/transistor] oracle16               blur=0    I-AUROC(max)=1.0000 P-AUROC=0.9996 AUPRO=0.9906
+[eval/transistor] oracle16               blur=1    I-AUROC(max)=1.0000 P-AUROC=0.9996 AUPRO=0.9906
+[eval/transistor] oracle16               blur=2    I-AUROC(max)=1.0000 P-AUROC=0.9995 AUPRO=0.9903
+[eval/transistor] oracle16               blur=4    I-AUROC(max)=1.0000 P-AUROC=0.9995 AUPRO=0.9889
+[eval/transistor] oracle16               blur=8    I-AUROC(max)=1.0000 P-AUROC=0.9992 AUPRO=0.9820
+wrote /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/results.csv (30 new rows), report -> /home/rakhimov/rae_industrial/rae_dit_iad/results_dit_iad_loc/per_category/seed0/DR_draem_lat/report.md
